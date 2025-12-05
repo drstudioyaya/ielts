@@ -1,1 +1,94 @@
-Add listening test MVP
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>雅思听力测试（MVP）</title>
+  <style>
+    body { font-family: Arial; max-width: 720px; margin: 40px auto; padding: 20px; }
+    h1 { text-align: center; }
+    .question { margin-bottom: 20px; }
+    button { padding: 12px 18px; margin-top: 20px; font-size: 16px; cursor: pointer; }
+    #result-box { margin-top: 40px; padding: 20px; border: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+
+<h1>雅思听力测试（MVP）</h1>
+<p>以下 20 道题将快速评估你的听力实力。请选择每题的正确答案。</p>
+
+<form id="quizForm">
+
+  <!-- Example questions — you can replace with真实雅思题 later -->
+  <div class="question">
+    <p>1. What time does the train leave?</p>
+    <label><input type="radio" name="q1" value="A"> A. 6:30</label><br>
+    <label><input type="radio" name="q1" value="B"> B. 6:45</label><br>
+    <label><input type="radio" name="q1" value="C"> C. 7:00</label>
+  </div>
+
+  <div class="question">
+    <p>2. Where will the meeting take place?</p>
+    <label><input type="radio" name="q2" value="A"> A. Room 203</label><br>
+    <label><input type="radio" name="q2" value="B"> B. Room 305</label><br>
+    <label><input type="radio" name="q2" value="C"> C. Library</label>
+  </div>
+
+  <!-- === 你之后可以继续复制更多问题，直到20题 === -->
+
+  <button type="button" onclick="submitQuiz()">提交答案</button>
+</form>
+
+<div id="result-box" style="display:none;"></div>
+
+<script>
+// 正确答案 - 你之后可以修改
+const answers = {
+  q1: "B",
+  q2: "A"
+  // q3: "...",
+  // q4 ...
+};
+
+// 评分对应表（雅思听力）
+function convertToIELTS(correct) {
+  if (correct <= 5) return 4.0;
+  if (correct <= 10) return 5.0;
+  if (correct <= 15) return 6.0;
+  if (correct <= 17) return 7.0;
+  if (correct == 18) return 7.5;
+  if (correct == 19) return 8.0;
+  if (correct == 20) return 8.5;
+  return 0;
+}
+
+function submitQuiz() {
+  let score = 0;
+  for (let key in answers) {
+    const selected = document.querySelector(`input[name=${key}]:checked`);
+    if (selected && selected.value === answers[key]) {
+      score++;
+    }
+  }
+
+  const band = convertToIELTS(score);
+
+  // 显示结果
+  const resultBox = document.getElementById("result-box");
+  resultBox.style.display = "block";
+  resultBox.innerHTML = `
+    <h2>测试结果</h2>
+    <p><strong>正确题数：</strong> ${score} / 20</p>
+    <p><strong>预估雅思听力分数：</strong> ${band}</p>
+    <h3>学习建议：</h3>
+    <ul>
+      <li>如果低于 6 分：建议从听力基础词汇 + 场景训练开始。</li>
+      <li>如果 6–7 分：加强地图题、表格题、数字题精准度。</li>
+      <li>如果 7 分以上：重点突破 multiple choice & section 3 高频干扰。</li>
+    </ul>
+  `;
+}
+</script>
+
+</body>
+</html>
+
