@@ -1,7 +1,7 @@
 window.IELTS_QUESTION_BANK = {
   test1_section1: {
     title: "IELTS Listening Test 1 – Section 1",
-    audio: "audio/Listening_Test_1_SECTION_1.mp3",
+    audio: "https://www.yayastudio.us/public/audio/Listening_Test_1_SECTION_1.mp3",
 
     questions: [
       {
