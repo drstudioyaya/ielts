@@ -8,17 +8,94 @@
   <!-- 引入题库 -->
   <script src="questions.js"></script>
 
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 700px; margin: auto; padding: 20px; }
-    h1 { text-align: center; }
-    .question { margin-bottom: 20px; }
-    .submit-btn { display: block; width: 100%; padding: 12px; background: black; color: white; border: none; font-size: 18px; cursor: pointer; margin-top: 20px; }
-    #result { margin-top: 30px; padding: 20px; border: 1px solid #ccc; display: none; }
-  </style>
+ <style>
+    body {
+        font-family: Arial, sans-serif;
+        max-width: 750px;
+        margin: auto;
+        padding: 20px;
+        line-height: 1.6;
+    }
+
+    /* TITLE */
+    .test-title {
+        text-align: center;
+        font-size: 32px;
+        font-weight: bold;
+        margin-bottom: 25px;
+    }
+
+    /* IELTS Instructions Box */
+    .instructions {
+        background: #f7f7f7;
+        padding: 15px 20px;
+        border-left: 4px solid #444;
+        margin-bottom: 25px;
+        font-size: 16px;
+    }
+
+    .instructions ul {
+        margin-top: 10px;
+    }
+
+    /* SECTION SUB-INSTRUCTION */
+    .sub-instruction {
+        margin-bottom: 10px;
+        color: #333;
+        font-size: 15px;
+    }
+
+    /* QUESTIONS */
+    .question {
+        margin-bottom: 20px;
+    }
+
+    .question-number {
+        font-weight: bold;
+        margin-top: 18px;
+        margin-bottom: 5px;
+        font-size: 17px;
+    }
+
+    /* Button */
+    .submit-btn {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: black;
+        color: white;
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+
+    /* Result Box */
+    #result {
+        margin-top: 30px;
+        padding: 20px;
+        border: 1px solid #ccc;
+        display: none;
+        font-size: 18px;
+    }
+</style>
+
 </head>
 <body>
 
-  <h1>IELTS Listening Test – Section 1</h1>
+ <h1 class="test-title">IELTS Listening Test 1 – Section 1</h1>
+
+<div class="instructions">
+    <p><strong>Questions 1–10</strong></p>
+    <p>You will hear a conversation between a staff member and a parent registering a child for a programme.</p>
+    <p><strong>Answer the questions as instructed.</strong></p>
+    <ul>
+        <li>Write <strong>NO MORE THAN TWO WORDS AND/OR A NUMBER</strong> for each answer.</li>
+        <li>For multiple-choice questions, choose the correct letter <strong>A, B or C</strong>.</li>
+    </ul>
+    <p>You will hear the recording <strong>once only</strong>.</p>
+</div>
+
 
   <!-- 音频播放器 -->
   <audio id="audioPlayer" controls style="width: 100%; margin-bottom: 20px;"></audio>
