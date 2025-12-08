@@ -9,6 +9,18 @@
   <script src="questions.js"></script>
 
  <style>
+   .inst-block {
+  background: #f7f7f7;
+  border-left: 4px solid #333;
+  padding: 18px;
+  margin: 30px 0 20px 0;
+}
+
+.inst-block h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+}
+
     body {
         font-family: Arial, sans-serif;
         max-width: 750px;
@@ -85,16 +97,7 @@
 
  <h1 class="test-title">IELTS Listening Test 1 – Section 1</h1>
 
-<div class="instructions">
-    <p><strong>Questions 1–10</strong></p>
-    <p>You will hear a conversation between a staff member and a parent registering a child for a programme.</p>
-    <p><strong>Answer the questions as instructed.</strong></p>
-    <ul>
-        <li>Write <strong>NO MORE THAN TWO WORDS AND/OR A NUMBER</strong> for each answer.</li>
-        <li>For multiple-choice questions, choose the correct letter <strong>A, B or C</strong>.</li>
-    </ul>
-    <p>You will hear the recording <strong>once only</strong>.</p>
-</div>
+
 
 
   <!-- 音频播放器 -->
@@ -116,7 +119,67 @@
   // 渲染题目
   const form = document.getElementById("testForm");
 
-  section.questions.forEach(q => {
+  let instructionsHTML = "";
+
+// 在第 1 題前顯示填空題 instructions
+if (section.questions.some(q => q.number === 1)) {
+  instructionsHTML += `
+    <div class="inst-block">
+      <h3>Questions 1–6</h3>
+      <p><strong>Write NO MORE THAN TWO WORDS AND/OR A NUMBER for each answer.</strong></p>
+    </div>`;
+}
+
+// 在第 7 題前顯示選擇題 instructions
+if (section.questions.some(q => q.number === 7)) {
+  instructionsHTML += `
+    <div class="inst-block">
+      <h3>Questions 7–10</h3>
+      <p><strong>Choose the correct letter A, B or C.</strong></p>
+    </div>`;
+}
+
+document.getElementById("questionsContainer").innerHTML = instructionsHTML;
+
+  section.questions.forEach((q) => {
+  let html = "";
+
+  if (q.number === 7) {
+    // 在第 7 題前加 instructions
+    html += `
+      <div class="inst-block">
+        <h3>Questions 7–10</h3>
+        <p><strong>Choose the correct letter A, B or C.</strong></p>
+      </div>`;
+  }
+
+  if (q.type === "blank") {
+    html += `
+      <div class="question">
+        <p><strong>${q.number}. ${q.question}</strong></p>
+        <input type="text" name="q${q.number}">
+      </div>`;
+  }
+
+  if (q.type === "mcq") {
+    html += `
+      <div class="question">
+        <p><strong>${q.number}. ${q.question}</strong></p>
+        ${q.options
+          .map(
+            (opt, idx) => `
+          <label>
+            <input type="radio" name="q${q.number}" value="${opt}">
+            ${String.fromCharCode(65 + idx)}. ${opt}
+          </label><br>`
+          )
+          .join("")}
+      </div>`;
+  }
+
+  form.innerHTML += html;
+});
+
     let html = `<div class='question'><strong>${q.number}. ${q.question}</strong><br>`;
 
     if (q.type === "blank") {
