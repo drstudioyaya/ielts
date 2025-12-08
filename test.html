@@ -8,101 +8,83 @@
   <!-- 引入题库 -->
   <script src="questions.js"></script>
 
- <style>
-   .inst-block {
-  background: #f7f7f7;
-  border-left: 4px solid #333;
-  padding: 18px;
-  margin: 30px 0 20px 0;
-}
-
-.inst-block h3 {
-  margin: 0 0 10px 0;
-  font-size: 18px;
-}
-
+  <style>
     body {
-        font-family: Arial, sans-serif;
-        max-width: 750px;
-        margin: auto;
-        padding: 20px;
-        line-height: 1.6;
+      font-family: Arial, sans-serif;
+      max-width: 750px;
+      margin: auto;
+      padding: 20px;
     }
 
-    /* TITLE */
-    .test-title {
-        text-align: center;
-        font-size: 32px;
-        font-weight: bold;
-        margin-bottom: 25px;
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
     }
 
     /* IELTS Instructions Box */
-    .instructions {
-        background: #f7f7f7;
-        padding: 15px 20px;
-        border-left: 4px solid #444;
-        margin-bottom: 25px;
-        font-size: 16px;
+    .inst-block {
+      background: #f7f7f7;
+      border-left: 4px solid #333;
+      padding: 18px;
+      margin: 30px 0 20px 0;
     }
 
-    .instructions ul {
-        margin-top: 10px;
+    .inst-block h3 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
     }
 
-    /* SECTION SUB-INSTRUCTION */
-    .sub-instruction {
-        margin-bottom: 10px;
-        color: #333;
-        font-size: 15px;
-    }
-
-    /* QUESTIONS */
     .question {
-        margin-bottom: 20px;
+      margin-top: 25px;
     }
 
-    .question-number {
-        font-weight: bold;
-        margin-top: 18px;
-        margin-bottom: 5px;
-        font-size: 17px;
+    .question strong {
+      font-size: 16px;
     }
 
-    /* Button */
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
     .submit-btn {
-        display: block;
-        width: 100%;
-        padding: 12px;
-        background: black;
-        color: white;
-        border: none;
-        font-size: 18px;
-        cursor: pointer;
-        margin-top: 20px;
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: black;
+      color: white;
+      border: none;
+      font-size: 18px;
+      margin-top: 30px;
+      cursor: pointer;
     }
 
-    /* Result Box */
     #result {
-        margin-top: 30px;
-        padding: 20px;
-        border: 1px solid #ccc;
-        display: none;
-        font-size: 18px;
+      margin-top: 30px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      display: none;
     }
-</style>
-
+  </style>
 </head>
+
 <body>
+  <h1>IELTS Listening Test 1 – Section 1</h1>
 
- <h1 class="test-title">IELTS Listening Test 1 – Section 1</h1>
-
-
-
+  <!-- 最上方 instructions（固定） -->
+  <div class="inst-block">
+    <h3>SECTION 1 — Questions 1–10</h3>
+    <p>You will hear a conversation between a staff member and a parent registering a child for a programme.</p>
+    <p><strong>You will hear the recording once only.</strong></p>
+  </div>
 
   <!-- 音频播放器 -->
-  <audio id="audioPlayer" controls style="width: 100%; margin-bottom: 20px;"></audio>
+  <audio id="audioPlayer" controls style="width: 100%; margin-bottom: 25px;"></audio>
 
+  <!-- 容器：题目内容会动态插入 -->
   <form id="testForm"></form>
 
   <button class="submit-btn" onclick="submitAnswers()">Submit Answers</button>
@@ -110,123 +92,90 @@
   <div id="result"></div>
 
 <script>
-  // 加载 Section 1 数据
+  /* 读取 Section 1 Data */
   const section = window.IELTS_QUESTION_BANK["test1_section1"];
 
-  // 设置音频
+  /* 设置音频来源 */
   document.getElementById("audioPlayer").src = section.audio;
 
-  // 渲染题目
   const form = document.getElementById("testForm");
 
-  let instructionsHTML = "";
+  /* ======== 插入动态 Instructions ======== */
 
-// 在第 1 題前顯示填空題 instructions
-if (section.questions.some(q => q.number === 1)) {
-  instructionsHTML += `
+  // Questions 1–6（填空题）
+  form.innerHTML += `
     <div class="inst-block">
       <h3>Questions 1–6</h3>
       <p><strong>Write NO MORE THAN TWO WORDS AND/OR A NUMBER for each answer.</strong></p>
-    </div>`;
-}
+    </div>
+  `;
 
-// 在第 7 題前顯示選擇題 instructions
-if (section.questions.some(q => q.number === 7)) {
-  instructionsHTML += `
-    <div class="inst-block">
-      <h3>Questions 7–10</h3>
-      <p><strong>Choose the correct letter A, B or C.</strong></p>
-    </div>`;
-}
-
-document.getElementById("questionsContainer").innerHTML = instructionsHTML;
-
+  /* ======== 渲染题目 ======== */
   section.questions.forEach((q) => {
-  let html = "";
-
-  if (q.number === 7) {
-    // 在第 7 題前加 instructions
-    html += `
-      <div class="inst-block">
-        <h3>Questions 7–10</h3>
-        <p><strong>Choose the correct letter A, B or C.</strong></p>
-      </div>`;
-  }
-
-  if (q.type === "blank") {
-    html += `
-      <div class="question">
-        <p><strong>${q.number}. ${q.question}</strong></p>
-        <input type="text" name="q${q.number}">
-      </div>`;
-  }
-
-  if (q.type === "mcq") {
-    html += `
-      <div class="question">
-        <p><strong>${q.number}. ${q.question}</strong></p>
-        ${q.options
-          .map(
-            (opt, idx) => `
-          <label>
-            <input type="radio" name="q${q.number}" value="${opt}">
-            ${String.fromCharCode(65 + idx)}. ${opt}
-          </label><br>`
-          )
-          .join("")}
-      </div>`;
-  }
-
-  form.innerHTML += html;
-});
-
-    let html = `<div class='question'><strong>${q.number}. ${q.question}</strong><br>`;
-
-    if (q.type === "blank") {
-      html += `<input type='text' name='q${q.number}' style='width: 100%; padding: 6px; margin-top: 5px;' />`;
+    
+    /* 在第 7 题前插入 MCQ instructions */
+    if (q.number === 7) {
+      form.innerHTML += `
+        <div class="inst-block">
+          <h3>Questions 7–10</h3>
+          <p><strong>Choose the correct letter A, B or C.</strong></p>
+        </div>
+      `;
     }
 
-    if (q.type === "choice") {
-      q.options.forEach((opt, idx) => {
-        html += `
+    /* 生成填空题 */
+    if (q.type === "blank") {
+      form.innerHTML += `
+        <div class="question">
+          <p><strong>${q.number}. ${q.question}</strong></p>
+          <input type="text" name="q${q.number}">
+        </div>
+      `;
+    }
+
+    /* 生成选择题 */
+    if (q.type === "mcq") {
+      let options = "";
+      q.options.forEach((opt, index) => {
+        options += `
           <label>
-            <input type="radio" name="q${q.number}" value="${idx}">
-            ${opt}
+            <input type="radio" name="q${q.number}" value="${opt}">
+            ${String.fromCharCode(65 + index)}. ${opt}
           </label><br>
         `;
       });
-    }
 
-    html += `</div>`;
-    form.innerHTML += html;
+      form.innerHTML += `
+        <div class="question">
+          <p><strong>${q.number}. ${q.question}</strong></p>
+          ${options}
+        </div>
+      `;
+    }
   });
 
-  // 提交评分
+  /* ======== 评分功能 ======== */
   function submitAnswers() {
     let score = 0;
 
-    section.questions.forEach(q => {
-      const userAnswer = document.querySelector(`[name='q${q.number}']:checked`) ||
-                         document.querySelector(`[name='q${q.number}']`);
+    section.questions.forEach((q) => {
+      let userAns = document.querySelector(`[name="q${q.number}"]`);
 
-      if (!userAnswer) return;
+      if (!userAns) return;
 
       if (q.type === "blank") {
-        if (userAnswer.value.trim().toLowerCase() === q.answer.toLowerCase()) {
-          score++;
-        }
+        let val = userAns.value.trim().toLowerCase();
+        if (val === q.answer.toLowerCase()) score++;
       }
 
-      if (q.type === "choice") {
-        if (Number(userAnswer.value) === q.answer) {
-          score++;
-        }
+      if (q.type === "mcq") {
+        let chosen = document.querySelector(`input[name="q${q.number}"]:checked`);
+        if (chosen && chosen.value === q.answer) score++;
       }
     });
 
-    const resultBox = document.getElementById("result");
-    resultBox.style.display = "block";
-    resultBox.innerHTML = `
+    document.getElementById("result").style.display = "block";
+    document.getElementById("result").innerHTML = `
       <h2>Your Score: ${score} / ${section.questions.length}</h2>
       <p>Thank you for completing the Section 1 listening test.</p>
     `;
