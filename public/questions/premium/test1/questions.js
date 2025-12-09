@@ -6,7 +6,8 @@
 
 window.PREMIUM_TEST1 = {
     section1: {
-        audio: "/audio/premium/test1/section1.mp3",
+       audio: "/public/audio/premium/test1/Listening_Test_1_SECTION_1.mp3",
+
 
         questions: [
             // ===== Questions 1–6: Fill in the blanks =====
