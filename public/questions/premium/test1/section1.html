@@ -1,241 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IELTS Listening Test 1 – Section 1</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IELTS Listening – Section 1</title>
 
-  <!-- 题库脚本：使用 PREMIUM_TEST1.section1 -->
-  <script src="questions.js"></script>
+<script src="questions.js"></script>
 
-  <style>
+<style>
     body {
-      font-family: Arial, sans-serif;
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 24px;
-      line-height: 1.6;
+        font-family: Arial, sans-serif;
+        max-width: 760px;
+        margin: auto;
+        padding: 25px;
+        line-height: 1.6;
     }
 
     h1 {
-      text-align: center;
-      font-size: 26px;
-      margin-bottom: 16px;
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 25px;
     }
 
-    /* 顶部预读提示 + 倒计时 */
-    .preview-box {
-      text-align: center;
-      margin-bottom: 16px;
-      color: #b00000;
-      font-weight: bold;
+    /* 倒计时区块 */
+    .countdown-box {
+        background: #fff3f3;
+        border-left: 4px solid red;
+        padding: 15px;
+        margin-bottom: 25px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        color: #c00;
     }
 
-    .preview-box p {
-      margin: 4px 0;
-    }
-
-    /* 音频条 */
-    .audio-wrapper {
-      margin: 8px 0 24px;
-    }
-
-    audio {
-      width: 100%;
-    }
-
-    /* 说明灰框 */
+    /* 提示框 */
     .inst-block {
-      background: #f7f7f7;
-      border-left: 4px solid #333;
-      padding: 16px;
-      margin: 16px 0 20px;
+        background: #f7f7f7;
+        border-left: 4px solid #333;
+        padding: 18px;
+        margin: 25px 0;
     }
 
-    .inst-block strong {
-      display: block;
-      margin-bottom: 4px;
+    .inst-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
     }
 
     .question {
-      margin-top: 18px;
-      font-weight: bold;
+        margin-top: 18px;
+        font-weight: bold;
     }
 
     input[type="text"] {
-      width: 100%;
-      padding: 8px;
-      margin-top: 6px;
-      font-size: 15px;
-      box-sizing: border-box;
+        width: 100%;
+        padding: 8px;
+        margin-top: 6px;
+        font-size: 15px;
     }
 
     .options {
-      margin-top: 6px;
-      margin-left: 4px;
+        margin-left: 20px;
+        margin-top: 6px;
     }
 
-    .options label {
-      display: block;
-      font-weight: normal;
-      margin-bottom: 4px;
+    /* 禁止点击 audio 控件（Safari/Chrome） */
+    audio::-webkit-media-controls-panel {
+        pointer-events: none !important;
     }
-  </style>
+
+    /* 播放器容器，使遮罩能覆盖 */
+    .audio-wrapper {
+        position: relative;
+        margin: 20px 0;
+    }
+
+    /* 完全透明但阻止所有交互的遮罩 */
+    .audio-blocker {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: auto;
+        background: transparent;
+    }
+</style>
 </head>
 
 <body>
-  <h1>SECTION 1 — Questions 1–10</h1>
 
-  <!-- 预读提示 + 倒计时 -->
-  <div class="preview-box">
-    <p>You now have some time to look at Questions 1–10.</p>
-    <p id="countdownText">
-      The recording will begin in <span id="countNum">10</span> seconds.
-    </p>
-  </div>
+<h1>SECTION 1 — Questions 1–10</h1>
 
-  <!-- 音频：尝试自动播放，禁止学生有效暂停/快进 -->
-  <div class="audio-wrapper">
-    <audio
-      id="audioPlayer"
-      src="/public/audio/premium/test1/Listening_Test_1_SECTION_1.mp3"
-      controls
-    ></audio>
-  </div>
+<!-- 倒计时区块 -->
+<div id="countdownBox" class="countdown-box">
+    <div>You now have some time to look at Questions 1–10.</div>
+    <div id="countdownText">The recording will begin in 10 seconds.</div>
+</div>
 
-  <!-- Questions 1–6 说明 -->
-  <div class="inst-block">
-    <strong>Questions 1–6</strong>
-    Write <strong>NO MORE THAN TWO WORDS AND/OR A NUMBER</strong> for each answer.
-  </div>
+<!-- 音频播放器（默认禁用交互） -->
+<div class="audio-wrapper">
+    <audio id="audioPlayer"
+        src="/public/audio/premium/test1/Listening_Test_1_SECTION_1.mp3"
+        controls></audio>
 
-  <!-- 题目容器 -->
-  <form id="testForm"></form>
+    <!-- 透明遮罩层，用来完全阻止点击/拖动 -->
+    <div class="audio-blocker"></div>
+</div>
 
-  <!-- Questions 7–10 说明（会插在题目 6 后面） -->
-  <template id="inst7to10">
-    <div class="inst-block">
-      <strong>Questions 7–10</strong>
-      Choose the correct letter <strong>A, B or C.</strong>
-    </div>
-  </template>
+<!-- 题干：Questions 1–6 -->
+<div class="inst-block">
+    <div class="inst-title">Questions 1–6</div>
+    <p>Write <strong>NO MORE THAN TWO WORDS AND/OR A NUMBER</strong> for each answer.</p>
+</div>
 
-  <script>
-    // ===================== 加载 Section 1 题库 =====================
-    const sectionData = window.PREMIUM_TEST1.section1;
+<form id="testForm"></form>
 
-    const form = document.getElementById("testForm");
-    const inst7to10Tpl = document.getElementById("inst7to10").content;
+<!-- 题干：Questions 7–10 -->
+<div class="inst-block" style="margin-top:35px">
+    <div class="inst-title">Questions 7–10</div>
+    <p>Choose the correct letter <strong>A, B or C.</strong></p>
+</div>
 
-    sectionData.questions.forEach((q) => {
-      // 在第 7 题前插入 “Questions 7–10” 说明
-      if (q.number === 7) {
-        form.appendChild(inst7to10Tpl.cloneNode(true));
-      }
+<script>
+/* ===========================
+   加载题库数据
+=========================== */
+const test = window.PREMIUM_TEST1.section1;
+const form = document.getElementById("testForm");
 
-      const wrapper = document.createElement("div");
+/* ===========================
+   渲染题目
+=========================== */
+test.questions.forEach((q) => {
+    let html = `<div class="question">${q.number}. ${q.question}</div>`;
 
-      // 题干
-      const qTitle = document.createElement("div");
-      qTitle.className = "question";
-      qTitle.textContent = `${q.number}. ${q.question}`;
-      wrapper.appendChild(qTitle);
-
-      // 填空题
-      if (q.type === "blank") {
-        const input = document.createElement("input");
-        input.type = "text";
-        input.id = `q${q.number}`;
-        wrapper.appendChild(input);
-      }
-
-      // 选择题
-      if (q.type === "mcq") {
-        const optBox = document.createElement("div");
-        optBox.className = "options";
-
-        q.options.forEach((opt, idx) => {
-          const label = document.createElement("label");
-          const radio = document.createElement("input");
-          radio.type = "radio";
-          radio.name = `q${q.number}`;
-          radio.value = opt;
-
-          const letter = String.fromCharCode(65 + idx); // A, B, C
-          label.appendChild(radio);
-          label.insertAdjacentText("beforeend", ` ${letter}. ${opt}`);
-          optBox.appendChild(label);
-        });
-
-        wrapper.appendChild(optBox);
-      }
-
-      form.appendChild(wrapper);
-    });
-
-    // ===================== 倒计时 + 自动播放 =====================
-    const PREVIEW_SECONDS = 10; // 预读时间（秒）
-    const countdownSpan = document.getElementById("countNum");
-    const countdownText = document.getElementById("countdownText");
-    const audio = document.getElementById("audioPlayer");
-
-    function startCountdown() {
-      let remaining = PREVIEW_SECONDS;
-      countdownSpan.textContent = remaining;
-
-      const timer = setInterval(() => {
-        remaining -= 1;
-
-        if (remaining <= 0) {
-          clearInterval(timer);
-          countdownText.textContent = "The recording is now starting.";
-
-          // 尝试自动播放
-          const playPromise = audio.play();
-          if (playPromise && playPromise.catch) {
-            playPromise.catch(() => {
-              // 被浏览器拦截：提示学生点击播放
-              countdownText.textContent =
-                "The recording is ready. Click the play button to start.";
-            });
-          }
-        } else {
-          countdownSpan.textContent = remaining;
-        }
-      }, 1000);
+    if (q.type === "blank") {
+        html += `<input type="text" id="q${q.number}" />`;
     }
 
-    // ===================== 禁止暂停 / 快进 =====================
-    let lastTime = 0;
-
-    audio.addEventListener("timeupdate", () => {
-      lastTime = audio.currentTime;
-    });
-
-    // 学生拖动进度条：拉回去
-    audio.addEventListener("seeking", () => {
-      if (Math.abs(audio.currentTime - lastTime) > 1) {
-        audio.currentTime = lastTime;
-      }
-    });
-
-    // 学生点暂停：立刻继续播放（除非已经自然结束）
-    audio.addEventListener("pause", () => {
-      if (!audio.ended) {
-        audio.play().catch(() => {
-          // 如果这里也被拦截，就不再死循环，让学生自己点播放
+    if (q.type === "mcq") {
+        html += `<div class="options">`;
+        q.options.forEach((opt, idx) => {
+            html += `
+                <label>
+                    <input type="radio" name="q${q.number}" value="${opt}">
+                    ${String.fromCharCode(65 + idx)}. ${opt}
+                </label><br>`;
         });
-      }
-    });
+        html += `</div>`;
+    }
 
-    // 音频自然播放结束 → 自动跳到 Section 2
-    audio.addEventListener("ended", () => {
-      // 这里直接跳转到下一个 Section 页面
-      window.location.href = "section2.html";
-    });
+    form.innerHTML += html;
+});
 
-    // 页面加载完成后启动倒计时
-    window.addEventListener("load", startCountdown);
-  </script>
+/* ===========================
+   倒计时控制
+=========================== */
+let timeLeft = 10;
+const countdownText = document.getElementById("countdownText");
+const countdownBox = document.getElementById("countdownBox");
+const audio = document.getElementById("audioPlayer");
+
+const timer = setInterval(() => {
+    timeLeft--;
+    countdownText.textContent = `The recording will begin in ${timeLeft} seconds.`;
+
+    if (timeLeft <= 0) {
+        clearInterval(timer);
+        countdownBox.style.display = "none";
+
+        /* 自动播放音频 */
+        audio.play().catch(() => {
+            console.log("浏览器阻止自动播放，用户点击后将正常播放");
+        });
+    }
+}, 1000);
+
+/* ===========================
+   音频结束 → 自动跳转 section2
+=========================== */
+audio.onended = function () {
+    window.location.href = "section2.html";
+};
+</script>
+
 </body>
 </html>
