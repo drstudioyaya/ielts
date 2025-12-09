@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IELTS Listening – Section 1</title>
+
+<!-- 载入 Test 1 题库 -->
+<script src="questions.js"></script>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        max-width: 760px;
+        margin: auto;
+        padding: 25px;
+        line-height: 1.6;
+    }
+
+    h1 {
+        font-size: 24px;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .inst-block {
+        background: #f7f7f7;
+        border-left: 4px solid #333;
+        padding: 18px;
+        margin: 20px 0;
+    }
+
+    #countdown {
+        font-size: 20px;
+        font-weight: bold;
+        text-align: center;
+        color: #d00;
+        margin-top: 10px;
+    }
+
+    .question {
+        margin-top: 18px;
+        font-weight: bold;
+    }
+
+    input[type="text"] {
+        width: 100%;
+        padding: 8px;
+        margin-top: 6px;
+        font-size: 15px;
+    }
+
+    .options {
+        margin-left: 20px;
+        margin-top: 6px;
+    }
+
+    /* 显示播放条，但禁止任何点击操作 */
+    audio {
+        width: 100%;
+        margin-top: 20px;
+        pointer-events: none;  /* 看得见，点不到 */
+    }
+</style>
+</head>
+
+<body>
+
+<h1>SECTION 1 — Questions 1–10</h1>
+
+<div class="inst-block">
+    <p><strong>You now have some time to look at Questions 1–10.</strong></p>
+    <p>The recording will begin in 10 seconds.</p>
+</div>
+
+<div id="countdown">Section 1 will begin in 10 seconds…</div>
+
+<div class="inst-block">
+    <strong>Questions 1–6</strong><br>
+    Write <strong>NO MORE THAN TWO WORDS AND/OR A NUMBER</strong> for each answer.
+</div>
+
+<form id="testForm"></form>
+
+<audio id="audioPlayer"></audio>
+
+<script>
+/* 读取 Test1 的 Section 1 题库 */
+const sectionData = window.PREMIUM_TEST1.section1;
+
+/* 渲染题目 */
+const form = document.getElementById("testForm");
+
+sectionData.questions.forEach((q) => {
+    // 在第 7 题前插入 Questions 7–10 指令
+    if (q.number === 7) {
+        form.innerHTML += `
+            <div class="inst-block">
+                <strong>Questions 7–10</strong><br>
+                Choose the correct letter <strong>A, B or C</strong>.
+            </div>
+        `;
+    }
+
+    let html = `<div class="question">${q.number}. ${q.question}</div>`;
+
+    if (q.type === "blank") {
+        html += `<input type="text" id="q${q.number}" />`;
+    }
+
+    if (q.type === "mcq") {
+        html += `<div class="options">`;
+        q.options.forEach((opt, index) => {
+            html += `
+                <label>
+                    <input type="radio" name="q${q.number}" value="${opt}">
+                    ${String.fromCharCode(65 + index)}. ${opt}
+                </label><br>
+            `;
+        });
+        html += `</div>`;
+    }
+
+    form.innerHTML += html;
+});
+
+/* 设置音频：路径从 questions.js 里的 section1.audio 读取 */
+const audio = document.getElementById("audioPlayer");
+audio.src = sectionData.audio;
+audio.controls = true;  // 显示播放条，但通过 CSS 禁止操作
+
+/* 保存本 Section 答案到 localStorage */
+function saveAnswers() {
+    sectionData.questions.forEach((q) => {
+        let value = "";
+
+        if (q.type === "blank") {
+            value = document.getElementById(`q${q.number}`).value || "";
+        }
+
+        if (q.type === "mcq") {
+            const chosen = document.querySelector(`input[name="q${q.number}"]:checked`);
+            value = chosen ? chosen.value : "";
+        }
+
+        localStorage.setItem(`test1_s1_q${q.number}`, value);
+    });
+}
+
+/* 音频播放完毕 → 自动跳到 Section 2 */
+audio.addEventListener("ended", () => {
+    saveAnswers();
+    window.location.href = "section2.html?section=2";
+});
+
+/* 10 秒倒计时，用于预读题干 */
+let count = 10;
+const countdownBox = document.getElementById("countdown");
+
+const timer = setInterval(() => {
+    count--;
+    if (count > 0) {
+        countdownBox.textContent = `Section 1 will begin in ${count} seconds…`;
+    } else {
+        clearInterval(timer);
+        countdownBox.style.display = "none";
+        // 正式开始播放 Section 1 音频
+        audio.play();
+    }
+}, 1000);
+</script>
+
+</body>
+</html>
