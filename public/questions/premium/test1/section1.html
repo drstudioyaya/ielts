@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IELTS Listening Test 1 – Section 1</title>
 
-  <!-- 题库脚本：使用 PREMIUM_TEST1.section1 -->
+  <!-- 使用 premium test1 题库 -->
   <script src="questions.js"></script>
 
   <style>
@@ -23,25 +23,32 @@
       margin-bottom: 16px;
     }
 
-    /* 顶部预读提示 + 倒计时 */
+    /* 顶部预读提示 + 倒计时（红字） */
     .preview-box {
       text-align: center;
       margin-bottom: 16px;
       color: #b00000;
       font-weight: bold;
     }
-
     .preview-box p {
       margin: 4px 0;
     }
 
-    /* 音频条 */
+    /* 音频外壳 + 透明遮罩 */
     .audio-wrapper {
+      position: relative;
       margin: 8px 0 24px;
     }
-
-    audio {
+    .audio-wrapper audio {
       width: 100%;
+    }
+    /* 覆盖在 audio 上，拦截所有点击和拖动 */
+    .audio-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      background: transparent;
+      cursor: not-allowed;
     }
 
     /* 说明灰框 */
@@ -51,7 +58,6 @@
       padding: 16px;
       margin: 16px 0 20px;
     }
-
     .inst-block strong {
       display: block;
       margin-bottom: 4px;
@@ -74,7 +80,6 @@
       margin-top: 6px;
       margin-left: 4px;
     }
-
     .options label {
       display: block;
       font-weight: normal;
@@ -94,16 +99,17 @@
     </p>
   </div>
 
-  <!-- 音频：尝试自动播放，禁止学生有效暂停/快进 -->
+  <!-- 音频：有播放条，但被透明层罩住，学生点不到真实按钮 -->
   <div class="audio-wrapper">
     <audio
       id="audioPlayer"
       src="/public/audio/premium/test1/Listening_Test_1_SECTION_1.mp3"
       controls
     ></audio>
+    <div id="audioOverlay" class="audio-overlay"></div>
   </div>
 
-  <!-- Questions 1–6 说明 -->
+  <!-- Questions 1–6 说明（始终可见） -->
   <div class="inst-block">
     <strong>Questions 1–6</strong>
     Write <strong>NO MORE THAN TWO WORDS AND/OR A NUMBER</strong> for each answer.
@@ -112,7 +118,7 @@
   <!-- 题目容器 -->
   <form id="testForm"></form>
 
-  <!-- Questions 7–10 说明（会插在题目 6 后面） -->
+  <!-- Questions 7–10 说明模板，会插在第 7 题前 -->
   <template id="inst7to10">
     <div class="inst-block">
       <strong>Questions 7–10</strong>
@@ -121,27 +127,32 @@
   </template>
 
   <script>
-    // ===================== 加载 Section 1 题库 =====================
-    const sectionData = window.PREMIUM_TEST1.section1;
+    // ============= 加载 Section 1 题库 =============
+    const sectionData =
+      window.PREMIUM_TEST1 && window.PREMIUM_TEST1.section1;
+
+    if (!sectionData || !sectionData.questions) {
+      document.body.innerHTML =
+        "<h1>Section 1</h1><p>Question data not found.</p>";
+      throw new Error("No section1 data");
+    }
 
     const form = document.getElementById("testForm");
     const inst7to10Tpl = document.getElementById("inst7to10").content;
 
     sectionData.questions.forEach((q) => {
-      // 在第 7 题前插入 “Questions 7–10” 说明
+      // 在第 7 题前插入 “Questions 7–10” 灰框
       if (q.number === 7) {
         form.appendChild(inst7to10Tpl.cloneNode(true));
       }
 
       const wrapper = document.createElement("div");
 
-      // 题干
       const qTitle = document.createElement("div");
       qTitle.className = "question";
       qTitle.textContent = `${q.number}. ${q.question}`;
       wrapper.appendChild(qTitle);
 
-      // 填空题
       if (q.type === "blank") {
         const input = document.createElement("input");
         input.type = "text";
@@ -149,7 +160,6 @@
         wrapper.appendChild(input);
       }
 
-      // 选择题
       if (q.type === "mcq") {
         const optBox = document.createElement("div");
         optBox.className = "options";
@@ -161,7 +171,7 @@
           radio.name = `q${q.number}`;
           radio.value = opt;
 
-          const letter = String.fromCharCode(65 + idx); // A, B, C
+          const letter = String.fromCharCode(65 + idx); // A,B,C...
           label.appendChild(radio);
           label.insertAdjacentText("beforeend", ` ${letter}. ${opt}`);
           optBox.appendChild(label);
@@ -173,11 +183,39 @@
       form.appendChild(wrapper);
     });
 
-    // ===================== 倒计时 + 自动播放 =====================
-    const PREVIEW_SECONDS = 10; // 预读时间（秒）
+    // ============= 倒计时 + 自动播放逻辑 =============
+    const PREVIEW_SECONDS = 10;
     const countdownSpan = document.getElementById("countNum");
     const countdownText = document.getElementById("countdownText");
+
     const audio = document.getElementById("audioPlayer");
+    const overlay = document.getElementById("audioOverlay");
+
+    let hasStarted = false;
+    let lastTime = 0;
+
+    function tryStartPlayback(fromUser) {
+      if (hasStarted) return;
+      const playPromise = audio.play();
+
+      if (playPromise && playPromise.then) {
+        playPromise
+          .then(() => {
+            hasStarted = true;
+            countdownText.textContent = "The recording is now playing.";
+          })
+          .catch(() => {
+            // 自动播放失败（浏览器拦截）
+            if (!fromUser) {
+              countdownText.textContent =
+                "The recording is ready. Click the play button to start.";
+            }
+          });
+      } else {
+        hasStarted = true;
+        countdownText.textContent = "The recording is now playing.";
+      }
+    }
 
     function startCountdown() {
       let remaining = PREVIEW_SECONDS;
@@ -189,52 +227,49 @@
         if (remaining <= 0) {
           clearInterval(timer);
           countdownText.textContent = "The recording is now starting.";
-
           // 尝试自动播放
-          const playPromise = audio.play();
-          if (playPromise && playPromise.catch) {
-            playPromise.catch(() => {
-              // 被浏览器拦截：提示学生点击播放
-              countdownText.textContent =
-                "The recording is ready. Click the play button to start.";
-            });
-          }
+          tryStartPlayback(false);
         } else {
           countdownSpan.textContent = remaining;
         }
       }, 1000);
     }
 
-    // ===================== 禁止暂停 / 快进 =====================
-    let lastTime = 0;
+    // 透明遮罩：如果自动播放被拦截，学生点击整条区域 → 我们代替它播放
+    overlay.addEventListener("click", () => {
+      if (!hasStarted) {
+        tryStartPlayback(true);
+      }
+      // 播放开始后仍然拦截点击，防止暂停/拖动
+    });
 
+    // 记录当前播放位置，用于防止拖动进度条
     audio.addEventListener("timeupdate", () => {
       lastTime = audio.currentTime;
     });
 
-    // 学生拖动进度条：拉回去
+    // 防止拖动（进度突然跳动就拉回去）
     audio.addEventListener("seeking", () => {
       if (Math.abs(audio.currentTime - lastTime) > 1) {
         audio.currentTime = lastTime;
       }
     });
 
-    // 学生点暂停：立刻继续播放（除非已经自然结束）
+    // 防止手动暂停（键盘之类）
     audio.addEventListener("pause", () => {
-      if (!audio.ended) {
+      if (!audio.ended && hasStarted) {
         audio.play().catch(() => {
-          // 如果这里也被拦截，就不再死循环，让学生自己点播放
+          // 如果这里也被拦截，就不再死循环
         });
       }
     });
 
-    // 音频自然播放结束 → 自动跳到 Section 2
+    // 音频自然结束 → 跳转 Section 2
     audio.addEventListener("ended", () => {
-      // 这里直接跳转到下一个 Section 页面
       window.location.href = "section2.html";
     });
 
-    // 页面加载完成后启动倒计时
+    // 页面加载完就启动倒计时
     window.addEventListener("load", startCountdown);
   </script>
 </body>
