@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IELTS Premium Listening Test – Start</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        max-width: 760px;
+        margin: auto;
+        padding: 25px;
+        line-height: 1.6;
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .box {
+        background: #f7f7f7;
+        padding: 20px;
+        border-left: 5px solid #333;
+        margin-bottom: 30px;
+    }
+
+    .start-btn {
+        width: 100%;
+        background: black;
+        color: white;
+        padding: 15px;
+        font-size: 18px;
+        border: none;
+        cursor: pointer;
+        margin-top: 20px;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>IELTS Listening Test 1 – Premium Mode</h1>
+
+<div class="box">
+    <h3>Important Instructions</h3>
+    <ul>
+        <li>The test contains <strong>4 Sections</strong>, each with 10 questions.</li>
+        <li>Once the test begins, the audio will play <strong>without pause</strong>.</li>
+        <li>You <strong>cannot replay</strong> or <strong>go back</strong> to previous sections.</li>
+        <li>Before each audio starts, you will have <strong>5 seconds</strong> to read the questions.</li>
+        <li>After Section 4 ends, you will have <strong>2 minutes</strong> to check your answers.</li>
+        <li>Your final score will be shown automatically.</li>
+    </ul>
+</div>
+
+<button class="start-btn" onclick="startTest()">Start Test</button>
+
+<script>
+function startTest() {
+    // 进入 Section 1 倒计时页面
+    window.location.href = "section1.html?section=1";
+}
+</script>
+
+</body>
+</html>
