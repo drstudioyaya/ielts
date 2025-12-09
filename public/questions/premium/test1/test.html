@@ -1,192 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>IELTS Premium Listening Test</title>
-
-<script src="questions.js"></script>
-
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        max-width: 760px;
-        margin: auto;
-        padding: 25px;
-        line-height: 1.6;
-    }
-
-    h1 {
-        text-align: center;
-        font-weight: bold;
-        margin-bottom: 20px;
-    }
-
-    .inst-block {
-        background: #f7f7f7;
-        border-left: 4px solid #333;
-        padding: 18px;
-        margin: 20px 0;
-    }
-
-    .inst-title {
-        font-size: 18px;
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
-
-    .question {
-        margin-top: 18px;
-        font-weight: bold;
-    }
-
-    input[type="text"] {
-        width: 100%;
-        padding: 8px;
-        margin-top: 6px;
-        font-size: 15px;
-    }
-
-    .options {
-        margin-left: 20px;
-        margin-top: 6px;
-    }
-
-    .submit-btn {
-        width: 100%;
-        background: black;
-        color: white;
-        padding: 12px;
-        margin-top: 25px;
-        font-size: 18px;
-        cursor: pointer;
-        border: none;
-    }
-
-    #result {
-        display: none;
-        margin-top: 35px;
-        padding: 20px;
-        border: 2px solid #eee;
-        background: #fafafa;
-        font-size: 18px;
-        text-align: center;
-    }
-</style>
-</head>
-
-<body>
-
-<h1 id="pageTitle"></h1>
-
-<div id="sectionIntro"></div>
-
-<div class="audio-box">
-    <audio id="audioPlayer" controls style="width:100%"></audio>
-</div>
-
-<form id="testForm"></form>
-
-<button class="submit-btn" onclick="submitAnswers()">Submit Answers</button>
-
-<div id="result"></div>
-
-<script>
 /* -----------------------
-   获取 URL 中的 section 参数
+   高级评分函数（智能容错）
 -------------------------- */
-const params = new URLSearchParams(window.location.search);
-const sec = params.get("section") || "1";
-
-document.getElementById("pageTitle").innerText =
-    `IELTS Listening Test 1 – Section ${sec}`;
-
-/* -----------------------
-   获取题库数据
--------------------------- */
-const test = window.PREMIUM_TEST1;
-const sectionData = test[`section${sec}`];
-
-/* -----------------------
-   若 section 没内容 → Coming Soon
--------------------------- */
-if (!sectionData || !sectionData.questions || sectionData.questions.length === 0) {
-    document.body.innerHTML = `
-        <h1>Section ${sec}</h1>
-        <div class="inst-block">
-            <p><strong>This section is coming soon.</strong></p>
-        </div>
-    `;
-    throw new Error("Section empty");
+function normalize(text) {
+    return text
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/[\$]/g, "")          // 去掉货币符号
+        .replace(/(\d+)(th|st|nd|rd)/g, "$1")  // 去掉日期序号
+        .replace(/\s+/g, " ");         // 规范空格
 }
 
-/* -----------------------
-   写入音频路径
--------------------------- */
-document.getElementById("audioPlayer").src = sectionData.audio;
-
-/* -----------------------
-   Section 顶部说明
--------------------------- */
-document.getElementById("sectionIntro").innerHTML = `
-    <div class="inst-block">
-        <div class="inst-title">SECTION ${sec} — Questions 1–10</div>
-        <p>Please answer the questions as instructed.</p>
-    </div>
-`;
-
-/* -----------------------
-   Questions 1–6 说明
--------------------------- */
-if (sec === "1") {
-    document.getElementById("testForm").innerHTML += `
-        <div class="inst-block">
-            <div class="inst-title">Questions 1–6</div>
-            <p><strong>Write NO MORE THAN TWO WORDS AND/OR A NUMBER for each answer.</strong></p>
-        </div>
-    `;
-}
-
-/* -----------------------
-   渲染全部题目
--------------------------- */
-const form = document.getElementById("testForm");
-
-sectionData.questions.forEach((q) => {
-    if (q.number === 7) {
-        form.innerHTML += `
-            <div class="inst-block">
-                <div class="inst-title">Questions 7–10</div>
-                <p><strong>Choose the correct letter A, B or C</strong></p>
-            </div>
-        `;
-    }
-
-    let html = `<div class="question">${q.number}. ${q.question}</div>`;
-
-    if (q.type === "blank") {
-        html += `<input type="text" id="q${q.number}" />`;
-    }
-
-    if (q.type === "mcq") {
-        html += `<div class="options">`;
-        q.options.forEach((opt, index) => {
-            html += `
-                <label>
-                    <input type="radio" name="q${q.number}" value="${opt}" />
-                    ${String.fromCharCode(65 + index)}. ${opt}
-                </label><br>
-            `;
-        });
-        html += `</div>`;
-    }
-
-    form.innerHTML += html;
-});
-
-/* -----------------------
-   评分函数
--------------------------- */
 function submitAnswers() {
     let score = 0;
 
@@ -194,15 +18,18 @@ function submitAnswers() {
         let user = "";
 
         if (q.type === "blank") {
-            user = (document.getElementById(`q${q.number}`).value || "").trim().toLowerCase();
+            user = document.getElementById(`q${q.number}`).value || "";
         }
 
         if (q.type === "mcq") {
             let chosen = document.querySelector(`input[name="q${q.number}"]:checked`);
-            if (chosen) user = chosen.value.trim();
+            if (chosen) user = chosen.value || "";
         }
 
-        if (user === q.answer.toLowerCase()) score++;
+        const userN = normalize(user);
+        const ansN = normalize(q.answer);
+
+        if (userN === ansN) score++;
     });
 
     document.getElementById("result").style.display = "block";
@@ -211,7 +38,3 @@ function submitAnswers() {
         Thank you for completing Section ${sec}.
     `;
 }
-</script>
-
-</body>
-</html>
