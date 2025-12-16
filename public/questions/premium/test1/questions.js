@@ -1,96 +1,150 @@
 /**
  * PREMIUM – IELTS Listening Test 1
- * Section 1 (10 questions)
- * 使用完整音频：/audio/premium/test1/section1.mp3
+ * Unified Question Bank + Answer Checking Logic
+ * （支持多答案、同义词、格式容错）
  */
 
 window.PREMIUM_TEST1 = {
-    section1: {
-       audio: "/public/audio/premium/test1/Listening_Test_1_SECTION_1.mp3",
+  /* =========================
+     SECTION 1
+  ========================== */
+  section1: {
+    audio: "/public/audio/premium/test1/Listening_Test_1_SECTION_1.mp3",
 
+    questions: [
+      { number: 1, type: "blank", question: "Child’s Name:" },
+      { number: 2, type: "blank", question: "Age:" },
+      { number: 3, type: "blank", question: "Programme Start Date:" },
+      { number: 4, type: "blank", question: "Basic Fee:" },
+      { number: 5, type: "blank", question: "Meal Plan Fee:" },
+      { number: 6, type: "blank", question: "Allergy Information:" },
 
-        questions: [
-            // ===== Questions 1–6: Fill in the blanks =====
-            {
-                number: 1,
-                type: "blank",
-                question: "Child’s Name:",
-                answer: "Ethan Park"
-            },
-            {
-                number: 2,
-                type: "blank",
-                question: "Age:",
-                answer: "9"
-            },
-            {
-                number: 3,
-                type: "blank",
-                question: "Programme Start Date:",
-                answer: "July 14th"
-            },
-            {
-                number: 4,
-                type: "blank",
-                question: "Basic Fee:",
-                answer: "$480"
-            },
-            {
-                number: 5,
-                type: "blank",
-                question: "Meal Plan Fee:",
-                answer: "$60"
-            },
-            {
-                number: 6,
-                type: "blank",
-                question: "Allergy Information:",
-                answer: "peanut"
-            },
-
-            // ===== Questions 7–10: Multiple Choice =====
-            {
-                number: 7,
-                type: "mcq",
-                question: "Which programme is suitable for Ethan?",
-                options: ["Adventure Camp", "Explorer Camp", "Science Camp"],
-                answer: "Explorer Camp"
-            },
-            {
-                number: 8,
-                type: "mcq",
-                question: "How long does the programme last?",
-                options: ["One week", "Two weeks", "Three weeks"],
-                answer: "Two weeks"
-            },
-            {
-                number: 9,
-                type: "mcq",
-                question: "How will the woman pay?",
-                options: ["By credit card", "By bank transfer", "In cash"],
-                answer: "By bank transfer"
-            },
-            {
-                number: 10,
-                type: "mcq",
-                question: "What will the woman receive after completing the online form?",
-                options: ["A confirmation letter", "A payment receipt", "An email containing bank details"],
-                answer: "An email containing bank details"
-            }
+      {
+        number: 7,
+        type: "mcq",
+        question: "Which programme is suitable for Ethan?",
+        options: ["Adventure Camp", "Explorer Camp", "Science Camp"]
+      },
+      {
+        number: 8,
+        type: "mcq",
+        question: "How long does the programme last?",
+        options: ["One week", "Two weeks", "Three weeks"]
+      },
+      {
+        number: 9,
+        type: "mcq",
+        question: "How will the woman pay?",
+        options: ["By credit card", "By bank transfer", "In cash"]
+      },
+      {
+        number: 10,
+        type: "mcq",
+        question: "What will the woman receive after completing the online form?",
+        options: [
+          "A confirmation letter",
+          "A payment receipt",
+          "An email containing bank details"
         ]
-    },
+      }
+    ],
 
-    // ===== Placeholder (未来你会填 Section 2–4) =====
-    section2: {
-        audio: "",
-        questions: []
-    },
-    section3: {
-        audio: "",
-        questions: []
-    },
-    section4: {
-        audio: "",
-        questions: []
+    answers: {
+      1: ["ethan park"],
+      2: ["9"],
+      3: ["july 14th", "14 july"],
+      4: ["480", "$480"],
+      5: ["60", "$60"],
+      6: ["peanut"],
+      7: ["explorer camp"],
+      8: ["two weeks"],
+      9: ["by bank transfer"],
+      10: ["an email containing bank details"]
     }
+  },
+
+  /* =========================
+     SECTION 2
+  ========================== */
+  section2: {
+    audio: "/public/audio/premium/test1/Premium_IELTS_Listening_Test1_Section2.mp3",
+
+    questions: [
+      { number: 11, type: "blank", question: "Library →" },
+      { number: 12, type: "blank", question: "Main Cafeteria →" },
+      { number: 13, type: "blank", question: "Sports Centre →" },
+      { number: 14, type: "blank", question: "Main Lawn →" },
+
+      { number: 15, type: "blank", question: "The library opens at ________." },
+      { number: 16, type: "blank", question: "Students must show their ________ to enter the library." },
+
+      {
+        number: 17,
+        type: "mcq",
+        question: "What support service does the speaker mention first?",
+        options: ["Accommodation help", "Language support", "IT assistance"]
+      },
+      {
+        number: 18,
+        type: "mcq",
+        question: "What does the speaker advise students to do during breaks?",
+        options: ["Meet in the cafeteria", "Relax on the lawn", "Visit the student centre"]
+      },
+      {
+        number: 19,
+        type: "mcq",
+        question: "What should students do if they have questions after the tour?",
+        options: ["Email the guide", "Go to the info desk", "Ask another student volunteer"]
+      },
+      {
+        number: 20,
+        type: "mcq",
+        question: "What does the speaker suggest students check online?",
+        options: ["The campus map", "Upcoming events", "Course registration dates"]
+      }
+    ],
+
+    answers: {
+      11: ["e"],
+      12: ["c"],
+      13: ["b"],
+      14: ["f"],
+      15: ["8:30", "8.30", "eight-thirty"],
+      16: ["id", "identification"],
+      17: ["b"],
+      18: ["b"],
+      19: ["b"],
+      20: ["b"]
+    }
+  },
+
+  section3: { questions: [], answers: {} },
+  section4: { questions: [], answers: {} }
+};
+
+/* =========================
+   SHARED SCORING UTILITIES
+   （所有 section 共用）
+========================== */
+
+/**
+ * Normalize user input for IELTS-style marking
+ */
+window.normalizeAnswer = function (text) {
+  return text
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/[$£,]/g, "");
+};
+
+/**
+ * Check if user's answer matches ANY accepted answer
+ */
+window.isCorrectAnswer = function (userInput, acceptedAnswers) {
+  const user = normalizeAnswer(userInput);
+  return acceptedAnswers.some(
+    ans => normalizeAnswer(ans) === user
+  );
 };
