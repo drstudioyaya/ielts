@@ -70,6 +70,30 @@
         font-style: italic;
         margin-top: 10px;
     }
+
+    /* ===== Map questions (11–14) inline layout ===== */
+
+.map-question {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.map-question .q-num {
+  width: 30px;
+  font-weight: bold;
+}
+
+.map-question .q-text {
+  width: 180px;
+}
+
+.inline-input {
+  flex: 1;
+  padding: 6px;
+  font-size: 14px;
+}
+
 </style>
 </head>
 
@@ -103,13 +127,30 @@
     <img src="/public/questions/premium/test1/section2_map.png" alt="Campus Map">
 </div>
 
-<div class="question">11. Library →</div> <input type="text">
+<div class="map-question">
+  <span class="q-num">11.</span>
+  <span class="q-text">Library →</span>
+  <input type="text" name="q11" class="inline-input">
+</div>
 
-<div class="question">12. Main Cafeteria →</div> <input type="text">
+<div class="map-question">
+  <span class="q-num">12.</span>
+  <span class="q-text">Main Cafeteria →</span>
+  <input type="text" name="q12" class="inline-input">
+</div>
 
-<div class="question">13. Sports Centre →</div> <input type="text">
+<div class="map-question">
+  <span class="q-num">13.</span>
+  <span class="q-text">Sports Centre →</span>
+  <input type="text" name="q13" class="inline-input">
+</div>
 
-<div class="question">14. Main Lawn →</div> <input type="text">
+<div class="map-question">
+  <span class="q-num">14.</span>
+  <span class="q-text">Main Lawn →</span>
+  <input type="text" name="q14" class="inline-input">
+</div>
+
 
 
 <!-- Questions 15–16 -->
