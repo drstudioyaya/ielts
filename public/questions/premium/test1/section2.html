@@ -6,70 +6,58 @@
 <title>IELTS Listening Test 1 – Section 2</title>
 
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        max-width: 760px;
-        margin: auto;
-        padding: 25px;
-        line-height: 1.6;
-    }
+body {
+    font-family: Arial, sans-serif;
+    max-width: 760px;
+    margin: auto;
+    padding: 25px;
+    line-height: 1.6;
+}
 
-    h1 {
-        text-align: center;
-        margin-bottom: 10px;
-    }
+h1 {
+    text-align: center;
+    margin-bottom: 10px;
+}
 
-    .countdown {
-        text-align: center;
-        color: #b00000;
-        font-weight: bold;
-        margin-bottom: 20px;
-    }
+.countdown {
+    text-align: center;
+    color: darkred;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
 
-    .inst-block {
-        background: #f7f7f7;
-        border-left: 4px solid #333;
-        padding: 15px;
-        margin: 25px 0 15px;
-    }
+.inst-block {
+    background: #f7f7f7;
+    border-left: 4px solid #333;
+    padding: 15px;
+    margin: 20px 0;
+}
 
-    .question {
-        margin-top: 18px;
-        font-weight: bold;
-    }
+.question {
+    margin-top: 16px;
+    font-weight: bold;
+}
 
-    input[type="text"] {
-        width: 100%;
-        padding: 8px;
-        margin-top: 6px;
-        font-size: 15px;
-    }
+input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    margin-top: 6px;
+    font-size: 15px;
+}
 
-    .options {
-        margin-left: 20px;
-        margin-top: 6px;
-    }
+.options {
+    margin-left: 20px;
+    margin-top: 6px;
+}
 
-    .map-box {
-        text-align: center;
-        margin: 20px 0;
-    }
+.audio-box {
+    margin: 20px 0;
+}
 
-    .map-box img {
-        max-width: 100%;
-        border: 1px solid #ccc;
-    }
-
-    audio {
-        width: 100%;
-        pointer-events: none; /* 禁止操作 */
-    }
-
-    .audio-note {
-        text-align: center;
-        font-style: italic;
-        margin-top: 10px;
-    }
+audio {
+    width: 100%;
+    pointer-events: none;
+}
 </style>
 </head>
 
@@ -77,123 +65,103 @@
 
 <h1>SECTION 2 — Questions 11–20</h1>
 
-<div id="countdown" class="countdown">
-    You now have some time to look at Questions 11–20.<br>
-    The recording will begin in <span id="time">10</span> seconds.
+<div class="countdown" id="countdownText">
+You now have some time to look at Questions 11–20.  
+The recording will begin in <span id="time">10</span> seconds.
 </div>
 
-<!-- 音频 -->
+<div class="audio-box">
 <audio id="audio" preload="auto">
-  <source src="/public/audio/premium/test1/Premium_IELTS_Listening_Test1_Section2.mp3" type="audio/mpeg">
+    <source src="/public/audio/premium/test1/Premium_IELTS_Listening_Test1_Section2.mp3" type="audio/mpeg">
 </audio>
-
-
-<div id="audioNote" class="audio-note" style="display:none;">
-    The recording is ready. Click the play button to start.
 </div>
 
 <!-- Questions 11–14 -->
 <div class="inst-block">
-    <strong>Questions 11–14</strong><br>
-    Label the map below.<br>
-    Write the correct letter <strong>A–F</strong> next to Questions 11–14.
+<strong>Questions 11–14</strong><br>
+Label the map below.<br>
+Write the correct letter A–F next to Questions 11–14.
 </div>
 
-<div class="map-box">
-    <img src="/public/questions/premium/test1/section2_map.png" alt="Campus Map">
-</div>
+<img src="/public/audio/premium/test1/IELTS_Map_Section2_Official_v3.png" alt="Campus Map" style="width:100%; max-width:600px;">
 
-<div class="question">11. Library</div>
-<input type="text" name="q11">
+<div class="question">11.</div>
+<input type="text">
 
-<div class="question">12. Student Centre</div>
-<input type="text" name="q12">
+<div class="question">12.</div>
+<input type="text">
 
-<div class="question">13. Main Cafeteria</div>
-<input type="text" name="q13">
+<div class="question">13.</div>
+<input type="text">
 
-<div class="question">14. Sports Centre</div>
-<input type="text" name="q14">
-
+<div class="question">14.</div>
+<input type="text">
 
 <!-- Questions 15–16 -->
 <div class="inst-block">
-    <strong>Questions 15–16</strong><br>
-    Write <strong>ONE WORD AND/OR A NUMBER</strong> for each answer.
+<strong>Questions 15–16</strong><br>
+Write <strong>ONE WORD AND/OR A NUMBER</strong> for each answer.
 </div>
 
-<div class="question">15. What time does the orientation tour begin?</div>
-<input type="text" name="q15">
+<div class="question">15.</div>
+<input type="text">
 
-<div class="question">16. What should students bring with them?</div>
-<input type="text" name="q16">
+<div class="question">16.</div>
+<input type="text">
 
 <!-- Questions 17–20 -->
 <div class="inst-block">
-    <strong>Questions 17–20</strong><br>
-    Choose the correct letter <strong>A, B or C</strong>.
+<strong>Questions 17–20</strong><br>
+Choose the correct letter, A, B or C.
 </div>
 
-<div class="question">17. What is the main purpose of the orientation tour?</div>
+<div class="question">17.</div>
 <div class="options">
-  <label><input type="radio" name="q17"> A. To register for courses</label><br>
-  <label><input type="radio" name="q17"> B. To introduce campus facilities</label><br>
-  <label><input type="radio" name="q17"> C. To meet academic staff</label>
+<label><input type="radio" name="q17"> A</label><br>
+<label><input type="radio" name="q17"> B</label><br>
+<label><input type="radio" name="q17"> C</label>
 </div>
 
-<div class="question">18. Where can students get help with accommodation?</div>
+<div class="question">18.</div>
 <div class="options">
-  <label><input type="radio" name="q18"> A. Student Centre</label><br>
-  <label><input type="radio" name="q18"> B. Library</label><br>
-  <label><input type="radio" name="q18"> C. Sports Centre</label>
+<label><input type="radio" name="q18"> A</label><br>
+<label><input type="radio" name="q18"> B</label><br>
+<label><input type="radio" name="q18"> C</label>
 </div>
 
-<div class="question">19. What does the speaker recommend students do first?</div>
+<div class="question">19.</div>
 <div class="options">
-  <label><input type="radio" name="q19"> A. Attend the welcome talk</label><br>
-  <label><input type="radio" name="q19"> B. Explore the campus</label><br>
-  <label><input type="radio" name="q19"> C. Collect their ID cards</label>
+<label><input type="radio" name="q19"> A</label><br>
+<label><input type="radio" name="q19"> B</label><br>
+<label><input type="radio" name="q19"> C</label>
 </div>
 
-<div class="question">20. When will the next tour take place?</div>
+<div class="question">20.</div>
 <div class="options">
-  <label><input type="radio" name="q20"> A. Tomorrow</label><br>
-  <label><input type="radio" name="q20"> B. Next week</label><br>
-  <label><input type="radio" name="q20"> C. Next month</label>
+<label><input type="radio" name="q20"> A</label><br>
+<label><input type="radio" name="q20"> B</label><br>
+<label><input type="radio" name="q20"> C</label>
 </div>
 
 <script>
-const audio = document.getElementById("audio");
-const countdownBox = document.getElementById("countdown");
-const audioNote = document.getElementById("audioNote");
 let timeLeft = 10;
+const timeSpan = document.getElementById("time");
+const audio = document.getElementById("audio");
+const countdownText = document.getElementById("countdownText");
 
-// 倒计时
 const timer = setInterval(() => {
     timeLeft--;
-    document.getElementById("time").innerText = timeLeft;
+    timeSpan.textContent = timeLeft;
 
     if (timeLeft === 0) {
         clearInterval(timer);
-        countdownBox.style.display = "none";
-
         audio.play().catch(() => {
-            audioNote.style.display = "block";
-            audio.controls = true;
-            audio.style.pointerEvents = "auto";
+            countdownText.textContent =
+              "The recording is ready. Click the play button to start.";
         });
     }
 }, 1000);
 
-// 禁止暂停 / 拖动
-audio.addEventListener("pause", () => {
-    if (!audio.ended) audio.play();
-});
-audio.addEventListener("seeking", () => {
-    audio.currentTime = audio.currentTime;
-});
-
-// 音频结束 → 跳转 Section 3
 audio.addEventListener("ended", () => {
     window.location.href = "section3.html";
 });
