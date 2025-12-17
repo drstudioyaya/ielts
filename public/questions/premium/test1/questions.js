@@ -118,9 +118,71 @@ window.PREMIUM_TEST1 = {
     }
   },
 
-  section3: { questions: [], answers: {} },
+/* =========================
+     SECTION 3 (LOCKED)
+  ========================== */
+  section3: {
+    audio: "/public/audio/premium/test1/Premium_IELTS_Listening_Test1_Section3.mp3",
+
+    questions: [
+      {
+        number: 21,
+        type: "mcq",
+        question: "What problem does the tutor identify with the students’ initial topic?",
+        options: [
+          "It is too broad",
+          "It lacks sufficient data",
+          "It overlaps with another group’s project"
+        ]
+      },
+      {
+        number: 22,
+        type: "mcq",
+        question: "What does Mia think will be the most challenging part of the project?",
+        options: [
+          "Organising group meetings",
+          "Collecting survey responses",
+          "Analysing academic sources"
+        ]
+      },
+      {
+        number: 23,
+        type: "mcq",
+        question: "Why does Leo suggest changing the research method?",
+        options: [
+          "The current method is too time-consuming",
+          "The tutor recommends a different approach",
+          "Previous studies used a similar method"
+        ]
+      },
+
+      { number: 24, type: "blank", question: "Mia →" },
+      { number: 25, type: "blank", question: "Leo →" },
+      { number: 26, type: "blank", question: "Sarah →" },
+
+      { number: 27, type: "blank", question: "The final report should be no more than ________ words." },
+      { number: 28, type: "blank", question: "Students must submit a draft by ________." },
+      { number: 29, type: "blank", question: "At least ________ academic sources are required." },
+      { number: 30, type: "blank", question: "The presentation will last approximately ________ minutes." }
+    ],
+
+    answers: {
+      21: ["a"],
+      22: ["c"],
+      23: ["a"],
+      24: ["c"],
+      25: ["b"],
+      26: ["d"],
+      27: ["3000"],
+      28: ["friday"],
+      29: ["five", "5"],
+      30: ["ten", "10"]
+    }
+  },
+
   section4: { questions: [], answers: {} }
 };
+
 
 /* =========================
    SHARED SCORING UTILITIES
