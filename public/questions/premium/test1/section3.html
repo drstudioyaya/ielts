@@ -1,1 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IELTS Listening Test 1 – Section 3</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 760px;
+      margin: auto;
+      padding: 25px;
+      line-height: 1.6;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .countdown {
+      text-align: center;
+      color: #b00000;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .inst-block {
+      background: #f7f7f7;
+      border-left: 4px solid #333;
+      padding: 15px;
+      margin: 25px 0 15px;
+    }
+
+    .question {
+      margin-top: 18px;
+      font-weight: bold;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+      font-size: 15px;
+    }
+
+    .options {
+      margin-left: 20px;
+      margin-top: 6px;
+    }
+
+    audio {
+      width: 100%;
+      pointer-events: none; /* 禁止操作（机考风格） */
+    }
+
+    .audio-note {
+      text-align: center;
+      font-style: italic;
+      margin-top: 10px;
+    }
+
+    /* Matching layout (24–26) */
+    .match-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 10px 0;
+    }
+    .match-row .qnum {
+      width: 34px;
+      font-weight: bold;
+    }
+    .match-row .who {
+      width: 120px;
+    }
+    .match-row input[type="text"] {
+      margin-top: 0;
+      max-width: 120px;
+      text-transform: uppercase;
+    }
+
+    /* Notes list (27–30) */
+    .notes {
+      margin-top: 10px;
+      padding-left: 0;
+      list-style: none;
+    }
+    .notes li {
+      margin: 10px 0;
+    }
+    .blank {
+      display: inline-block;
+      min-width: 160px;
+      border-bottom: 2px solid #333;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>SECTION 3 — Questions 21–30</h1>
+
+  <div id="countdown" class="countdown">
+    You now have some time to look at Questions 21–30.<br>
+    The recording will begin in <span id="time">10</span> seconds.
+  </div>
+
+  <!-- Audio (controls shown but locked via pointer-events) -->
+  <audio id="audio" controls preload="auto" controlslist="nodownload noplaybackrate">
+    <source src="/public/audio/premium/test1/Premium_IELTS_Listening_Test1_Section3.mp3" type="audio/mpeg">
+  </audio>
+
+  <div id="audioNote" class="audio-note" style="display:none;">
+    The recording is ready. Click the play button to start.
+  </div>
+
+  <!-- Questions 21–23 -->
+  <div class="inst-block">
+    <strong>Questions 21–23</strong><br>
+    Choose the correct letter <strong>A, B or C</strong>.
+  </div>
+
+  <div class="question">21. What problem does the tutor identify with the students’ initial topic?</div>
+  <div class="options">
+    <label><input type="radio" name="q21" value="A"> A. It is too broad</label><br>
+    <label><input type="radio" name="q21" value="B"> B. It lacks sufficient data</label><br>
+    <label><input type="radio" name="q21" value="C"> C. It overlaps with another group’s project</label>
+  </div>
+
+  <div class="question">22. What does Mia think will be the most challenging part of the project?</div>
+  <div class="options">
+    <label><input type="radio" name="q22" value="A"> A. Organising group meetings</label><br>
+    <label><input type="radio" name="q22" value="B"> B. Collecting survey responses</label><br>
+    <label><input type="radio" name="q22" value="C"> C. Analysing academic sources</label>
+  </div>
+
+  <div class="question">23. Why does Leo suggest changing the research method?</div>
+  <div class="options">
+    <label><input type="radio" name="q23" value="A"> A. The current method is too time-consuming</label><br>
+    <label><input type="radio" name="q23" value="B"> B. The tutor recommends a different approach</label><br>
+    <label><input type="radio" name="q23" value="C"> C. Previous studies used a similar method</label>
+  </div>
+
+  <!-- Questions 24–26 -->
+  <div class="inst-block">
+    <strong>Questions 24–26</strong><br>
+    Match each student with the responsibility they will take on.<br>
+    Write the correct letter <strong>A–E</strong> next to Questions 24–26.<br><br>
+
+    <strong>Responsibilities</strong><br>
+    A. Designing the questionnaire<br>
+    B. Conducting interviews<br>
+    C. Reviewing academic literature<br>
+    D. Preparing the final presentation<br>
+    E. Editing the written report
+  </div>
+
+  <div class="match-row">
+    <div class="qnum">24.</div>
+    <div class="who">Mia</div>
+    <input type="text" name="q24" maxlength="1" aria-label="Question 24">
+  </div>
+
+  <div class="match-row">
+    <div class="qnum">25.</div>
+    <div class="who">Leo</div>
+    <input type="text" name="q25" maxlength="1" aria-label="Question 25">
+  </div>
+
+  <div class="match-row">
+    <div class="qnum">26.</div>
+    <div class="who">Sarah</div>
+    <input type="text" name="q26" maxlength="1" aria-label="Question 26">
+  </div>
+
+  <!-- Questions 27–30 -->
+  <div class="inst-block">
+    <strong>Questions 27–30</strong><br>
+    Complete the notes below.<br>
+    Write <strong>ONE WORD AND/OR A NUMBER</strong> for each answer.
+  </div>
+
+  <div class="question">Group Project – Key Instructions</div>
+  <ul class="notes">
+    <li>• The final report should be no more than <strong>27.</strong> <input type="text" name="q27" style="max-width:220px; display:inline-block;"> words.</li>
+    <li>• Students must submit a draft by <strong>28.</strong> <input type="text" name="q28" style="max-width:220px; display:inline-block;">.</li>
+    <li>• At least <strong>29.</strong> <input type="text" name="q29" style="max-width:220px; display:inline-block;"> academic sources are required.</li>
+    <li>• The presentation will last approximately <strong>30.</strong> <input type="text" name="q30" style="max-width:220px; display:inline-block;"> minutes.</li>
+  </ul>
+
+  <script>
+    const audio = document.getElementById("audio");
+    const countdownBox = document.getElementById("countdown");
+    const audioNote = document.getElementById("audioNote");
+    let timeLeft = 10;
+
+    // Countdown
+    const timer = setInterval(() => {
+      timeLeft--;
+      document.getElementById("time").innerText = timeLeft;
+
+      if (timeLeft === 0) {
+        clearInterval(timer);
+        countdownBox.style.display = "none";
+
+        audio.play().catch(() => {
+          audioNote.style.display = "block";
+          audio.controls = true;
+          audio.style.pointerEvents = "auto"; // 仅在被拦截时允许点击播放
+        });
+      }
+    }, 1000);
+
+    // Prevent pause / seeking (exam mode)
+    audio.addEventListener("pause", () => {
+      if (!audio.ended) audio.play();
+    });
+    audio.addEventListener("seeking", () => {
+      audio.currentTime = audio.currentTime;
+    });
+
+    // Audio end -> go Section 4
+    audio.addEventListener("ended", () => {
+      window.location.href = "section4.html";
+    });
+  </script>
+
+</body>
+</html>
 
