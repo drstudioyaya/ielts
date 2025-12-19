@@ -1,130 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>IELTS Premium Listening Test 1 – Section 4</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IELTS Premium Listening Test 1 – Section 4</title>
 
-<script src="../questions.js"></script>
+ <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 760px;
+      margin: auto;
+      padding: 25px;
+      line-height: 1.6;
+    }
 
-<style>
-body {
-  font-family: Arial, sans-serif;
-  max-width: 760px;
-  margin: auto;
-  padding: 24px;
-  line-height: 1.6;
-}
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
 
-h1 {
-  text-align: center;
-  margin-bottom: 12px;
-}
+    .countdown {
+      text-align: center;
+      color: #b00000;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
 
-.notice {
-  color: #b00000;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 18px;
-}
+    .inst-block {
+      background: #f7f7f7;
+      border-left: 4px solid #333;
+      padding: 15px;
+      margin: 25px 0 15px;
+    }
 
-.inst-block {
-  background: #f3f3f3;
-  border-left: 4px solid #444;
-  padding: 14px;
-  margin: 18px 0;
-}
+    .question {
+      margin-top: 18px;
+      font-weight: bold;
+    }
 
-.section-title {
-  font-weight: bold;
-  margin-top: 22px;
-}
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+      font-size: 15px;
+    }
 
-.question {
-  margin-top: 14px;
-}
+    .options {
+      margin-left: 20px;
+      margin-top: 6px;
+    }
 
-input[type="text"] {
-  width: 100%;
-  padding: 6px;
-  margin-top: 4px;
-  font-size: 15px;
-}
+    audio {
+      width: 100%;
+      pointer-events: none; /* 禁止操作（机考风格） */
+    }
 
-.submit-btn {
-  width: 100%;
-  padding: 14px;
-  font-size: 18px;
-  background: black;
-  color: white;
-  border: none;
-  margin-top: 30px;
-  cursor: pointer;
-}
-
-audio {
-  width: 100%;
-  margin: 18px 0;
-}
-
-.hidden-controls::-webkit-media-controls {
-  display: none !important;
-}
-</style>
+    .audio-note {
+      text-align: center;
+      font-style: italic;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 
 <body>
 
-<h1>IELTS Listening Test 1 – Section 4</h1>
+  <h1>SECTION 4</h1>
 
-<div class="notice" id="countdownText">
-You now have some time to look at Questions 31–40.  
-The recording will begin in <span id="count">10</span> seconds.
+
+  <div id="countdown" class="countdown">
+    You now have some time to look at Questions 21–30.<br>
+    The recording will begin in <span id="time">10</span> seconds.
 </div>
 
-<audio id="audio" class="hidden-controls">
-  <source src="/public/audio/premium/test1/Premium_IELTS_Listening_Test1_Section4.mp3" type="audio/mpeg">
-</audio>
+  <!-- Audio (controls shown but locked via pointer-events) -->
+  <audio id="audio" controls preload="auto" controlslist="nodownload noplaybackrate">
+    <source src="/public/audio/premium/test1/Premium_IELTS_Listening_Test1_Section4.mp3" type="audio/mpeg">
+  </audio>
 
-<div class="inst-block">
-<strong>Questions 31–40</strong><br>
-Complete the notes below.<br>
-<strong>Write ONE WORD AND/OR A NUMBER for each answer.</strong>
+  <div id="audioNote" class="audio-note" style="display:none;">
+    The recording is ready. Click the play button to start.
+  </div>
+
+  <!-- Questions 31–40 -->
+  <div class="inst-block">
+    <strong>Questions 31–40</strong><br>
+    Complete the notes below.<br>
+    Write <strong>ONE WORD AND/OR A NUMBER</strong> for each answer.
 </div>
 
-<div class="section-title"><strong>Sustainable Cities – Key Features</strong></div>
-
-<div class="question">31. reduce ________ emissions.</div>
-<input id="q31" type="text">
-
-<div class="question">32. more ________ and affordable.</div>
-<input id="q32" type="text">
-
-<div class="question">33. solar and ________ power.</div>
-<input id="q33" type="text">
-
-<div class="question">34. parks and ________.</div>
-<input id="q34" type="text">
-
-<div class="question">35. limit urban ________.</div>
-<input id="q35" type="text">
-
-<div class="section-title"><strong>Sustainable Infrastructure</strong></div>
-
-<div class="question">36. reduce water ________.</div>
-<input id="q36" type="text">
-
-<div class="question">37. recycling and ________.</div>
-<input id="q37" type="text">
-
-<div class="question">38. pedestrian and ________ friendly streets.</div>
-<input id="q38" type="text">
-
-<div class="question">39. traffic ________.</div>
-<input id="q39" type="text">
-
-<div class="question">40. local ________.</div>
-<input id="q40" type="text">
+<div class="question">Sustainable Cities</div>
+  <ul class="notes">
+    <li>• One major goal of sustainable cities is to reduce <strong>31.</strong> <input type="text" name="q31" style="max-width:220px; display:inline-block;"> emissions.</li>
+    <li>• Public transport systems are designed to be more <strong>32.</strong> <input type="text" name="q32" style="max-width:220px; display:inline-block;"> and affordable</li>
+    <li>• Many cities encourage the use of renewable energy, such as solar and <strong>33.</strong> <input type="text" name="q33" style="max-width:220px; display:inline-block;"> power.</li>
+    <li>• Urban planners aim to increase access to green spaces, including parks and <strong>34.</strong> <input type="text" name="q34" style="max-width:220px; display:inline-block;"> .</li>
+    <li>• High-density housing helps to limit urban <strong>35.</strong> <input type="text" name="q35" style="max-width:220px; display:inline-block;"> .</li>
+  </ul>
+      
+<div class="question">Sustainable Infrastructure</div>
+  <ul class="notes">
+    <li>• Modern buildings often include systems to reduce water <strong>36.</strong> <input type="text" name="q36" style="max-width:220px; display:inline-block;"> .</li>
+    <li>• Waste management focuses on recycling and <strong>37.</strong> <input type="text" name="q37" style="max-width:220px; display:inline-block;"> .</li>
+    <li>• Sustainable cities prioritise pedestrian and <strong>38.</strong> <input type="text" name="q38" style="max-width:220px; display:inline-block;"> friendly streets.</li>
+    <li>• Smart technology is used to monitor energy use and traffic <strong>39.</strong> <input type="text" name="q39" style="max-width:220px; display:inline-block;"> .</li>
+    <li>• Long-term planning requires cooperation between governments and local <strong>40.</strong> <input type="text" name="q40" style="max-width:220px; display:inline-block;"> .</li>
+  </ul>
 
 <button class="submit-btn" onclick="submitTest()">Submit Answers</button>
 
