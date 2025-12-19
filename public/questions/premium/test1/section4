@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IELTS Premium Listening Test 1 – Section 4</title>
+
+<script src="../questions.js"></script>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  max-width: 760px;
+  margin: auto;
+  padding: 24px;
+  line-height: 1.6;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.notice {
+  color: #b00000;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+.inst-block {
+  background: #f3f3f3;
+  border-left: 4px solid #444;
+  padding: 14px;
+  margin: 18px 0;
+}
+
+.section-title {
+  font-weight: bold;
+  margin-top: 22px;
+}
+
+.question {
+  margin-top: 14px;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 6px;
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  font-size: 18px;
+  background: black;
+  color: white;
+  border: none;
+  margin-top: 30px;
+  cursor: pointer;
+}
+
+audio {
+  width: 100%;
+  margin: 18px 0;
+}
+
+.hidden-controls::-webkit-media-controls {
+  display: none !important;
+}
+</style>
+</head>
+
+<body>
+
+<h1>IELTS Listening Test 1 – Section 4</h1>
+
+<div class="notice" id="countdownText">
+You now have some time to look at Questions 31–40.  
+The recording will begin in <span id="count">10</span> seconds.
+</div>
+
+<audio id="audio" class="hidden-controls">
+  <source src="/public/audio/premium/test1/Premium_IELTS_Listening_Test1_Section4.mp3" type="audio/mpeg">
+</audio>
+
+<div class="inst-block">
+<strong>Questions 31–40</strong><br>
+Complete the notes below.<br>
+<strong>Write ONE WORD AND/OR A NUMBER for each answer.</strong>
+</div>
+
+<div class="section-title"><strong>Sustainable Cities – Key Features</strong></div>
+
+<div class="question">31. reduce ________ emissions.</div>
+<input id="q31" type="text">
+
+<div class="question">32. more ________ and affordable.</div>
+<input id="q32" type="text">
+
+<div class="question">33. solar and ________ power.</div>
+<input id="q33" type="text">
+
+<div class="question">34. parks and ________.</div>
+<input id="q34" type="text">
+
+<div class="question">35. limit urban ________.</div>
+<input id="q35" type="text">
+
+<div class="section-title"><strong>Sustainable Infrastructure</strong></div>
+
+<div class="question">36. reduce water ________.</div>
+<input id="q36" type="text">
+
+<div class="question">37. recycling and ________.</div>
+<input id="q37" type="text">
+
+<div class="question">38. pedestrian and ________ friendly streets.</div>
+<input id="q38" type="text">
+
+<div class="question">39. traffic ________.</div>
+<input id="q39" type="text">
+
+<div class="question">40. local ________.</div>
+<input id="q40" type="text">
+
+<button class="submit-btn" onclick="submitTest()">Submit Answers</button>
+
+<script>
+const audio = document.getElementById("audio");
+let seconds = 10;
+
+const timer = setInterval(() => {
+  seconds--;
+  document.getElementById("count").innerText = seconds;
+  if (seconds === 0) {
+    clearInterval(timer);
+    document.getElementById("countdownText").innerText =
+      "The recording is now playing.";
+    audio.play().catch(() => {
+      document.getElementById("countdownText").innerText =
+        "The recording is ready. Click play to start.";
+      audio.controls = true;
+    });
+  }
+}, 1000);
+
+// 音频结束 → 自动提交
+audio.addEventListener("ended", () => {
+  submitTest();
+});
+
+function submitTest() {
+  // 这里后续可接评分页
+  window.location.href = "../result.html";
+}
+</script>
+
+</body>
+</html>
