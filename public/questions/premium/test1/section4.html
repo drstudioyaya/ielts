@@ -107,26 +107,41 @@
     <li>• Long-term planning requires cooperation between governments and local <strong>40.</strong> <input type="text" name="q40" style="max-width:220px; display:inline-block;"> .</li>
   </ul>
 
+  
 <button class="submit-btn" onclick="submitTest()">Submit Answers</button>
 
-<script>
-const audio = document.getElementById("audio");
-let seconds = 10;
+  
+  <script>
+    const audio = document.getElementById("audio");
+    const countdownBox = document.getElementById("countdown");
+    const audioNote = document.getElementById("audioNote");
+    let timeLeft = 10;
 
-const timer = setInterval(() => {
-  seconds--;
-  document.getElementById("count").innerText = seconds;
-  if (seconds === 0) {
-    clearInterval(timer);
-    document.getElementById("countdownText").innerText =
-      "The recording is now playing.";
-    audio.play().catch(() => {
-      document.getElementById("countdownText").innerText =
-        "The recording is ready. Click play to start.";
-      audio.controls = true;
+    // Countdown
+    const timer = setInterval(() => {
+      timeLeft--;
+      document.getElementById("time").innerText = timeLeft;
+
+      if (timeLeft === 0) {
+        clearInterval(timer);
+        countdownBox.style.display = "none";
+
+        audio.play().catch(() => {
+          audioNote.style.display = "block";
+          audio.controls = true;
+          audio.style.pointerEvents = "auto"; // 仅在被拦截时允许点击播放
+        });
+      }
+    }, 1000);
+
+    // Prevent pause / seeking (exam mode)
+    audio.addEventListener("pause", () => {
+      if (!audio.ended) audio.play();
     });
-  }
-}, 1000);
+    audio.addEventListener("seeking", () => {
+      audio.currentTime = audio.currentTime;
+    });
+
 
 // 音频结束 → 自动提交
 audio.addEventListener("ended", () => {
