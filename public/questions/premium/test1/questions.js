@@ -180,8 +180,42 @@ window.PREMIUM_TEST1 = {
     }
   },
 
-  section4: { questions: [], answers: {} }
-};
+  
+ /* =========================
+   SECTION 4
+========================== */
+section4: {
+  audio: "/public/audio/premium/test1/Premium_IELTS_Listening_Test1_Section4.mp3",
+
+  questions: [
+    { number: 31, type: "blank", question: "One major goal of sustainable cities is to reduce ________ emissions." },
+    { number: 32, type: "blank", question: "Public transport systems are designed to be more ________ and affordable." },
+    { number: 33, type: "blank", question: "Many cities encourage the use of renewable energy, such as solar and ________ power." },
+    { number: 34, type: "blank", question: "Urban planners aim to increase access to green spaces, including parks and ________." },
+    { number: 35, type: "blank", question: "High-density housing helps to limit urban ________." },
+
+    { number: 36, type: "blank", question: "Modern buildings often include systems to reduce water ________." },
+    { number: 37, type: "blank", question: "Waste management focuses on recycling and ________." },
+    { number: 38, type: "blank", question: "Sustainable cities prioritise pedestrian and ________ friendly streets." },
+    { number: 39, type: "blank", question: "Smart technology is used to monitor energy use and traffic ________." },
+    { number: 40, type: "blank", question: "Long-term planning requires cooperation between governments and local ________." }
+  ],
+
+  answers: {
+    31: ["carbon"],
+    32: ["efficient"],
+    33: ["wind"],
+    34: ["gardens"],
+    35: ["sprawl"],
+
+    36: ["consumption"],
+    37: ["composting"],
+    38: ["cycling"],
+    39: ["flow"],
+    40: ["communities"]
+  }
+},
+
 
 
 /* =========================
