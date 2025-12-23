@@ -106,7 +106,7 @@ document.getElementById("pageTitle").innerText =
    获取题库数据
 -------------------------- */
 const test = window.PREMIUM_TEST1;
-const sectionData = test[`section${sec}`];
+const sectionData = test && test[`section${sec}`];
 
 /* -----------------------
    若 section 没内容 → Coming Soon
@@ -127,18 +127,20 @@ if (!sectionData || !sectionData.questions || sectionData.questions.length === 0
 document.getElementById("audioPlayer").src = sectionData.audio;
 
 /* -----------------------
-   Section 顶部说明
+   顶部说明（按 section 简单显示范围）
 -------------------------- */
+const rangeMap = { "1": "1–10", "2": "11–20", "3": "21–30", "4": "31–40" };
+const qRange = rangeMap[String(sec)] || "";
 document.getElementById("sectionIntro").innerHTML = `
     <div class="inst-block">
-        <div class="inst-title">SECTION ${sec} — Questions 1–10</div>
-        <p>You will hear a conversation. Answer the questions as instructed.</p>
+        <div class="inst-title">SECTION ${sec}${qRange ? ` — Questions ${qRange}` : ""}</div>
+        <p>You will hear a recording. Answer the questions as instructed.</p>
         <p>You will hear the recording <strong>once only</strong>.</p>
     </div>
 `;
 
 /* -----------------------
-   Questions 1–6 指令
+   Questions 1–6 指令（只在 Section 1 显示）
 -------------------------- */
 if (sec === "1") {
     document.getElementById("testForm").innerHTML += `
@@ -156,7 +158,7 @@ const form = document.getElementById("testForm");
 
 sectionData.questions.forEach((q) => {
 
-    /* 插入 Questions 7–10 指令 */
+    /* 插入 Questions 7–10 指令（保持你原逻辑） */
     if (q.number === 7) {
         form.innerHTML += `
             <div class="inst-block">
@@ -175,9 +177,13 @@ sectionData.questions.forEach((q) => {
     if (q.type === "mcq") {
         html += `<div class="options">`;
         q.options.forEach((opt, index) => {
+            const letterLower = String.fromCharCode(97 + index); // a/b/c
             html += `
                 <label>
-                    <input type="radio" name="q${q.number}" value="${opt}" />
+                    <input type="radio"
+                           name="q${q.number}"
+                           value="${opt}"
+                           data-letter="${letterLower}" />
                     ${String.fromCharCode(65 + index)}. ${opt}
                 </label><br>
             `;
@@ -193,7 +199,8 @@ sectionData.questions.forEach((q) => {
 -------------------------- */
 function normalize(text) {
     if (text === undefined || text === null) return "";
-    return String(text)
+    return text
+        .toString()
         .trim()
         .toLowerCase()
         .replace(/[\$]/g, "")
@@ -202,31 +209,52 @@ function normalize(text) {
 }
 
 /* -----------------------
+   本地判分：支持多答案；MCQ 支持“字母答案”或“文本答案”
+-------------------------- */
+function isCorrectLocal(q, userText, userLetterLower) {
+    const accepted = (sectionData.answers && sectionData.answers[q.number]) || [];
+    const acceptedArr = Array.isArray(accepted) ? accepted : [accepted];
+
+    const acceptedNorm = acceptedArr.map(normalize).filter(Boolean);
+    if (acceptedNorm.length === 0) return false;
+
+    // 如果答案看起来全是单个字母（a/b/c/d/e/f...），就用字母对比
+    const looksLikeLetters = acceptedNorm.every(a => /^[a-f]$/.test(a));
+    if (looksLikeLetters) {
+        return acceptedNorm.includes(normalize(userLetterLower));
+    }
+
+    // 否则用文本对比（Section1 的 mcq/blank）
+    const userN = normalize(userText);
+    return acceptedNorm.includes(userN);
+}
+
+/* -----------------------
    提交评分
 -------------------------- */
 function submitAnswers() {
   let score = 0;
-  const answers = {}; // ✅ 收集用户答案（题号 -> 用户输入）
+  const answers = {}; // 题号 -> 用户输入（用于入库）
 
   sectionData.questions.forEach((q) => {
     let user = "";
+    let userLetterLower = "";
 
     if (q.type === "blank") {
       user = document.getElementById(`q${q.number}`)?.value || "";
     }
 
     if (q.type === "mcq") {
-      let chosen = document.querySelector(`input[name="q${q.number}"]:checked`);
-      if (chosen) user = chosen.value || "";
+      const chosen = document.querySelector(`input[name="q${q.number}"]:checked`);
+      if (chosen) {
+        user = chosen.value || "";
+        userLetterLower = chosen.dataset.letter || "";
+      }
     }
 
-    answers[q.number] = user; // ✅ 存下来给API
+    answers[q.number] = user;
 
-    // ✅ 修复：答案不在 q.answer，而在 sectionData.answers[q.number]（数组，多答案）
-    const userN = normalize(user);
-    const accepted = (sectionData.answers && sectionData.answers[q.number]) ? sectionData.answers[q.number] : [];
-    const isCorrect = accepted.some(a => normalize(a) === userN);
-    if (isCorrect) score++;
+    if (isCorrectLocal(q, user, userLetterLower)) score++;
   });
 
   // ✅ 发到 API，拿 attemptId，然后跳转评分页
@@ -236,7 +264,7 @@ function submitAnswers() {
     body: JSON.stringify({
       testId: "premium-test1",
       section: sec,
-      scoreLocal: score,                // 可选：先传本地分数，后面用后端真实分数替换
+      scoreLocal: score,
       answers: answers,
       contact: {
         name: document.querySelector("#name")?.value || "",
@@ -247,12 +275,12 @@ function submitAnswers() {
     })
   })
     .then((r) => r.json())
-    .then(({ attemptId }) => {
-      // ✅ 跳转到评分页
+    .then((data) => {
+      const attemptId = data && data.attemptId;
+      if (!attemptId) throw new Error("No attemptId returned from /api/attempts");
       location.href = `./score.html?attemptId=${encodeURIComponent(attemptId)}`;
     })
     .catch((err) => {
-      // 如果 API 失败，至少先显示本地结果（不影响学生体验）
       console.error(err);
       document.getElementById("result").style.display = "block";
       document.getElementById("result").innerHTML =
