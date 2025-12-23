@@ -1,0 +1,132 @@
+{
+  "version": "scoreResponse.v1",
+  "testId": "premium-test1",
+  "attemptId": "a_20251222_0001",
+  "generatedAt": "2025-12-22T12:00:00-08:00",
+
+  "overall": {
+    "rawCorrect": 27,
+    "rawTotal": 40,
+    "band": 6.5,
+    "cefr": "B2",
+    "timeSpentSec": 2280,
+    "headlineCn": "你目前能抓住大意，但在同义替换与干扰项上丢分明显。"
+  },
+
+  "sections": [
+    {
+      "section": 1,
+      "rawCorrect": 8,
+      "rawTotal": 10,
+      "timeSpentSec": 520,
+      "topErrorLabels": ["SPELLING_MISSPELLING", "FORMAT_NUMBER_FORMAT"]
+    },
+    {
+      "section": 2,
+      "rawCorrect": 6,
+      "rawTotal": 10,
+      "timeSpentSec": 560,
+      "topErrorLabels": ["PARAPHRASE_MISMAP", "LOCATION_LOST_TRACK"]
+    },
+    {
+      "section": 3,
+      "rawCorrect": 7,
+      "rawTotal": 10,
+      "timeSpentSec": 610,
+      "topErrorLabels": ["DISTRACTOR_NEGATION_TURN", "SIGNPOST_MISSED_TRANSITION"]
+    },
+    {
+      "section": 4,
+      "rawCorrect": 6,
+      "rawTotal": 10,
+      "timeSpentSec": 590,
+      "topErrorLabels": ["ENDURANCE_FATIGUE_DROP", "PARAPHRASE_KEYWORD_TRAP"]
+    }
+  ],
+
+  "dimensions": [
+    {
+      "id": "D2",
+      "nameCn": "同义替换识别力",
+      "score": 42,
+      "level": "LOW",
+      "oneLineCn": "能听到信息但对改写映射不稳，容易被题干关键词带走。"
+    },
+    {
+      "id": "D9",
+      "nameCn": "干扰项抗性",
+      "score": 48,
+      "level": "LOW",
+      "oneLineCn": "转折/否定后的最终答案抓取不牢，MCQ易选到前置信息。"
+    },
+    {
+      "id": "D4",
+      "nameCn": "数字/日期/拼写能力",
+      "score": 55,
+      "level": "MED",
+      "oneLineCn": "常见数字格式与拼写细节仍会造成稳定失分。"
+    }
+  ],
+
+  "errorLabels": [
+    {
+      "code": "PARAPHRASE_MISMAP",
+      "nameCn": "同义改写未映射",
+      "count": 6,
+      "impact": "HIGH",
+      "linkedDimensions": ["D2"]
+    },
+    {
+      "code": "DISTRACTOR_NEGATION_TURN",
+      "nameCn": "否定/转折干扰",
+      "count": 4,
+      "impact": "MED",
+      "linkedDimensions": ["D9", "D10"]
+    }
+  ],
+
+  "evidenceSnapshot": [
+    {
+      "titleCn": "证据 1：同义改写未映射",
+      "questionRange": "Q21–Q23",
+      "questionType": "表格填空",
+      "errorLabel": "PARAPHRASE_MISMAP",
+      "whatHappenedCn": "听到原句表达，但没有对应到题干的改写点，填入了语义相近但不匹配的词。",
+      "fixCn": "训练“听到→改写→题干槽位”的映射：先圈题干信息点，再听关键词组而非单词。"
+    },
+    {
+      "titleCn": "证据 2：否定/转折干扰",
+      "questionRange": "Q31–Q32",
+      "questionType": "单选题",
+      "errorLabel": "DISTRACTOR_NEGATION_TURN",
+      "whatHappenedCn": "先给出A后立刻否定并转向B，但选到了A。",
+      "fixCn": "强制抓“转折/否定后一句”的最终结论；做题时延迟落笔 1–2 秒。"
+    }
+  ],
+
+  "actionPlan": [
+    {
+      "dimensionId": "D2",
+      "dimensionNameCn": "同义替换识别力",
+      "todayActions": [
+        "10分钟：做“改写对照”训练——把本套错题相关句子抄出来，写出题干同义替换对应关系（至少5组）。",
+        "10分钟：听同一段音频，第二遍只盯题干信息点，复述对应表达并核对答案。"
+      ],
+      "courseEntryPlaceholder": "Course Entry（placeholder）"
+    },
+    {
+      "dimensionId": "D9",
+      "dimensionNameCn": "干扰项抗性",
+      "todayActions": [
+        "15分钟：专练“转折/否定”——把错题句的but/however/not actually等信号词标出来，写出最终答案句。",
+        "5分钟：复盘本次所有MCQ错因标签，归类到同一错误模式。"
+      ],
+      "courseEntryPlaceholder": "Course Entry（placeholder）"
+    }
+  ],
+
+  "paywall": {
+    "freeVisible": ["overall", "sections", "dimensions_top3", "evidenceSnapshot", "actionPlan_top2"],
+    "locked": ["dimensions_full12", "errorLabels_full", "clusters", "failurePath", "courseEntries_real"]
+  }
+}
