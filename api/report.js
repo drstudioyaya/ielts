@@ -1,7 +1,7 @@
-export default async function handler(req, res) {
-  const attemptId = req.query.attemptId || "mock";
+import { createClient } from "@supabase/supabase-js";
 
-  return res.status(200).json({
+function mockReport(attemptId = "mock") {
+  return {
     version: "scoreResponse.v1",
     attemptId,
     overall: {
@@ -17,6 +17,86 @@ export default async function handler(req, res) {
     errorLabels: [],
     evidenceSnapshot: [],
     actionPlan: [],
-    paywall: { freeVisible: ["overall"], locked: ["dimensions_full12", "errorLabels_full"] }
-  });
+    paywall: {
+      freeVisible: ["overall"],
+      locked: ["dimensions_full12", "errorLabels_full"]
+    }
+  };
+}
+
+export default async function handler(req, res) {
+  try {
+    const attemptId = String(req.query.attemptId || "").trim();
+
+    if (!attemptId) {
+      return res.status(400).json({ error: "missing_attemptId" });
+    }
+
+    // 允许你继续用 ?attemptId=mock 测试
+    if (attemptId === "mock") {
+      return res.status(200).json(mockReport("mock"));
+    }
+
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceKey) {
+      return res.status(500).json({ error: "missing_supabase_env" });
+    }
+
+    const supabase = createClient(supabaseUrl, serviceKey, {
+      auth: { persistSession: false }
+    });
+
+    const { data: attempt, error } = await supabase
+      .from("attempts")
+      .select("*")
+      .eq("id", attemptId)
+      .single();
+
+    if (error || !attempt) {
+      return res.status(404).json({ error: "attempt_not_found", attemptId });
+    }
+
+    // 你目前是“按 section 提交一次”，所以这里先按每个 section 10 题算
+    const section = String(attempt.section || "");
+    const totalBySection = { "1": 10, "2": 10, "3": 10, "4": 10 };
+    const rawTotal = totalBySection[section] ?? 10;
+
+    const rawCorrect = Number(attempt.score_local ?? 0);
+
+    // 这里先不硬算 IELTS band（因为你现在只是 section 局部判分）
+    // 等你把 4 个 section 都跑通、变成 40题整体判分后，再换成真实 band 映射表
+    const report = {
+      version: "scoreResponse.v1",
+      attemptId,
+      overall: {
+        rawCorrect,
+        rawTotal,
+        band: null,
+        cefr: "NA",
+        timeSpentSec: 0,
+        headlineCn: `已生成真实报告：Section ${section} 本地判分 ${rawCorrect}/${rawTotal}（已写入数据库）`
+      },
+      sections: [
+        {
+          section,
+          rawCorrect,
+          rawTotal
+        }
+      ],
+      dimensions: [],
+      errorLabels: [],
+      evidenceSnapshot: [],
+      actionPlan: [],
+      paywall: {
+        freeVisible: ["overall", "sections"],
+        locked: ["dimensions_full12", "errorLabels_full"]
+      }
+    };
+
+    return res.status(200).json(report);
+  } catch (e) {
+    return res.status(500).json({ error: "server_error", message: String(e?.message || e) });
+  }
 }
