@@ -205,31 +205,61 @@ function normalize(text) {
    提交评分
 -------------------------- */
 function submitAnswers() {
-    let score = 0;
+  let score = 0;
+  const answers = {}; // ✅ 收集用户答案（题号 -> 用户输入）
 
-    sectionData.questions.forEach((q) => {
-        let user = "";
+  sectionData.questions.forEach((q) => {
+    let user = "";
 
-        if (q.type === "blank") {
-            user = document.getElementById(`q${q.number}`).value || "";
-        }
+    if (q.type === "blank") {
+      user = document.getElementById(`q${q.number}`).value || "";
+    }
 
-        if (q.type === "mcq") {
-            let chosen = document.querySelector(`input[name="q${q.number}"]:checked`);
-            if (chosen) user = chosen.value || "";
-        }
+    if (q.type === "mcq") {
+      let chosen = document.querySelector(`input[name="q${q.number}"]:checked`);
+      if (chosen) user = chosen.value || "";
+    }
 
-        const userN = normalize(user);
-        const ansN = normalize(q.answer);
+    answers[q.number] = user; // ✅ 存下来给API
 
-        if (userN === ansN) score++;
-    });
+    // 你原来的本地评分（可以先保留，方便你对照）
+    const userN = normalize(user);
+    const ansN = normalize(q.answer);
+    if (userN === ansN) score++;
+  });
 
-    document.getElementById("result").style.display = "block";
-    document.getElementById("result").innerHTML =
+  // ✅ 发到 API，拿 attemptId，然后跳转评分页
+  fetch("/api/attempts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      testId: "premium-test1",
+      section: sec,
+      scoreLocal: score,                // 可选：先传本地分数，后面用后端真实分数替换
+      answers: answers,
+      contact: {
+        name: document.querySelector("#name")?.value || "",
+        wechat: document.querySelector("#wechat")?.value || "",
+        email: document.querySelector("#email")?.value || "",
+        consentMarketing: !!document.querySelector("#consent")?.checked
+      }
+    })
+  })
+    .then((r) => r.json())
+    .then(({ attemptId }) => {
+      // ✅ 跳转到评分页
+      location.href = `./score.html?attemptId=${encodeURIComponent(attemptId)}`;
+    })
+    .catch((err) => {
+      // 如果 API 失败，至少先显示本地结果（不影响学生体验）
+      console.error(err);
+      document.getElementById("result").style.display = "block";
+      document.getElementById("result").innerHTML =
         `<strong>Your Score: ${score} / ${sectionData.questions.length}</strong><br><br>
-         Thank you for completing Section ${sec}.`;
+         (API error, showing local score) Thank you for completing Section ${sec}.`;
+    });
 }
+
 </script>
 
 </body>
