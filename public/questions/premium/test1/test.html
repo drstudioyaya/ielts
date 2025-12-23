@@ -88,7 +88,7 @@
 
 <form id="testForm"></form>
 
-<button class="submit-btn" onclick="submitAnswers()">Submit Answers</button>
+<button class="submit-btn" type="button" onclick="submitAnswers()">Submit Answers</button>
 
 <div id="result"></div>
 
@@ -192,13 +192,13 @@ sectionData.questions.forEach((q) => {
    高级评分函数（容错）
 -------------------------- */
 function normalize(text) {
-    return text
-        .toString()
+    if (text === undefined || text === null) return "";
+    return String(text)
         .trim()
         .toLowerCase()
-        .replace(/[\$]/g, "")            
-        .replace(/(\d+)(th|st|nd|rd)/g, "$1") 
-        .replace(/\s+/g, " ");           
+        .replace(/[\$]/g, "")
+        .replace(/(\d+)(th|st|nd|rd)/g, "$1")
+        .replace(/\s+/g, " ");
 }
 
 /* -----------------------
@@ -212,7 +212,7 @@ function submitAnswers() {
     let user = "";
 
     if (q.type === "blank") {
-      user = document.getElementById(`q${q.number}`).value || "";
+      user = document.getElementById(`q${q.number}`)?.value || "";
     }
 
     if (q.type === "mcq") {
@@ -222,10 +222,11 @@ function submitAnswers() {
 
     answers[q.number] = user; // ✅ 存下来给API
 
-    // 你原来的本地评分（可以先保留，方便你对照）
+    // ✅ 修复：答案不在 q.answer，而在 sectionData.answers[q.number]（数组，多答案）
     const userN = normalize(user);
-    const ansN = normalize(q.answer);
-    if (userN === ansN) score++;
+    const accepted = (sectionData.answers && sectionData.answers[q.number]) ? sectionData.answers[q.number] : [];
+    const isCorrect = accepted.some(a => normalize(a) === userN);
+    if (isCorrect) score++;
   });
 
   // ✅ 发到 API，拿 attemptId，然后跳转评分页
@@ -259,7 +260,6 @@ function submitAnswers() {
          (API error, showing local score) Thank you for completing Section ${sec}.`;
     });
 }
-
 </script>
 
 </body>
