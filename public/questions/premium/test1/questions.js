@@ -207,14 +207,13 @@ section4: {
     33: ["wind"],
     34: ["gardens"],
     35: ["sprawl"],
-
     36: ["consumption"],
     37: ["composting"],
     38: ["cycling"],
     39: ["flow"],
     40: ["communities"]
   }
-},
+};
 
 
 
