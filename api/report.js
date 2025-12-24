@@ -63,9 +63,18 @@ module.exports = async (req, res) => {
     }
 
     const section = String(attempt.section || "");
-    const totalBySection = { "1": 10, "2": 10, "3": 10, "4": 10，"full": 40 };
+
+    // ✅ 关键：full 一套 40 题，其它 section 都是 10 题
+    const totalBySection = { "1": 10, "2": 10, "3": 10, "4": 10, full: 40 };
     const rawTotal = totalBySection[section] ?? 10;
+
     const rawCorrect = Number(attempt.score_local ?? 0);
+
+    // ✅ 关键：headlineCn 对 full 和普通 section 分开写
+    const headlineCn =
+      section === "full"
+        ? `已生成真实报告：Full Test 本地判分 ${rawCorrect}/${rawTotal}（已写入数据库）`
+        : `已生成真实报告：Section ${section} 本地判分 ${rawCorrect}/${rawTotal}（已写入数据库）`;
 
     return res.status(200).json({
       version: "scoreResponse.v1",
@@ -76,7 +85,7 @@ module.exports = async (req, res) => {
         band: null,
         cefr: "NA",
         timeSpentSec: 0,
-        headlineCn: `已生成真实报告：Section ${section} 本地判分 ${rawCorrect}/${rawTotal}（已写入数据库）`,
+        headlineCn,
       },
       sections: [{ section, rawCorrect, rawTotal }],
       dimensions: [],
