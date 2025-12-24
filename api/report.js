@@ -76,11 +76,7 @@ module.exports = async (req, res) => {
         band: null,
         cefr: "NA",
         timeSpentSec: 0,
-        const headlineCn =
-          section === "full"
-            ? `已生成真实报告：Full Test 本地判分 ${rawCorrect}/${rawTotal}（已写入数据库）`
-            : `已生成真实报告：Section ${section} 本地判分 ${rawCorrect}/${rawTotal}（已写入数据库）`;
-
+        headlineCn: `已生成真实报告：Section ${section} 本地判分 ${rawCorrect}/${rawTotal}（已写入数据库）`,
       },
       sections: [{ section, rawCorrect, rawTotal }],
       dimensions: [],
