@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IELTS Premium Listening Test 1 (Full 40 Questions)</title>
+
+<!-- ✅ 载入题库（按你提供的 questions.js 原样使用，不改题目与答案） -->
+<script src="questions.js"></script>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 860px;
+    margin: auto;
+    padding: 22px;
+    line-height: 1.6;
+  }
+  h1 {
+    text-align: center;
+    font-weight: 800;
+    margin: 8px 0 18px;
+  }
+  .inst-block {
+    background: #f7f7f7;
+    border-left: 4px solid #111;
+    padding: 14px 16px;
+    margin: 16px 0;
+  }
+  .inst-title {
+    font-size: 16px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .section {
+    margin-top: 26px;
+    padding-top: 8px;
+    border-top: 2px solid #eee;
+  }
+  .section h2 {
+    margin: 10px 0 8px;
+    font-size: 20px;
+  }
+  .audio-box {
+    margin: 10px 0 14px;
+  }
+  .question {
+    margin-top: 14px;
+    font-weight: 800;
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 8px 10px;
+    margin-top: 6px;
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+  .options {
+    margin-left: 18px;
+    margin-top: 6px;
+  }
+  .options label {
+    display: block;
+    margin: 6px 0;
+  }
+  .submit-btn {
+    width: 100%;
+    background: #000;
+    color: #fff;
+    padding: 13px;
+    margin-top: 22px;
+    font-size: 18px;
+    cursor: pointer;
+    border: none;
+    border-radius: 0;
+  }
+  .submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  #result {
+    display: none;
+    margin-top: 18px;
+    padding: 16px;
+    border: 2px solid #eee;
+    background: #fafafa;
+    font-size: 16px;
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 640px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+  .small {
+    color: #666;
+    font-size: 13px;
+    margin-top: 6px;
+  }
+  .err {
+    color: #b00020;
+    font-weight: 700;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>IELTS Premium Listening Test 1 — Full Test (40 Questions)</h1>
+
+<div class="inst-block">
+  <div class="inst-title">Instructions</div>
+  <p>You will hear each recording <strong>once only</strong>. Answer the questions as instructed.</p>
+  <p class="small">
+    Marking follows IELTS-style rules:
+    case-insensitive; extra leading/trailing punctuation ignored; currency symbols ignored;
+    and strict word/format limits are enforced (answers that exceed the stated word limits receive <strong>0</strong>).
+  </p>
+</div>
+
+<!-- 可选：联系方式（不会影响做题；你要收集就留着） -->
+<div class="inst-block">
+  <div class="inst-title">Optional contact (for follow-up)</div>
+  <div class="grid-2">
+    <div>
+      <label class="small">Name</label>
+      <input id="name" type="text" placeholder="Your name (optional)" />
+    </div>
+    <div>
+      <label class="small">WeChat</label>
+      <input id="wechat" type="text" placeholder="WeChat ID (optional)" />
+    </div>
+  </div>
+  <div style="margin-top:10px;">
+    <label class="small">Email</label>
+    <input id="email" type="text" placeholder="Email (optional)" />
+  </div>
+  <div style="margin-top:10px;">
+    <label>
+      <input id="consent" type="checkbox" />
+      I agree to receive study tips and updates.
+    </label>
+  </div>
+</div>
+
+<form id="fullForm"></form>
+
+<button id="submitBtn" class="submit-btn" type="button">Submit Full Test (40 Questions)</button>
+
+<div id="result"></div>
+
+<script>
+(function () {
+  // -----------------------------
+  // Load test data (no edits)
+  // -----------------------------
+  const test = window.PREMIUM_TEST1;
+  if (!test || !test.section1 || !test.section2 || !test.section3 || !test.section4) {
+    document.getElementById("result").style.display = "block";
+    document.getElementById("result").innerHTML =
+      `<div class="err">Error: Question bank not loaded. Make sure questions.js is in the same folder as full.html.</div>`;
+    return;
+  }
+
+  const SECTIONS = [
+    { key: "section1", title: "Section 1", qRangeText: "Questions 1–10" },
+    { key: "section2", title: "Section 2", qRangeText: "Questions 11–20" },
+    { key: "section3", title: "Section 3", qRangeText: "Questions 21–30" },
+    { key: "section4", title: "Section 4", qRangeText: "Questions 31–40" }
+  ];
+
+  const form = document.getElementById("fullForm");
+
+  // -----------------------------
+  // IELTS-like normalization (strict enough)
+  //   - case-insensitive
+  //   - trim + collapse spaces
+  //   - ignore currency symbols/commas
+  //   - ignore leading/trailing punctuation
+  //   - allow ordinal suffix removal (14th -> 14)
+  //   - allow time dot/colon normalization (8.30 -> 8:30)
+  // -----------------------------
+  function normalizeForMarking(text) {
+    let s = (text ?? "").toString().trim().toLowerCase();
+
+    // remove leading/trailing punctuation
+    s = s.replace(/^[\s"'“”‘’()\[\]{}.,;:!?]+|[\s"'“”‘’()\[\]{}.,;:!?]+$/g, "");
+
+    // currency & separators
+    s = s.replace(/[$£,]/g, "");
+
+    // collapse whitespace
+    s = s.replace(/\s+/g, " ");
+
+    // ordinal suffix
+    s = s.replace(/(\d+)(th|st|nd|rd)\b/g, "$1");
+
+    // time normalize: 8.30 or 8:30 -> 8:30
+    s = s.replace(/\b(\d{1,2})[.:](\d{2})\b/g, "$1:$2");
+
+    return s;
+  }
+
+  // IELTS word count (hyphenated stays as one token)
+  function countWordsIELTS(raw) {
+    const s = (raw ?? "").toString().trim();
+    if (!s) return 0;
+    const compact = s.replace(/\s+/g, " ");
+    return compact.split(" ").filter(Boolean).length;
+  }
+
+  function isAllSingleLetters(list) {
+    return Array.isArray(list) && list.length > 0 && list.every(a => /^[a-f]$/i.test((a ?? "").toString().trim()));
+  }
+
+  // Strict IELTS rule mapping by question number and accepted answer shape
+  function getIELTSRule(qNumber, acceptedAnswers, qType) {
+    const n = Number(qNumber);
+    const rule = { maxWords: null, mustBeSingleLetter: false, isMCQLetter: false };
+
+    // If accepted answers are single letters (A-F), enforce single letter
+    if (isAllSingleLetters(acceptedAnswers)) {
+      rule.mustBeSingleLetter = true;
+      rule.maxWords = 1;
+      // if it's mcq, we store letter
+      if (qType === "mcq") rule.isMCQLetter = true;
+      return rule;
+    }
+
+    // Word/number limits based on IELTS-style instructions
+    // S1 Q1-6: NO MORE THAN TWO WORDS AND/OR A NUMBER
+    if (n >= 1 && n <= 6) rule.maxWords = 2;
+
+    // S2 Q15-16: treated as NO MORE THAN ONE WORD AND/OR A NUMBER (time/id)
+    if (n === 15 || n === 16) rule.maxWords = 1;
+
+    // S3 Q27-30: NO MORE THAN ONE WORD AND/OR A NUMBER
+    if (n >= 27 && n <= 30) rule.maxWords = 1;
+
+    // S4 Q31-40: NO MORE THAN ONE WORD AND/OR A NUMBER
+    if (n >= 31 && n <= 40) rule.maxWords = 1;
+
+    return rule;
+  }
+
+  function passesIELTSRule(userRaw, rule) {
+    const raw = (userRaw ?? "").toString().trim();
+    if (!raw) return true; // empty allowed; will be marked incorrect later
+
+    if (rule.mustBeSingleLetter) {
+      const s = normalizeForMarking(raw);
+      return /^[a-f]$/i.test(s);
+    }
+
+    if (rule.maxWords != null) {
+      const wc = countWordsIELTS(raw);
+      return wc <= rule.maxWords;
+    }
+
+    return true;
+  }
+
+  function isCorrect(userInput, acceptedAnswers) {
+    const userN = normalizeForMarking(userInput);
+    const list = Array.isArray(acceptedAnswers) ? acceptedAnswers : [];
+
+    return list.some(ans => {
+      const ansN = normalizeForMarking(ans);
+
+      // pure numeric equivalence (05 == 5)
+      if (/^\d+$/.test(userN) && /^\d+$/.test(ansN)) {
+        return Number(userN) === Number(ansN);
+      }
+      return ansN === userN;
+    });
+  }
+
+  // -----------------------------
+  // Render sections + questions
+  // -----------------------------
+  function render() {
+    SECTIONS.forEach(({ key, title, qRangeText }) => {
+      const sec = test[key];
+      const secDiv = document.createElement("div");
+      secDiv.className = "section";
+
+      // Header
+      secDiv.innerHTML = `
+        <h2>${title} — ${qRangeText}</h2>
+        <div class="audio-box">
+          <audio controls style="width:100%" src="${sec.audio}"></audio>
+        </div>
+      `;
+
+      // Instructions per section (display only; scoring rule enforced by number mapping)
+      const inst = document.createElement("div");
+      inst.className = "inst-block";
+
+      if (key === "section1") {
+        inst.innerHTML = `
+          <div class="inst-title">SECTION 1 Instructions</div>
+          <p>Questions 1–6: <strong>Write NO MORE THAN TWO WORDS AND/OR A NUMBER</strong> for each answer.</p>
+          <p>Questions 7–10: <strong>Choose the correct letter A, B or C.</strong></p>
+        `;
+      } else if (key === "section2") {
+        inst.innerHTML = `
+          <div class="inst-title">SECTION 2 Instructions</div>
+          <p>Questions 11–14: <strong>Choose the correct letter A–F.</strong></p>
+          <p>Questions 15–16: <strong>Write NO MORE THAN ONE WORD AND/OR A NUMBER</strong> for each answer.</p>
+          <p>Questions 17–20: <strong>Choose the correct letter A, B or C.</strong></p>
+        `;
+      } else if (key === "section3") {
+        inst.innerHTML = `
+          <div class="inst-title">SECTION 3 Instructions</div>
+          <p>Questions 21–23: <strong>Choose the correct letter A, B or C.</strong></p>
+          <p>Questions 24–26: <strong>Choose the correct letter A–D.</strong></p>
+          <p>Questions 27–30: <strong>Write NO MORE THAN ONE WORD AND/OR A NUMBER</strong> for each answer.</p>
+        `;
+      } else {
+        inst.innerHTML = `
+          <div class="inst-title">SECTION 4 Instructions</div>
+          <p>Questions 31–40: <strong>Write NO MORE THAN ONE WORD AND/OR A NUMBER</strong> for each answer.</p>
+        `;
+      }
+
+      secDiv.appendChild(inst);
+
+      // Questions
+      sec.questions.forEach(q => {
+        const accepted = sec.answers?.[q.number] || [];
+        const rule = getIELTSRule(q.number, accepted, q.type);
+
+        const block = document.createElement("div");
+        block.dataset.qnum = String(q.number);
+
+        let html = `<div class="question">${q.number}. ${q.question}</div>`;
+
+        if (q.type === "blank") {
+          const placeholder = rule.mustBeSingleLetter ? "Enter a single letter (e.g., B)" : "";
+          html += `<input type="text" id="q${q.number}" placeholder="${placeholder}" />`;
+          if (rule.maxWords != null && !rule.mustBeSingleLetter) {
+            html += `<div class="small">Max words: ${rule.maxWords}</div>`;
+          }
+        }
+
+        if (q.type === "mcq") {
+          html += `<div class="options">`;
+
+          // If accepted is letters, store A/B/C (or A/B/C) as value.
+          // Else store option text as value (Section 1).
+          q.options.forEach((opt, idx) => {
+            const letter = String.fromCharCode(65 + idx); // A B C
+            const value = rule.isMCQLetter ? letter.toLowerCase() : opt;
+
+            html += `
+              <label>
+                <input type="radio" name="q${q.number}" value="${value}" />
+                ${letter}. ${opt}
+              </label>
+            `;
+          });
+
+          html += `</div>`;
+        }
+
+        block.innerHTML = html;
+        secDiv.appendChild(block);
+      });
+
+      form.appendChild(secDiv);
+    });
+  }
+
+  render();
+
+  // -----------------------------
+  // Submit: score all 40, create 1 attempt, redirect to score.html
+  // -----------------------------
+  const submitBtn = document.getElementById("submitBtn");
+
+  async function submitFullAttempt() {
+    submitBtn.disabled = true;
+
+    const answers = {};
+    let correct = 0;
+    const total = 40;
+
+    // Loop all sections/questions in order
+    SECTIONS.forEach(({ key }) => {
+      const sec = test[key];
+      sec.questions.forEach(q => {
+        let user = "";
+
+        if (q.type === "blank") {
+          user = document.getElementById(`q${q.number}`)?.value || "";
+        } else if (q.type === "mcq") {
+          const chosen = document.querySelector(`input[name="q${q.number}"]:checked`);
+          if (chosen) user = chosen.value || "";
+        }
+
+        answers[q.number] = user;
+
+        const accepted = sec.answers?.[q.number] || [];
+        const rule = getIELTSRule(q.number, accepted, q.type);
+        const okRule = passesIELTSRule(user, rule);
+        const ok = okRule && isCorrect(user, accepted);
+
+        if (ok) correct++;
+      });
+    });
+
+    // Local feedback (always)
+    const result = document.getElementById("result");
+    result.style.display = "block";
+    result.innerHTML = `<strong>Submitting...</strong><div class="small">Local score: ${correct} / ${total}</div>`;
+
+    try {
+      const payload = {
+        testId: "premium-test1",
+        section: "full",          // ✅ 一个 attempt = 40题
+        scoreLocal: correct,
+        answers: answers,
+        contact: {
+          name: document.querySelector("#name")?.value || "",
+          wechat: document.querySelector("#wechat")?.value || "",
+          email: document.querySelector("#email")?.value || "",
+          consentMarketing: !!document.querySelector("#consent")?.checked
+        }
+      };
+
+      const r = await fetch("/api/attempts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await r.json();
+
+      if (!r.ok) {
+        throw new Error(data?.error || `API error (${r.status})`);
+      }
+
+      const attemptId = data.attemptId;
+      console.log({ attemptId });
+
+      // ✅ 跳转评分页（沿用你现在的 score.html）
+      location.href = `./score.html?attemptId=${encodeURIComponent(attemptId)}`;
+
+    } catch (err) {
+      console.error(err);
+      result.innerHTML =
+        `<div class="err">Submit failed: ${String(err.message || err)}</div>
+         <div class="small">Local score preserved: ${correct} / ${total}</div>`;
+      submitBtn.disabled = false;
+    }
+  }
+
+  submitBtn.addEventListener("click", submitFullAttempt);
+})();
+</script>
+
+</body>
+</html>
