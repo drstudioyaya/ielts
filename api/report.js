@@ -24,22 +24,21 @@ function mockReport(attemptId = "mock") {
   };
 }
 
+function safeObj(v) {
+  if (!v) return null;
+  if (typeof v === "object") return v;
+  try { return JSON.parse(v); } catch { return null; }
+}
+
 module.exports = async (req, res) => {
   try {
     const attemptId = String(req.query.attemptId || "").trim();
+    if (!attemptId) return res.status(400).json({ error: "missing_attemptId" });
 
-    if (!attemptId) {
-      return res.status(400).json({ error: "missing_attemptId" });
-    }
-
-    // 继续允许 mock
-    if (attemptId === "mock") {
-      return res.status(200).json(mockReport("mock"));
-    }
+    if (attemptId === "mock") return res.status(200).json(mockReport("mock"));
 
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
     if (!supabaseUrl || !serviceKey) {
       return res.status(500).json({
         error: "missing_supabase_env",
@@ -63,17 +62,26 @@ module.exports = async (req, res) => {
     }
 
     const section = String(attempt.section || "");
-
-    // ✅ 关键：full 一套 40 题，其它 section 都是 10 题
-    const totalBySection = { "1": 10, "2": 10, "3": 10, "4": 10, full: 40 };
-    const rawTotal = totalBySection[section] ?? 10;
-
     const rawCorrect = Number(attempt.score_local ?? 0);
+    const rawTotal = section === "full" ? 40 : 10;
 
-    // ✅ 关键：headlineCn 对 full 和普通 section 分开写
-    const headlineCn =
+    // ✅ 如果 full，尝试从 answers._meta.perSection 读出分项
+    const answersObj = safeObj(attempt.answers);
+    const perSection = answersObj?._meta?.perSection || null;
+
+    let sections = [{ section, rawCorrect, rawTotal }];
+
+    if (section === "full" && perSection) {
+      sections = ["1", "2", "3", "4"].map((k) => ({
+        section: k,
+        rawCorrect: Number(perSection?.[k]?.rawCorrect ?? 0),
+        rawTotal: Number(perSection?.[k]?.rawTotal ?? 10),
+      }));
+    }
+
+    const headline =
       section === "full"
-        ? `已生成真实报告：Full Test 本地判分 ${rawCorrect}/${rawTotal}（已写入数据库）`
+        ? `已生成真实报告：Full Test 本地判分 ${rawCorrect}/40（已写入数据库）`
         : `已生成真实报告：Section ${section} 本地判分 ${rawCorrect}/${rawTotal}（已写入数据库）`;
 
     return res.status(200).json({
@@ -85,9 +93,9 @@ module.exports = async (req, res) => {
         band: null,
         cefr: "NA",
         timeSpentSec: 0,
-        headlineCn,
+        headlineCn: headline,
       },
-      sections: [{ section, rawCorrect, rawTotal }],
+      sections,
       dimensions: [],
       errorLabels: [],
       evidenceSnapshot: [],
