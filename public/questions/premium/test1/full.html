@@ -9,100 +9,29 @@
 <script src="questions.js"></script>
 
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    max-width: 860px;
-    margin: auto;
-    padding: 22px;
-    line-height: 1.6;
-  }
-  h1 {
-    text-align: center;
-    font-weight: 800;
-    margin: 8px 0 18px;
-  }
-  .inst-block {
-    background: #f7f7f7;
-    border-left: 4px solid #111;
-    padding: 14px 16px;
-    margin: 16px 0;
-  }
-  .inst-title {
-    font-size: 16px;
-    font-weight: 800;
-    margin-bottom: 6px;
-  }
-  .section {
-    margin-top: 26px;
-    padding-top: 8px;
-    border-top: 2px solid #eee;
-  }
-  .section h2 {
-    margin: 10px 0 8px;
-    font-size: 20px;
-  }
-  .audio-box {
-    margin: 10px 0 14px;
-  }
-  .question {
-    margin-top: 14px;
-    font-weight: 800;
-  }
-  input[type="text"] {
-    width: 100%;
-    padding: 8px 10px;
-    margin-top: 6px;
-    font-size: 15px;
-    box-sizing: border-box;
-  }
-  .options {
-    margin-left: 18px;
-    margin-top: 6px;
-  }
-  .options label {
-    display: block;
-    margin: 6px 0;
-  }
-  .submit-btn {
-    width: 100%;
-    background: #000;
-    color: #fff;
-    padding: 13px;
-    margin-top: 22px;
-    font-size: 18px;
-    cursor: pointer;
-    border: none;
-    border-radius: 0;
-  }
-  .submit-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-  #result {
-    display: none;
-    margin-top: 18px;
-    padding: 16px;
-    border: 2px solid #eee;
-    background: #fafafa;
-    font-size: 16px;
-  }
-  .grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  @media (max-width: 640px) {
-    .grid-2 { grid-template-columns: 1fr; }
-  }
-  .small {
-    color: #666;
-    font-size: 13px;
-    margin-top: 6px;
-  }
-  .err {
-    color: #b00020;
-    font-weight: 700;
-  }
+  body { font-family: Arial, sans-serif; max-width: 860px; margin: auto; padding: 22px; line-height: 1.6; }
+  h1 { text-align: center; font-weight: 800; margin: 8px 0 18px; }
+  .inst-block { background: #f7f7f7; border-left: 4px solid #111; padding: 14px 16px; margin: 16px 0; }
+  .inst-title { font-size: 16px; font-weight: 800; margin-bottom: 6px; }
+  .section { margin-top: 26px; padding-top: 8px; border-top: 2px solid #eee; }
+  .section h2 { margin: 10px 0 8px; font-size: 20px; }
+  .audio-box { margin: 10px 0 14px; }
+  .question { margin-top: 14px; font-weight: 800; }
+  input[type="text"] { width: 100%; padding: 8px 10px; margin-top: 6px; font-size: 15px; box-sizing: border-box; }
+  .options { margin-left: 18px; margin-top: 6px; }
+  .options label { display: block; margin: 6px 0; }
+  .submit-btn { width: 100%; background: #000; color: #fff; padding: 13px; margin-top: 22px; font-size: 18px; cursor: pointer; border: none; border-radius: 0; }
+  .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  #result { display: none; margin-top: 18px; padding: 16px; border: 2px solid #eee; background: #fafafa; font-size: 16px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
+  .small { color: #666; font-size: 13px; margin-top: 6px; }
+  .err { color: #b00020; font-weight: 700; }
+
+  /* Map */
+  .map-wrap { margin: 10px 0 6px; }
+  .map-img { max-width: 100%; border: 1px solid #ddd; display: none; }
+  .map-fallback { display: none; }
 </style>
 </head>
 
@@ -153,9 +82,6 @@
 
 <script>
 (function () {
-  // -----------------------------
-  // Load test data (no edits)
-  // -----------------------------
   const test = window.PREMIUM_TEST1;
   if (!test || !test.section1 || !test.section2 || !test.section3 || !test.section4) {
     document.getElementById("result").style.display = "block";
@@ -174,13 +100,7 @@
   const form = document.getElementById("fullForm");
 
   // -----------------------------
-  // IELTS-like normalization (strict enough)
-  //   - case-insensitive
-  //   - trim + collapse spaces
-  //   - ignore currency symbols/commas
-  //   - ignore leading/trailing punctuation
-  //   - allow ordinal suffix removal (14th -> 14)
-  //   - allow time dot/colon normalization (8.30 -> 8:30)
+  // IELTS-like normalization
   // -----------------------------
   function normalizeForMarking(text) {
     let s = (text ?? "").toString().trim().toLowerCase();
@@ -224,16 +144,14 @@
     if (isAllSingleLetters(acceptedAnswers)) {
       rule.mustBeSingleLetter = true;
       rule.maxWords = 1;
-      // if it's mcq, we store letter
       if (qType === "mcq") rule.isMCQLetter = true;
       return rule;
     }
 
-    // Word/number limits based on IELTS-style instructions
     // S1 Q1-6: NO MORE THAN TWO WORDS AND/OR A NUMBER
     if (n >= 1 && n <= 6) rule.maxWords = 2;
 
-    // S2 Q15-16: treated as NO MORE THAN ONE WORD AND/OR A NUMBER (time/id)
+    // S2 Q15-16: NO MORE THAN ONE WORD AND/OR A NUMBER
     if (n === 15 || n === 16) rule.maxWords = 1;
 
     // S3 Q27-30: NO MORE THAN ONE WORD AND/OR A NUMBER
@@ -247,7 +165,7 @@
 
   function passesIELTSRule(userRaw, rule) {
     const raw = (userRaw ?? "").toString().trim();
-    if (!raw) return true; // empty allowed; will be marked incorrect later
+    if (!raw) return true;
 
     if (rule.mustBeSingleLetter) {
       const s = normalizeForMarking(raw);
@@ -278,6 +196,50 @@
   }
 
   // -----------------------------
+  // Map image loader (Section 2)
+  // 放一张地图在同目录即可：test1/ 目录下常见命名我都帮你试
+  // -----------------------------
+  function injectSection2Map(secDiv) {
+    const wrap = document.createElement("div");
+    wrap.className = "map-wrap";
+    wrap.innerHTML = `
+      <div class="small"><strong>Map (Questions 11–14)</strong></div>
+      <img id="s2map" class="map-img" alt="Section 2 Map" />
+      <div id="s2mapFallback" class="small map-fallback">
+        (Map image not found. Put the map image in the same folder as full.html and name it one of:
+        <code>section2-map.png</code>, <code>section2-map.jpg</code>, <code>map.png</code>, <code>map.jpg</code>)
+      </div>
+    `;
+    secDiv.appendChild(wrap);
+
+    const img = wrap.querySelector("#s2map");
+    const fallback = wrap.querySelector("#s2mapFallback");
+
+    const candidates = [
+      "./section2-map.png",
+      "./section2-map.jpg",
+      "./section2_map.png",
+      "./section2_map.jpg",
+      "./map.png",
+      "./map.jpg"
+    ];
+
+    let idx = 0;
+    function tryNext() {
+      if (idx >= candidates.length) {
+        fallback.style.display = "block";
+        return;
+      }
+      img.src = candidates[idx++];
+    }
+
+    img.onload = () => { img.style.display = "block"; };
+    img.onerror = () => { tryNext(); };
+
+    tryNext();
+  }
+
+  // -----------------------------
   // Render sections + questions
   // -----------------------------
   function render() {
@@ -285,8 +247,8 @@
       const sec = test[key];
       const secDiv = document.createElement("div");
       secDiv.className = "section";
+      secDiv.dataset.sectionKey = key;
 
-      // Header
       secDiv.innerHTML = `
         <h2>${title} — ${qRangeText}</h2>
         <div class="audio-box">
@@ -294,7 +256,6 @@
         </div>
       `;
 
-      // Instructions per section (display only; scoring rule enforced by number mapping)
       const inst = document.createElement("div");
       inst.className = "inst-block";
 
@@ -324,10 +285,13 @@
           <p>Questions 31–40: <strong>Write NO MORE THAN ONE WORD AND/OR A NUMBER</strong> for each answer.</p>
         `;
       }
-
       secDiv.appendChild(inst);
 
-      // Questions
+      // ✅ 地图图（仅 Section 2）
+      if (key === "section2") {
+        injectSection2Map(secDiv);
+      }
+
       sec.questions.forEach(q => {
         const accepted = sec.answers?.[q.number] || [];
         const rule = getIELTSRule(q.number, accepted, q.type);
@@ -340,18 +304,13 @@
         if (q.type === "blank") {
           const placeholder = rule.mustBeSingleLetter ? "Enter a single letter (e.g., B)" : "";
           html += `<input type="text" id="q${q.number}" placeholder="${placeholder}" />`;
-          if (rule.maxWords != null && !rule.mustBeSingleLetter) {
-            html += `<div class="small">Max words: ${rule.maxWords}</div>`;
-          }
+          /* ✅ 你不想显示 Max words，这里就不再输出提示 */
         }
 
         if (q.type === "mcq") {
           html += `<div class="options">`;
-
-          // If accepted is letters, store A/B/C (or A/B/C) as value.
-          // Else store option text as value (Section 1).
           q.options.forEach((opt, idx) => {
-            const letter = String.fromCharCode(65 + idx); // A B C
+            const letter = String.fromCharCode(65 + idx);
             const value = rule.isMCQLetter ? letter.toLowerCase() : opt;
 
             html += `
@@ -361,7 +320,6 @@
               </label>
             `;
           });
-
           html += `</div>`;
         }
 
@@ -377,6 +335,7 @@
 
   // -----------------------------
   // Submit: score all 40, create 1 attempt, redirect to score.html
+  // 同时把每个 section 的分数塞到 answers._meta（不改数据库结构）
   // -----------------------------
   const submitBtn = document.getElementById("submitBtn");
 
@@ -384,10 +343,16 @@
     submitBtn.disabled = true;
 
     const answers = {};
+    const perSection = {
+      "1": { rawCorrect: 0, rawTotal: 10 },
+      "2": { rawCorrect: 0, rawTotal: 10 },
+      "3": { rawCorrect: 0, rawTotal: 10 },
+      "4": { rawCorrect: 0, rawTotal: 10 }
+    };
+
     let correct = 0;
     const total = 40;
 
-    // Loop all sections/questions in order
     SECTIONS.forEach(({ key }) => {
       const sec = test[key];
       sec.questions.forEach(q => {
@@ -407,11 +372,20 @@
         const okRule = passesIELTSRule(user, rule);
         const ok = okRule && isCorrect(user, accepted);
 
-        if (ok) correct++;
+        if (ok) {
+          correct++;
+
+          // section bucket by question number
+          const n = Number(q.number);
+          const bucket = n <= 10 ? "1" : n <= 20 ? "2" : n <= 30 ? "3" : "4";
+          perSection[bucket].rawCorrect += 1;
+        }
       });
     });
 
-    // Local feedback (always)
+    // attach meta
+    answers._meta = { perSection };
+
     const result = document.getElementById("result");
     result.style.display = "block";
     result.innerHTML = `<strong>Submitting...</strong><div class="small">Local score: ${correct} / ${total}</div>`;
@@ -419,7 +393,7 @@
     try {
       const payload = {
         testId: "premium-test1",
-        section: "full",          // ✅ 一个 attempt = 40题
+        section: "full",
         scoreLocal: correct,
         answers: answers,
         contact: {
@@ -437,15 +411,10 @@
       });
 
       const data = await r.json();
-
-      if (!r.ok) {
-        throw new Error(data?.error || `API error (${r.status})`);
-      }
+      if (!r.ok) throw new Error(data?.error || `API error (${r.status})`);
 
       const attemptId = data.attemptId;
       console.log({ attemptId });
-
-      // ✅ 跳转评分页（沿用你现在的 score.html）
       location.href = `./score.html?attemptId=${encodeURIComponent(attemptId)}`;
 
     } catch (err) {
