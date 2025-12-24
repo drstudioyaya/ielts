@@ -1,7 +1,7 @@
 /**
  * PREMIUM – IELTS Listening Test 1
  * Unified Question Bank + Answer Checking Logic
- * （支持多答案、同义词、格式容错）
+ * (严格按 IELTS “字数限制 + 大小写不敏感 + 常见日期/时间格式”判分)
  */
 
 window.PREMIUM_TEST1 = {
@@ -23,19 +23,19 @@ window.PREMIUM_TEST1 = {
         number: 7,
         type: "mcq",
         question: "Which programme is suitable for Ethan?",
-        options: ["Adventure Camp", "Explorer Camp", "Science Camp"]
+        options: ["Adventure Camp", "Explorer Camp", "Science Camp"],
       },
       {
         number: 8,
         type: "mcq",
         question: "How long does the programme last?",
-        options: ["One week", "Two weeks", "Three weeks"]
+        options: ["One week", "Two weeks", "Three weeks"],
       },
       {
         number: 9,
         type: "mcq",
         question: "How will the woman pay?",
-        options: ["By credit card", "By bank transfer", "In cash"]
+        options: ["By credit card", "By bank transfer", "In cash"],
       },
       {
         number: 10,
@@ -44,23 +44,48 @@ window.PREMIUM_TEST1 = {
         options: [
           "A confirmation letter",
           "A payment receipt",
-          "An email containing bank details"
-        ]
-      }
+          "An email containing bank details",
+        ],
+      },
     ],
 
     answers: {
       1: ["ethan park"],
-      2: ["9"],
-      3: ["july 14th", "14 july"],
+
+      // IELTS: ONE WORD AND/OR A NUMBER 允许数字写成单词（但会计入字数）
+      2: ["9", "nine"],
+
+      // 日期：接受常见书写 + 数字/斜杠/连字符（含前导0）
+      3: [
+        "july 14th",
+        "july 14",
+        "14 july",
+        "14th july",
+        "7/14",
+        "07/14",
+        "14/7",
+        "14/07",
+        "7-14",
+        "07-14",
+        "14-7",
+        "14-07",
+      ],
+
       4: ["480", "$480"],
       5: ["60", "$60"],
       6: ["peanut"],
+
+      // MCQ：这里按选项文本判分（大小写不敏感）
       7: ["explorer camp"],
       8: ["two weeks"],
       9: ["by bank transfer"],
-      10: ["an email containing bank details"]
-    }
+      10: ["an email containing bank details"],
+    },
+
+    // 严格字数限制：Q1-6 NO MORE THAN TWO WORDS AND/OR A NUMBER
+    limits: {
+      1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2,
+    },
   },
 
   /* =========================
@@ -82,26 +107,26 @@ window.PREMIUM_TEST1 = {
         number: 17,
         type: "mcq",
         question: "What support service does the speaker mention first?",
-        options: ["Accommodation help", "Language support", "IT assistance"]
+        options: ["Accommodation help", "Language support", "IT assistance"],
       },
       {
         number: 18,
         type: "mcq",
         question: "What does the speaker advise students to do during breaks?",
-        options: ["Meet in the cafeteria", "Relax on the lawn", "Visit the student centre"]
+        options: ["Meet in the cafeteria", "Relax on the lawn", "Visit the student centre"],
       },
       {
         number: 19,
         type: "mcq",
         question: "What should students do if they have questions after the tour?",
-        options: ["Email the guide", "Go to the info desk", "Ask another student volunteer"]
+        options: ["Email the guide", "Go to the info desk", "Ask another student volunteer"],
       },
       {
         number: 20,
         type: "mcq",
         question: "What does the speaker suggest students check online?",
-        options: ["The campus map", "Upcoming events", "Course registration dates"]
-      }
+        options: ["The campus map", "Upcoming events", "Course registration dates"],
+      },
     ],
 
     answers: {
@@ -109,13 +134,25 @@ window.PREMIUM_TEST1 = {
       12: ["c"],
       13: ["b"],
       14: ["f"],
+
+      // Q15: ONE WORD AND/OR A NUMBER -> "eight thirty"(2 words) 必须判错
       15: ["8:30", "8.30", "eight-thirty"],
+
+      // Q16: 接受缩写与全称
       16: ["id", "identification"],
+
+      // 17-20：题库答案为字母，前端也允许学生选项文本（见 isCorrectAnswer 内的 mcq 处理）
       17: ["b"],
       18: ["b"],
       19: ["b"],
-      20: ["b"]
-    }
+      20: ["b"],
+    },
+
+    // 严格字数限制：Q15-16 NO MORE THAN ONE WORDS AND/OR A NUMBER
+    limits: {
+      15: 1,
+      16: 1,
+    },
   },
 
   /* =========================
@@ -132,8 +169,8 @@ window.PREMIUM_TEST1 = {
         options: [
           "It is too broad",
           "It lacks sufficient data",
-          "It overlaps with another group’s project"
-        ]
+          "It overlaps with another group’s project",
+        ],
       },
       {
         number: 22,
@@ -142,8 +179,8 @@ window.PREMIUM_TEST1 = {
         options: [
           "Organising group meetings",
           "Collecting survey responses",
-          "Analysing academic sources"
-        ]
+          "Analysing academic sources",
+        ],
       },
       {
         number: 23,
@@ -152,8 +189,8 @@ window.PREMIUM_TEST1 = {
         options: [
           "The current method is too time-consuming",
           "The tutor recommends a different approach",
-          "Previous studies used a similar method"
-        ]
+          "Previous studies used a similar method",
+        ],
       },
 
       { number: 24, type: "blank", question: "Mia →" },
@@ -163,7 +200,7 @@ window.PREMIUM_TEST1 = {
       { number: 27, type: "blank", question: "The final report should be no more than ________ words." },
       { number: 28, type: "blank", question: "Students must submit a draft by ________." },
       { number: 29, type: "blank", question: "At least ________ academic sources are required." },
-      { number: 30, type: "blank", question: "The presentation will last approximately ________ minutes." }
+      { number: 30, type: "blank", question: "The presentation will last approximately ________ minutes." },
     ],
 
     answers: {
@@ -174,10 +211,15 @@ window.PREMIUM_TEST1 = {
       25: ["b"],
       26: ["d"],
       27: ["3000"],
-      28: ["friday"],
+      28: ["friday"],   // Friday 大小写不敏感
       29: ["five", "5"],
-      30: ["ten", "10"]
-    }
+      30: ["ten", "10"],
+    },
+
+    // 严格字数限制：Q27-30 NO MORE THAN ONE WORDS AND/OR A NUMBER
+    limits: {
+      27: 1, 28: 1, 29: 1, 30: 1,
+    },
   },
 
   /* =========================
@@ -197,7 +239,7 @@ window.PREMIUM_TEST1 = {
       { number: 37, type: "blank", question: "Waste management focuses on recycling and ________." },
       { number: 38, type: "blank", question: "Sustainable cities prioritise pedestrian and ________ friendly streets." },
       { number: 39, type: "blank", question: "Smart technology is used to monitor energy use and traffic ________." },
-      { number: 40, type: "blank", question: "Long-term planning requires cooperation between governments and local ________." }
+      { number: 40, type: "blank", question: "Long-term planning requires cooperation between governments and local ________." },
     ],
 
     answers: {
@@ -210,33 +252,69 @@ window.PREMIUM_TEST1 = {
       37: ["composting"],
       38: ["cycling"],
       39: ["flow"],
-      40: ["communities"]
-    }
-  }
+      40: ["communities"],
+    },
+
+    // 严格字数限制：Q31-40 NO MORE THAN ONE WORDS AND/OR A NUMBER
+    limits: {
+      31: 1, 32: 1, 33: 1, 34: 1, 35: 1, 36: 1, 37: 1, 38: 1, 39: 1, 40: 1,
+    },
+  },
 };
 
 /* =========================
    SHARED SCORING UTILITIES
-   （所有 section 共用）
 ========================== */
 
-/**
- * Normalize user input for IELTS-style marking
- */
 window.normalizeAnswer = function (text) {
   return (text ?? "")
     .toString()
     .trim()
     .toLowerCase()
+    .replace(/[“”‘’]/g, "'")
+    .replace(/[–—]/g, "-")
+    .replace(/[$£,]/g, "")
+    .replace(/(\d+)(st|nd|rd|th)\b/g, "$1")
     .replace(/\s+/g, " ")
-    .replace(/[$£,]/g, "");
+    .replace(/^[\s.,"'!?;:()[\]{}<>]+|[\s.,"'!?;:()[\]{}<>]+$/g, "");
+};
+
+window.wordCount = function (text) {
+  const t = window.normalizeAnswer(text);
+  if (!t) return 0;
+  return t.split(" ").filter(Boolean).length;
 };
 
 /**
  * Check if user's answer matches ANY accepted answer
+ * - maxWords: if provided, answers exceeding it are marked wrong
+ * - For MCQ-letter keys (a/b/c), this also accepts the corresponding option text if provided.
  */
-window.isCorrectAnswer = function (userInput, acceptedAnswers) {
-  const list = Array.isArray(acceptedAnswers) ? acceptedAnswers : [];
+window.isCorrectAnswer = function (userInput, acceptedAnswers, maxWords, mcqOptions) {
   const user = window.normalizeAnswer(userInput);
+  if (!user) return false;
+
+  if (typeof maxWords === "number" && maxWords > 0) {
+    if (window.wordCount(userInput) > maxWords) return false;
+  }
+
+  const list = Array.isArray(acceptedAnswers) ? acceptedAnswers.slice() : [];
+
+  // If key is letter a/b/c and we have options, allow matching option text too.
+  if (list.length === 1 && /^[abc]$/.test(window.normalizeAnswer(list[0])) && Array.isArray(mcqOptions)) {
+    const letter = window.normalizeAnswer(list[0]);
+    const idx = letter === "a" ? 0 : letter === "b" ? 1 : 2;
+    const opt = mcqOptions[idx];
+    if (opt) list.push(opt);
+  }
+
   return list.some((ans) => window.normalizeAnswer(ans) === user);
+};
+
+/**
+ * Helper: get section config by section number string ("1".."4")
+ */
+window.getSectionConfig = function (sec) {
+  const key = `section${sec}`;
+  return window.PREMIUM_TEST1?.[key] || null;
 };
