@@ -4,11 +4,195 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>评分报告</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --card:#f9fafb;
+      --accent:#111827;
+      --danger:#b91c1c;
+      --ok:#047857;
+    }
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      color:var(--text);
+      background:var(--bg);
+    }
+    .wrap{
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 28px 18px 60px;
+    }
+    h1{
+      margin: 0 0 8px;
+      font-size: 36px;
+      letter-spacing: .5px;
+    }
+    .sub{
+      color:var(--muted);
+      margin: 0 0 22px;
+      line-height: 1.6;
+    }
+    .row{
+      display:flex;
+      gap:12px;
+      flex-wrap: wrap;
+      align-items:center;
+    }
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 8px 10px;
+      border:1px solid var(--border);
+      border-radius: 999px;
+      background:#fff;
+      color:var(--muted);
+      font-size: 13px;
+    }
+    .pill b{ color:var(--text); }
+    .btn{
+      appearance:none;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:14px;
+    }
+    .btn.primary{
+      background: var(--accent);
+      color:#fff;
+      border-color: var(--accent);
+    }
+    .btn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 18px;
+    }
+    @media (min-width: 860px){
+      .grid.two{ grid-template-columns: 1fr 1fr; }
+    }
+    .card{
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:16px;
+    }
+    .card h2{
+      margin:0 0 10px;
+      font-size:16px;
+      color:var(--text);
+    }
+    .kv{
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .bigScore{
+      font-size: 44px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin: 2px 0 6px;
+    }
+    .muted{ color:var(--muted); }
+    .danger{ color: var(--danger); }
+    .ok{ color: var(--ok); }
+    .bar{
+      height: 10px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow:hidden;
+      margin-top: 10px;
+    }
+    .bar > div{
+      height: 100%;
+      background: #111827;
+      width: 0%;
+    }
+    .sectionItem{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      margin-top:10px;
+    }
+    .sectionLeft{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .sectionTitle{
+      font-weight:700;
+      font-size:14px;
+    }
+    .sectionMeta{
+      font-size:12px;
+      color:var(--muted);
+    }
+    .mono{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+    }
+    details{
+      margin-top: 14px;
+    }
+    details > summary{
+      cursor:pointer;
+      color:var(--muted);
+      user-select:none;
+    }
+    pre{
+      white-space: pre-wrap;
+      word-break: break-word;
+      background:#0b1020;
+      color:#e5e7eb;
+      padding:12px;
+      border-radius:12px;
+      border:1px solid #111827;
+      margin-top:10px;
+      font-size: 12px;
+    }
+    .hr{
+      height:1px;
+      background:var(--border);
+      margin:16px 0;
+    }
+  </style>
 </head>
-<body>
-  <h1>评分报告</h1>
-  <div id="app">加载中...</div>
 
- <script src="./score.js?v=20251222_1"></script>
+<body>
+  <div class="wrap">
+    <h1>评分报告</h1>
+    <p class="sub">基于你提交的答案生成（本页从 <span class="mono">/api/report</span> 拉取数据）。</p>
+
+    <div class="row" id="topRow">
+      <span class="pill">AttemptId: <b class="mono" id="attemptIdPill">—</b></span>
+      <button class="btn" id="copyAttemptBtn">复制 AttemptId</button>
+      <button class="btn" id="copyLinkBtn">复制报告链接</button>
+      <button class="btn" id="refreshBtn">刷新</button>
+    </div>
+
+    <div id="app" class="grid"></div>
+  </div>
+
+  <script src="./score.js?v=20251223_1"></script>
 </body>
 </html>
