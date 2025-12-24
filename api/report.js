@@ -63,7 +63,7 @@ module.exports = async (req, res) => {
     }
 
     const section = String(attempt.section || "");
-    const totalBySection = { "1": 10, "2": 10, "3": 10, "4": 10 };
+    const totalBySection = { "1": 10, "2": 10, "3": 10, "4": 10，"full": 40 };
     const rawTotal = totalBySection[section] ?? 10;
     const rawCorrect = Number(attempt.score_local ?? 0);
 
@@ -76,7 +76,11 @@ module.exports = async (req, res) => {
         band: null,
         cefr: "NA",
         timeSpentSec: 0,
-        headlineCn: `已生成真实报告：Section ${section} 本地判分 ${rawCorrect}/${rawTotal}（已写入数据库）`,
+        const headlineCn =
+          section === "full"
+            ? `已生成真实报告：Full Test 本地判分 ${rawCorrect}/${rawTotal}（已写入数据库）`
+            : `已生成真实报告：Section ${section} 本地判分 ${rawCorrect}/${rawTotal}（已写入数据库）`;
+
       },
       sections: [{ section, rawCorrect, rawTotal }],
       dimensions: [],
