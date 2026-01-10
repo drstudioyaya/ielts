@@ -1,11 +1,11 @@
 const { createClient } = require("@supabase/supabase-js");
 
 /**
- * api/report.js
+ * api/report.js (FINAL)
  * - Fetch attempt row from Supabase
  * - Re-grade on the server using stored answers (attempt.answers)
  * - Supports section 1-4 and full (40 questions)
- * - Enforces IELTS-style word/number limits STRICTLY where configured
+ * - Uses SAME normalization + word-limit logic as questions.js
  */
 
 function mockReport(attemptId = "mock") {
@@ -42,46 +42,87 @@ function safeObj(v) {
   }
 }
 
-/** ---------- IELTS-style normalization & limits ---------- **/
+/* =========================
+   SAME AS questions.js
+========================== */
 
+/**
+ * Normalize user input for IELTS-style marking
+ * ✅ 与你 questions.js 保持一致：
+ *  - 8.30 -> 8:30
+ *  - 去掉分隔符两侧空格：7 / 14 -> 7/14, 14 - 7 -> 14-7
+ *  - 保留 / : - . 作为日期/时间的一部分
+ */
 function normalizeAnswer(text) {
-  // Keep separators for dates/times (/:.-) but remove most punctuation/currency.
-  // Also: ordinal normalization (14th -> 14).
-  return (text ?? "")
+  let s = (text ?? "")
     .toString()
     .trim()
     .toLowerCase()
     .replace(/[“”‘’]/g, "'")
     .replace(/[–—]/g, "-")
     .replace(/[$£,]/g, "")
-    .replace(/(\d+)(st|nd|rd|th)\b/g, "$1")
+    .replace(/(\d+)(st|nd|rd|th)\b/g, "$1");
+
+  // 统一时间写法：8.30 -> 8:30
+  s = s.replace(/\b(\d{1,2})\.(\d{2})\b/g, "$1:$2");
+
+  // 去掉分隔符两侧空格： "7 / 14" -> "7/14", "14 - 7" -> "14-7"
+  s = s.replace(/\s*([\/:.-])\s*/g, "$1");
+
+  // 合并空格 + 去掉首尾标点
+  s = s
     .replace(/\s+/g, " ")
     .replace(/^[\s.,"'!?;:()[\]{}<>]+|[\s.,"'!?;:()[\]{}<>]+$/g, "");
+
+  return s;
 }
 
+/**
+ * Word count under IELTS-style limits.
+ * - "8:30" / "7/14" / "14-7" count as ONE token
+ */
 function wordCount(text) {
   const t = normalizeAnswer(text);
   if (!t) return 0;
-  // Count by whitespace tokens. A numeric like "7/14" or "8:30" counts as 1 token.
   return t.split(" ").filter(Boolean).length;
 }
 
-function isCorrectAnswer(userInput, acceptedAnswers, maxWords) {
+/**
+ * Check if user's answer matches ANY accepted answer
+ * - maxWords: if provided, answers exceeding it are marked wrong
+ * - MCQ-letter key (a/b/c) + options -> accept option text too
+ */
+function isCorrectAnswer(userInput, acceptedAnswers, maxWords, mcqOptions) {
   const user = normalizeAnswer(userInput);
-
   if (!user) return false;
 
   if (typeof maxWords === "number" && maxWords > 0) {
     if (wordCount(userInput) > maxWords) return false;
   }
 
-  const list = Array.isArray(acceptedAnswers) ? acceptedAnswers : [];
+  const list = Array.isArray(acceptedAnswers) ? acceptedAnswers.slice() : [];
+
+  // 如果 key 是 a/b/c 且有 options，则允许匹配对应的选项文本（与 questions.js 同逻辑）
+  if (
+    list.length === 1 &&
+    /^[abc]$/.test(normalizeAnswer(list[0])) &&
+    Array.isArray(mcqOptions)
+  ) {
+    const letter = normalizeAnswer(list[0]);
+    const idx = letter === "a" ? 0 : letter === "b" ? 1 : 2;
+    const opt = mcqOptions[idx];
+    if (opt) list.push(opt);
+  }
+
   return list.some((ans) => normalizeAnswer(ans) === user);
 }
 
-/** ---------- Answer key (Premium Test 1) ---------- **/
+/* =========================
+   Answer Key (LOCKED)
+   ⚠️ 不改题目/答案，只做后端一致判分
+========================== */
 
-// MCQ options (so if user stores option text, we can still mark from letter key)
+// MCQ options (用于 a/b/c -> 选项文本映射)
 const MCQ_OPTIONS = {
   // Section 1
   7: ["Adventure Camp", "Explorer Camp", "Science Camp"],
@@ -106,8 +147,6 @@ const ANSWERS = {
   // Section 1
   1: ["ethan park"],
   2: ["9", "nine"],
-
-  // Q3: accept common written + numeric variants (day/month + month/day), and "-" variants
   3: [
     "july 14th",
     "july 14",
@@ -122,12 +161,9 @@ const ANSWERS = {
     "14-7",
     "14-07",
   ],
-
   4: ["480", "$480"],
   5: ["60", "$60"],
   6: ["peanut"],
-
-  // For Section 1 MCQ, your key uses option text already (not letters)
   7: ["explorer camp"],
   8: ["two weeks"],
   9: ["by bank transfer"],
@@ -138,14 +174,8 @@ const ANSWERS = {
   12: ["c"],
   13: ["b"],
   14: ["f"],
-
-  // Q15: ONE WORD AND/OR A NUMBER -> "eight thirty" (2 words) should be WRONG.
-  // We accept numeric + hyphenated single-token wording.
   15: ["8:30", "8.30", "eight-thirty"],
-
   16: ["id", "identification"],
-
-  // Here your key is letters; we also accept the option text mapped from that letter.
   17: ["b"],
   18: ["b"],
   19: ["b"],
@@ -176,22 +206,23 @@ const ANSWERS = {
   40: ["communities"],
 };
 
-// Strict word limits (only enforce where we are sure from your instructions)
-// - Section 1 Q1-6: NO MORE THAN TWO WORDS AND/OR A NUMBER -> maxWords=2
-// - Section 2 Q15-16: ONE WORD AND/OR A NUMBER -> maxWords=1
-// - Section 3 Q27-30: all expected as single token -> maxWords=1 (won't block correct answers)
-// - Section 4 Q31-40: all single words -> maxWords=2 (safe; doesn't block correct)
+// ✅ 严格字数限制（对齐你 questions.js 的 limits）
+// - S1 Q1-6: max 2
+// - S2 Q15-16: max 1
+// - S3 Q27-30: max 1
+// - S4 Q31-40: max 1  （你已确认写 ONE WORD AND/OR A NUMBER）
 const MAX_WORDS = {
   1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2,
   15: 1, 16: 1,
   27: 1, 28: 1, 29: 1, 30: 1,
-  31: 2, 32: 2, 33: 2, 34: 2, 35: 2, 36: 2, 37: 2, 38: 2, 39: 2, 40: 2,
+  31: 1, 32: 1, 33: 1, 34: 1, 35: 1,
+  36: 1, 37: 1, 38: 1, 39: 1, 40: 1,
 };
 
 function expandAcceptedAnswers(qNum) {
   const base = Array.isArray(ANSWERS[qNum]) ? [...ANSWERS[qNum]] : [];
 
-  // If answer key is letter a/b/c AND we have options, accept option text too
+  // a/b/c + options => 允许 option text
   if (base.length === 1 && /^[abc]$/i.test(base[0]) && Array.isArray(MCQ_OPTIONS[qNum])) {
     const letter = normalizeAnswer(base[0]);
     const idx = letter === "a" ? 0 : letter === "b" ? 1 : 2;
@@ -213,8 +244,9 @@ function scoreQuestions(questionNumbers, answersObj) {
 
     const accepted = expandAcceptedAnswers(qNum);
     const maxWords = MAX_WORDS[qNum];
+    const mcqOptions = MCQ_OPTIONS[qNum];
 
-    if (isCorrectAnswer(userRaw, accepted, maxWords)) correct += 1;
+    if (isCorrectAnswer(userRaw, accepted, maxWords, mcqOptions)) correct += 1;
   }
 
   return { rawCorrect: correct, rawTotal: questionNumbers.length };
@@ -293,8 +325,8 @@ module.exports = async (req, res) => {
 
     const headline =
       section === "full"
-        ? `已生成真实报告：Full Test 本地判分 ${overall.rawCorrect}/40（已写入数据库）`
-        : `已生成真实报告：Section ${section} 本地判分 ${overall.rawCorrect}/${overall.rawTotal}（已写入数据库）`;
+        ? `已生成真实报告：Full Test 判分 ${overall.rawCorrect}/40（后端复算）`
+        : `已生成真实报告：Section ${section} 判分 ${overall.rawCorrect}/${overall.rawTotal}（后端复算）`;
 
     return res.status(200).json({
       version: "scoreResponse.v1",
