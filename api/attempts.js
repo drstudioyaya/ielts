@@ -1,10 +1,10 @@
-const { createClient } = require("@supabase/supabase-js");
 const crypto = require("crypto");
 
 /**
- * api/attempts.js
- * - Create attempt row in Supabase
- * - Always return JSON (so前端 r.json() 不会炸)
+ * api/attempts.js (REST版，最稳)
+ * - POST /api/attempts
+ * - Insert into Supabase via REST endpoint:  {SUPABASE_URL}/rest/v1/attempts
+ * - Always returns JSON: { attemptId } or { error, message }
  */
 
 function safeParseBody(req) {
@@ -25,20 +25,16 @@ module.exports = async (req, res) => {
 
     const body = safeParseBody(req);
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const SUPABASE_URL = (process.env.SUPABASE_URL || "").trim().replace(/\/$/, "");
+    const SUPABASE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
 
-    if (!supabaseUrl || !serviceKey) {
+    if (!SUPABASE_URL || !SUPABASE_KEY) {
       return res.status(500).json({
         error: "missing_supabase_env",
-        hasUrl: !!supabaseUrl,
-        hasServiceRoleKey: !!serviceKey,
+        hasUrl: !!SUPABASE_URL,
+        hasServiceRoleKey: !!SUPABASE_KEY,
       });
     }
-
-    const supabase = createClient(supabaseUrl, serviceKey, {
-      auth: { persistSession: false },
-    });
 
     const attemptId = "a_" + Date.now() + "_" + crypto.randomBytes(4).toString("hex");
 
@@ -57,12 +53,31 @@ module.exports = async (req, res) => {
       paid: false,
     };
 
-    const { error } = await supabase.from("attempts").insert(row);
+    let r;
+    try {
+      r = await fetch(`${SUPABASE_URL}/rest/v1/attempts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify(row),
+      });
+    } catch (e) {
+      return res.status(500).json({
+        error: "supabase_network_error",
+        message: String(e && e.message ? e.message : e),
+      });
+    }
 
-    if (error) {
+    if (!r.ok) {
+      const text = await r.text().catch(() => "");
       return res.status(500).json({
         error: "supabase_insert_failed",
-        message: error.message || String(error),
+        status: r.status,
+        message: text || "(no response body)",
       });
     }
 
