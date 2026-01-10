@@ -82,12 +82,33 @@
 
 <script>
 (function () {
+  const resultEl = document.getElementById("result");
+  const submitBtn = document.getElementById("submitBtn");
+
+  function showError(msg) {
+    resultEl.style.display = "block";
+    resultEl.innerHTML = `<div class="err">${msg}</div>`;
+  }
+
   const test = window.PREMIUM_TEST1;
   if (!test || !test.section1 || !test.section2 || !test.section3 || !test.section4) {
-    document.getElementById("result").style.display = "block";
-    document.getElementById("result").innerHTML =
-      `<div class="err">Error: Question bank not loaded. Make sure questions.js is in the same folder as full.html.</div>`;
+    showError("Error: Question bank not loaded. Make sure questions.js is in the same folder as full.html.");
     return;
+  }
+
+  // ✅ 必须存在：normalizeAnswer + isCorrectAnswer（来自 questions.js）
+  if (typeof window.normalizeAnswer !== "function" || typeof window.isCorrectAnswer !== "function") {
+    showError("Error: scoring helpers missing. Ensure questions.js defines normalizeAnswer() and isCorrectAnswer().");
+    return;
+  }
+
+  // ✅ 兼容：如果你的 questions.js 没定义 wordCount，而 isCorrectAnswer 内部会用到
+  if (typeof window.wordCount !== "function") {
+    window.wordCount = function (text) {
+      const t = window.normalizeAnswer(text);
+      if (!t) return 0;
+      return t.split(" ").filter(Boolean).length;
+    };
   }
 
   const SECTIONS = [
@@ -99,105 +120,39 @@
 
   const form = document.getElementById("fullForm");
 
-  // -----------------------------
-  // IELTS-like normalization
-  // -----------------------------
-  function normalizeForMarking(text) {
-    let s = (text ?? "").toString().trim().toLowerCase();
-
-    // remove leading/trailing punctuation
-    s = s.replace(/^[\s"'“”‘’()\[\]{}.,;:!?]+|[\s"'“”‘’()\[\]{}.,;:!?]+$/g, "");
-
-    // currency & separators
-    s = s.replace(/[$£,]/g, "");
-
-    // collapse whitespace
-    s = s.replace(/\s+/g, " ");
-
-    // ordinal suffix
-    s = s.replace(/(\d+)(th|st|nd|rd)\b/g, "$1");
-
-    // time normalize: 8.30 or 8:30 -> 8:30
-    s = s.replace(/\b(\d{1,2})[.:](\d{2})\b/g, "$1:$2");
-
-    return s;
-  }
-
-  // IELTS word count (hyphenated stays as one token)
-  function countWordsIELTS(raw) {
-    const s = (raw ?? "").toString().trim();
-    if (!s) return 0;
-    const compact = s.replace(/\s+/g, " ");
-    return compact.split(" ").filter(Boolean).length;
-  }
-
   function isAllSingleLetters(list) {
     return Array.isArray(list) && list.length > 0 && list.every(a => /^[a-f]$/i.test((a ?? "").toString().trim()));
   }
 
-  // Strict IELTS rule mapping by question number and accepted answer shape
-  function getIELTSRule(qNumber, acceptedAnswers, qType) {
-    const n = Number(qNumber);
-    const rule = { maxWords: null, mustBeSingleLetter: false, isMCQLetter: false };
+  // ✅ 规则：优先用 questions.js 的 limits；若答案是字母（地图/配对题），强制单字母
+  function getRule(sectionData, q) {
+    const accepted = sectionData.answers?.[q.number] || [];
+    const maxWordsFromLimits = sectionData.limits?.[q.number];
 
-    // If accepted answers are single letters (A-F), enforce single letter
-    if (isAllSingleLetters(acceptedAnswers)) {
+    const rule = {
+      accepted,
+      maxWords: (typeof maxWordsFromLimits === "number" ? maxWordsFromLimits : null),
+      mustBeSingleLetter: false
+    };
+
+    // 11–14/24–26 这类题（答案为字母）强制单字母输入
+    if (isAllSingleLetters(accepted)) {
       rule.mustBeSingleLetter = true;
       rule.maxWords = 1;
-      if (qType === "mcq") rule.isMCQLetter = true;
-      return rule;
     }
-
-    // S1 Q1-6: NO MORE THAN TWO WORDS AND/OR A NUMBER
-    if (n >= 1 && n <= 6) rule.maxWords = 2;
-
-    // S2 Q15-16: NO MORE THAN ONE WORD AND/OR A NUMBER
-    if (n === 15 || n === 16) rule.maxWords = 1;
-
-    // S3 Q27-30: NO MORE THAN ONE WORD AND/OR A NUMBER
-    if (n >= 27 && n <= 30) rule.maxWords = 1;
-
-    // S4 Q31-40: NO MORE THAN ONE WORD AND/OR A NUMBER
-    if (n >= 31 && n <= 40) rule.maxWords = 1;
 
     return rule;
   }
 
-  function passesIELTSRule(userRaw, rule) {
-    const raw = (userRaw ?? "").toString().trim();
-    if (!raw) return true;
-
-    if (rule.mustBeSingleLetter) {
-      const s = normalizeForMarking(raw);
-      return /^[a-f]$/i.test(s);
-    }
-
-    if (rule.maxWords != null) {
-      const wc = countWordsIELTS(raw);
-      return wc <= rule.maxWords;
-    }
-
-    return true;
-  }
-
-  function isCorrect(userInput, acceptedAnswers) {
-    const userN = normalizeForMarking(userInput);
-    const list = Array.isArray(acceptedAnswers) ? acceptedAnswers : [];
-
-    return list.some(ans => {
-      const ansN = normalizeForMarking(ans);
-
-      // pure numeric equivalence (05 == 5)
-      if (/^\d+$/.test(userN) && /^\d+$/.test(ansN)) {
-        return Number(userN) === Number(ansN);
-      }
-      return ansN === userN;
-    });
+  function sectionBucketByQnum(n) {
+    if (n <= 10) return "1";
+    if (n <= 20) return "2";
+    if (n <= 30) return "3";
+    return "4";
   }
 
   // -----------------------------
   // Map image loader (Section 2)
-  // 放一张地图在同目录即可：test1/ 目录下常见命名我都帮你试
   // -----------------------------
   function injectSection2Map(secDiv) {
     const wrap = document.createElement("div");
@@ -235,7 +190,6 @@
 
     img.onload = () => { img.style.display = "block"; };
     img.onerror = () => { tryNext(); };
-
     tryNext();
   }
 
@@ -287,14 +241,10 @@
       }
       secDiv.appendChild(inst);
 
-      // ✅ 地图图（仅 Section 2）
-      if (key === "section2") {
-        injectSection2Map(secDiv);
-      }
+      if (key === "section2") injectSection2Map(secDiv);
 
       sec.questions.forEach(q => {
-        const accepted = sec.answers?.[q.number] || [];
-        const rule = getIELTSRule(q.number, accepted, q.type);
+        const rule = getRule(sec, q);
 
         const block = document.createElement("div");
         block.dataset.qnum = String(q.number);
@@ -304,18 +254,18 @@
         if (q.type === "blank") {
           const placeholder = rule.mustBeSingleLetter ? "Enter a single letter (e.g., B)" : "";
           html += `<input type="text" id="q${q.number}" placeholder="${placeholder}" />`;
-          /* ✅ 你不想显示 Max words，这里就不再输出提示 */
+          // ✅ 不输出 Max words 提示（保持你要求）
         }
 
         if (q.type === "mcq") {
           html += `<div class="options">`;
           q.options.forEach((opt, idx) => {
             const letter = String.fromCharCode(65 + idx);
-            const value = rule.isMCQLetter ? letter.toLowerCase() : opt;
 
+            // ✅ 关键：radio value 使用“选项文字”，然后把 q.options 传给 isCorrectAnswer 做字母映射
             html += `
               <label>
-                <input type="radio" name="q${q.number}" value="${value}" />
+                <input type="radio" name="q${q.number}" value="${opt}" />
                 ${letter}. ${opt}
               </label>
             `;
@@ -335,10 +285,7 @@
 
   // -----------------------------
   // Submit: score all 40, create 1 attempt, redirect to score.html
-  // 同时把每个 section 的分数塞到 answers._meta（不改数据库结构）
   // -----------------------------
-  const submitBtn = document.getElementById("submitBtn");
-
   async function submitFullAttempt() {
     submitBtn.disabled = true;
 
@@ -355,6 +302,7 @@
 
     SECTIONS.forEach(({ key }) => {
       const sec = test[key];
+
       sec.questions.forEach(q => {
         let user = "";
 
@@ -367,35 +315,36 @@
 
         answers[q.number] = user;
 
-        const accepted = sec.answers?.[q.number] || [];
-        const rule = getIELTSRule(q.number, accepted, q.type);
-        const okRule = passesIELTSRule(user, rule);
-        const ok = okRule && isCorrect(user, accepted);
+        const rule = getRule(sec, q);
+
+        // ✅ 单字母题：必须是 A-F（或 A-D）这种单字母，否则直接错
+        if (rule.mustBeSingleLetter) {
+          const u = window.normalizeAnswer(user);
+          if (!/^[a-f]$/i.test(u)) return;
+        }
+
+        // ✅ 关键：统一用 questions.js 的 isCorrectAnswer（带 maxWords + MCQ options）
+        const ok = window.isCorrectAnswer(user, rule.accepted, rule.maxWords, q.options);
 
         if (ok) {
-          correct++;
-
-          // section bucket by question number
-          const n = Number(q.number);
-          const bucket = n <= 10 ? "1" : n <= 20 ? "2" : n <= 30 ? "3" : "4";
+          correct += 1;
+          const bucket = sectionBucketByQnum(Number(q.number));
           perSection[bucket].rawCorrect += 1;
         }
       });
     });
 
-    // attach meta
     answers._meta = { perSection };
 
-    const result = document.getElementById("result");
-    result.style.display = "block";
-    result.innerHTML = `<strong>Submitting...</strong><div class="small">Local score: ${correct} / ${total}</div>`;
+    resultEl.style.display = "block";
+    resultEl.innerHTML = `<strong>Submitting...</strong><div class="small">Local score: ${correct} / ${total}</div>`;
 
     try {
       const payload = {
         testId: "premium-test1",
         section: "full",
         scoreLocal: correct,
-        answers: answers,
+        answers,
         contact: {
           name: document.querySelector("#name")?.value || "",
           wechat: document.querySelector("#wechat")?.value || "",
@@ -415,11 +364,11 @@
 
       const attemptId = data.attemptId;
       console.log({ attemptId });
-      location.href = `./score.html?attemptId=${encodeURIComponent(attemptId)}`;
 
+      location.href = `./score.html?attemptId=${encodeURIComponent(attemptId)}`;
     } catch (err) {
       console.error(err);
-      result.innerHTML =
+      resultEl.innerHTML =
         `<div class="err">Submit failed: ${String(err.message || err)}</div>
          <div class="small">Local score preserved: ${correct} / ${total}</div>`;
       submitBtn.disabled = false;
