@@ -148,7 +148,7 @@ window.PREMIUM_TEST1 = {
       20: ["b"],
     },
 
-    // 严格字数限制：Q15-16 NO MORE THAN ONE WORDS AND/OR A NUMBER
+    // 严格字数限制：Q15-16 NO MORE THAN ONE WORD AND/OR A NUMBER
     limits: {
       15: 1,
       16: 1,
@@ -211,12 +211,12 @@ window.PREMIUM_TEST1 = {
       25: ["b"],
       26: ["d"],
       27: ["3000"],
-      28: ["friday"],   // Friday 大小写不敏感
+      28: ["friday"], // Friday 大小写不敏感
       29: ["five", "5"],
       30: ["ten", "10"],
     },
 
-    // 严格字数限制：Q27-30 NO MORE THAN ONE WORDS AND/OR A NUMBER
+    // 严格字数限制：Q27-30 NO MORE THAN ONE WORD AND/OR A NUMBER
     limits: {
       27: 1, 28: 1, 29: 1, 30: 1,
     },
@@ -255,9 +255,10 @@ window.PREMIUM_TEST1 = {
       40: ["communities"],
     },
 
-    // 严格字数限制：Q31-40 NO MORE THAN ONE WORDS AND/OR A NUMBER
+    // 严格字数限制：Q31-40 NO MORE THAN ONE WORD AND/OR A NUMBER
     limits: {
-      31: 1, 32: 1, 33: 1, 34: 1, 35: 1, 36: 1, 37: 1, 38: 1, 39: 1, 40: 1,
+      31: 1, 32: 1, 33: 1, 34: 1, 35: 1,
+      36: 1, 37: 1, 38: 1, 39: 1, 40: 1,
     },
   },
 };
@@ -266,22 +267,45 @@ window.PREMIUM_TEST1 = {
    SHARED SCORING UTILITIES
 ========================== */
 
+/**
+ * Normalize user input for IELTS-style marking
+ * ✅ 关键增强：
+ *  - 8.30 -> 8:30
+ *  - 7 / 14、14 - 7 这种分隔符两侧空格统一去掉
+ *  - 保留 / : - . 作为日期/时间的一部分（不会把 7/14 拆成两个 token）
+ */
 window.normalizeAnswer = function (text) {
-  return (text ?? "")
+  let s = (text ?? "")
     .toString()
     .trim()
     .toLowerCase()
     .replace(/[“”‘’]/g, "'")
     .replace(/[–—]/g, "-")
     .replace(/[$£,]/g, "")
-    .replace(/(\d+)(st|nd|rd|th)\b/g, "$1")
-    .replace(/\s+/g, " ")
-    .replace(/^[\s.,"'!?;:()[\]{}<>]+|[\s.,"'!?;:()[\]{}<>]+$/g, "");
+    .replace(/(\d+)(st|nd|rd|th)\b/g, "$1");
+
+  // ✅ 统一时间写法：8.30 -> 8:30（避免 8.30 与 8:30 不匹配）
+  s = s.replace(/\b(\d{1,2})\.(\d{2})\b/g, "$1:$2");
+
+  // ✅ 去掉分隔符两侧空格： "7 / 14" -> "7/14", "14 - 7" -> "14-7"
+  // 仅针对日期/时间常见分隔符，不会影响普通词汇空格
+  s = s.replace(/\s*([\/:.-])\s*/g, "$1");
+
+  // 合并空格 + 去掉首尾标点
+  s = s.replace(/\s+/g, " ")
+       .replace(/^[\s.,"'!?;:()[\]{}<>]+|[\s.,"'!?;:()[\]{}<>]+$/g, "");
+
+  return s;
 };
 
+/**
+ * Word count under IELTS-style limits.
+ * - "8:30" / "7/14" / "14-7" should count as ONE token
+ */
 window.wordCount = function (text) {
   const t = window.normalizeAnswer(text);
   if (!t) return 0;
+  // Tokenize by whitespace ONLY; date/time remain as single tokens.
   return t.split(" ").filter(Boolean).length;
 };
 
@@ -301,7 +325,11 @@ window.isCorrectAnswer = function (userInput, acceptedAnswers, maxWords, mcqOpti
   const list = Array.isArray(acceptedAnswers) ? acceptedAnswers.slice() : [];
 
   // If key is letter a/b/c and we have options, allow matching option text too.
-  if (list.length === 1 && /^[abc]$/.test(window.normalizeAnswer(list[0])) && Array.isArray(mcqOptions)) {
+  if (
+    list.length === 1 &&
+    /^[abc]$/.test(window.normalizeAnswer(list[0])) &&
+    Array.isArray(mcqOptions)
+  ) {
     const letter = window.normalizeAnswer(list[0]);
     const idx = letter === "a" ? 0 : letter === "b" ? 1 : 2;
     const opt = mcqOptions[idx];
