@@ -1,41 +1,76 @@
-export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
+const { createClient } = require("@supabase/supabase-js");
+const crypto = require("crypto");
 
-  const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
-  const attemptId = "a_" + Date.now();
+/**
+ * api/attempts.js
+ * - Create attempt row in Supabase
+ * - Always return JSON (so前端 r.json() 不会炸)
+ */
 
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!SUPABASE_URL || !SUPABASE_KEY) return res.status(500).send("Missing SUPABASE env vars");
-
-  const row = {
-    id: attemptId,
-    test_id: body.testId || "premium-test1",
-    section: body.section || null,
-    score_local: Number.isFinite(body.scoreLocal) ? body.scoreLocal : null,
-    answers: body.answers || {},
-    name: body.contact?.name || "",
-    wechat: body.contact?.wechat || "",
-    email: body.contact?.email || "",
-    consent_marketing: !!body.contact?.consentMarketing,
-    paid: false
-  };
-
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/attempts`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "apikey": SUPABASE_KEY,
-      "Authorization": `Bearer ${SUPABASE_KEY}`,
-      "Prefer": "return=minimal"
-    },
-    body: JSON.stringify(row)
-  });
-
-  if (!r.ok) {
-    const text = await r.text();
-    return res.status(500).send(`Supabase insert failed: ${r.status} ${text}`);
+function safeParseBody(req) {
+  try {
+    if (!req || req.body == null) return {};
+    if (typeof req.body === "string") return JSON.parse(req.body);
+    return req.body;
+  } catch {
+    return {};
   }
-
-  return res.status(200).json({ attemptId });
 }
+
+module.exports = async (req, res) => {
+  try {
+    if (req.method !== "POST") {
+      return res.status(405).json({ error: "method_not_allowed" });
+    }
+
+    const body = safeParseBody(req);
+
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceKey) {
+      return res.status(500).json({
+        error: "missing_supabase_env",
+        hasUrl: !!supabaseUrl,
+        hasServiceRoleKey: !!serviceKey,
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, serviceKey, {
+      auth: { persistSession: false },
+    });
+
+    const attemptId = "a_" + Date.now() + "_" + crypto.randomBytes(4).toString("hex");
+
+    const row = {
+      id: attemptId,
+      test_id: body.testId || "premium-test1",
+      section: body.section || null, // "1".."4" or "full"
+      score_local: Number.isFinite(body.scoreLocal) ? body.scoreLocal : null,
+      answers: body.answers || {},
+
+      name: body.contact?.name || "",
+      wechat: body.contact?.wechat || "",
+      email: body.contact?.email || "",
+      consent_marketing: !!body.contact?.consentMarketing,
+
+      paid: false,
+    };
+
+    const { error } = await supabase.from("attempts").insert(row);
+
+    if (error) {
+      return res.status(500).json({
+        error: "supabase_insert_failed",
+        message: error.message || String(error),
+      });
+    }
+
+    return res.status(200).json({ attemptId });
+  } catch (e) {
+    return res.status(500).json({
+      error: "server_error",
+      message: String(e && e.message ? e.message : e),
+    });
+  }
+};
