@@ -312,7 +312,7 @@ window.wordCount = function (text) {
 /**
  * Check if user's answer matches ANY accepted answer
  * - maxWords: if provided, answers exceeding it are marked wrong
- * - For MCQ-letter keys (a/b/c), this also accepts the corresponding option text if provided.
+ * - MCQ兼容：accepted是a/b/c 或 user是a/b/c，都能映射到 options 文本
  */
 window.isCorrectAnswer = function (userInput, acceptedAnswers, maxWords, mcqOptions) {
   const user = window.normalizeAnswer(userInput);
@@ -324,7 +324,7 @@ window.isCorrectAnswer = function (userInput, acceptedAnswers, maxWords, mcqOpti
 
   const list = Array.isArray(acceptedAnswers) ? acceptedAnswers.slice() : [];
 
-  // If key is letter a/b/c and we have options, allow matching option text too.
+  // ✅ 1) accepted 是 a/b/c：允许匹配对应 options 文本（你原本就需要的）
   if (
     list.length === 1 &&
     /^[abc]$/.test(window.normalizeAnswer(list[0])) &&
@@ -336,8 +336,21 @@ window.isCorrectAnswer = function (userInput, acceptedAnswers, maxWords, mcqOpti
     if (opt) list.push(opt);
   }
 
-  return list.some((ans) => window.normalizeAnswer(ans) === user);
+  // ✅ 2) user 是 a/b/c：把 user 映射成 options 文本，再参与匹配（防未来页面 value 用字母）
+  let userVariants = [user];
+  if (/^[abc]$/.test(user) && Array.isArray(mcqOptions)) {
+    const idx = user === "a" ? 0 : user === "b" ? 1 : 2;
+    const opt = mcqOptions[idx];
+    if (opt) userVariants.push(window.normalizeAnswer(opt));
+  }
+
+  // ✅ 3) 精确匹配（normalize 后）
+  return list.some((ans) => {
+    const a = window.normalizeAnswer(ans);
+    return userVariants.some((u) => u === a);
+  });
 };
+
 
 /**
  * Helper: get section config by section number string ("1".."4")
