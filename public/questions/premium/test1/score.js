@@ -109,7 +109,6 @@
 
         <div class="hr"></div>
 
-    
         <div class="muted" style="margin-top:8px;">
           提示：本报告基于你提交的答案生成，评分规则在「附录A」可查看。
         </div>
@@ -146,7 +145,6 @@
     `;
 
     // ---- Module 3：Section 1–4 表现分析（表格+简短 note）----
-    // 这里先用 sections 的分数 + 固定 note 占位，后续接错因后再升级
     const module3 = `
       <div class="card" style="grid-column:1/-1;">
         <h2>Section 1–4 表现分析</h2>
@@ -248,7 +246,6 @@
       </div>
     `;
 
-    // ---- Module 7：付费解锁模块（CTA 文案改）----
     const module7 = `
       <div class="card" style="grid-column:1/-1;">
         <h2>解锁完整版诊断（Premium）</h2>
@@ -267,8 +264,6 @@
       </div>
     `;
 
-    // ---- 分享与复盘：改为“邀请其他同学一起免费测试” + 两个按钮 ----
-    // 说明文字删掉；按钮改为：复制考试链接 / 邀请微信好友一起免费测试
     const moduleShare = `
       <div class="card" style="grid-column:1/-1;">
         <h2>邀请其他同学一起免费测试</h2>
@@ -280,8 +275,13 @@
       </div>
     `;
 
+    // =========================
     // ---- 附录（可折叠）：A/B/C ----
-    // ✅ 仅修改这一块：把 A1（Raw vs Band）+ A2（CEFR vs IELTS）都做成“图里那种表格样式 + Footnote（只在表格后一句）”
+    // A：你已确认正确（Raw vs Band + CEFR vs IELTS + Footnote）
+    // B：Marking Rules（严格评分规则）
+    // C：Report Method（报告计算方法）
+    // =========================
+
     const appendixA = `
       <details>
         <summary><b>附录A（可展开）：对照表（仅参考）</b></summary>
@@ -392,51 +392,34 @@
       </details>
     `;
 
+    // ✅ 附录B：Marking Rules（严格评分规则）
     const appendixB = `
       <details>
-        <summary><b>附录B｜Band 对照表（Raw → Band）</b></summary>
-        <div style="margin-top:10px;">
-          ${
-            bandTable.length
-              ? bandTable
-                  .map((row) => {
-                    const raw = row?.raw ?? "";
-                    const band = row?.band ?? "";
-                    const isMine =
-                      String(rawCorrect) &&
-                      typeof raw === "string" &&
-                      raw.includes("–") &&
-                      (() => {
-                        const parts = raw.split("–").map((x) => parseInt(x, 10));
-                        if (parts.length !== 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return false;
-                        return rawCorrect >= parts[0] && rawCorrect <= parts[1];
-                      })();
-
-                    return `
-                      <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px; ${isMine ? "background:#f7f7f7;" : ""}">
-                        <div class="sectionLeft">
-                          <div class="sectionTitle">${esc("Raw " + raw)}</div>
-                        </div>
-                        <div style="font-weight:700; font-size:18px;">${esc(band)}</div>
-                      </div>
-                    `;
-                  })
-                  .join("")
-              : `<div class="muted">暂无 Band 对照表数据。</div>`
-          }
+        <summary><b>附录B（可展开）：Marking Rules（严格评分规则）</b></summary>
+        <div class="muted" style="margin-top:10px;">
+          <ul style="margin:8px 0 0; padding-left:18px;">
+            <li>Spelling must be correct. Misspellings are marked wrong.</li>
+            <li>Grammar must be correct where required by the sentence.</li>
+            <li>Word limit must be respected (e.g., ONE WORD AND/OR A NUMBER).</li>
+            <li>Numbers may be written in digits or words only if the word limit allows (e.g., 8:30 / 8.30; ‘eight thirty’ only when permitted).</li>
+            <li>Hyphenation/spacing variants may be accepted when meaning is unchanged (e.g., part-time / part time).</li>
+            <li>No free synonym acceptance unless explicitly allowed in the answer key.</li>
+          </ul>
         </div>
       </details>
     `;
 
+    // ✅ 附录C：Report Method（报告计算方法）
     const appendixC = `
       <details>
-        <summary><b>附录C｜原始数据（调试用）</b></summary>
-        <div class="muted" style="margin-top:10px;">version：<b>${esc(data?.version || "")}</b></div>
-        <div class="muted" style="margin-top:6px;">attemptId：<b>${esc(attemptId)}</b></div>
-        <details style="margin-top:10px;">
-          <summary>查看原始 JSON</summary>
-          <pre>${esc(JSON.stringify(data, null, 2))}</pre>
-        </details>
+        <summary><b>附录C（可展开）：Report Method（报告计算方法）</b></summary>
+        <div class="muted" style="margin-top:10px;">
+          <ul style="margin:8px 0 0; padding-left:18px;">
+            <li>Raw score = total correct answers (0–40).</li>
+            <li>Section score = correct answers within each section.</li>
+            <li>Dimension score (Dx) = Correct_Dx / Total_Dx × 100.</li>
+          </ul>
+        </div>
       </details>
     `;
 
@@ -460,7 +443,7 @@
       ${module1Overall}
       ${module1Sections}
 
-      <!-- 模块2已按你的要求删除（Band 对照表保留在附录B） -->
+      <!-- 模块2已按你的要求删除（Band 对照表已放入附录A 的 A1 表格中） -->
 
       ${module3}
       ${moduleDiagPreview}
@@ -496,7 +479,6 @@
       inviteWechatInPageBtn.onclick = async () => {
         const examUrl = new URL("./full.html", location.href).href;
         const text = `我在做这个雅思听力免费测试，你也来试试：\n${examUrl}`;
-        // 优先用系统分享（手机更友好）；否则复制文案让你粘贴到微信
         if (navigator.share) {
           try {
             await navigator.share({
@@ -525,7 +507,6 @@
     if (h1) h1.textContent = "《雅思听力全方位诊断报告》";
 
     // 2) 删掉副标题那行“基于你提交的答案生成...”（尽量不改 HTML，JS 里隐藏）
-    //    做法：找到包含该关键句的元素并隐藏
     const allTextNodes = Array.from(document.querySelectorAll("p, .muted, .subtitle, .subTitle, .desc"));
     for (const el of allTextNodes) {
       const t = (el.textContent || "").trim();
@@ -569,12 +550,6 @@
   }
 
   // ===== 顶部按钮：按你的要求改文案 & 改逻辑 =====
-  // 你要求：
-  // - “复制AttemptId”删掉
-  // - “刷新”删掉，改成“邀请微信好友一起免费测试”
-  // - “复制报告链接”改成“复制考试链接”
-  // 为了不改 HTML（保留结构/ID/大逻辑），这里直接“隐藏/复用”原按钮。
-
   const copyAttemptBtn = $("#copyAttemptBtn");
   if (copyAttemptBtn) copyAttemptBtn.style.display = "none";
 
