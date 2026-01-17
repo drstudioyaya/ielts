@@ -280,77 +280,142 @@
       </div>
     `;
 
-    // ---- 附录（可折叠）：A/B/C ----
-    const appendixA = `
-      <details>
-        <summary><b>附录A｜评分规则与判分口径</b></summary>
-        <div class="muted" style="margin-top:10px;">
-          <div><b>判分口径：</b>大小写不敏感；去除首尾多余标点；货币符号忽略；按题干字数限制严格判分。</div>
-          <div style="margin-top:8px;"><b>字数限制：</b>超过题干要求的词数/格式，按 IELTS 规则记 0 分。</div>
-          <div style="margin-top:8px;"><b>日期/时间：</b>常见格式可接受（例如 8:30 / 8.30；7/14 / 14/7 / 7-14 等，按题库与 normalize 规则）。</div>
-        </div>
-      </details>
-    `;
+// ---- 附录（可折叠）：A/B/C ----
+const appendicesHTML = `
+  <div class="card" style="grid-column: 1 / -1;">
+    <h2>附录（可折叠）</h2>
 
-    const appendixB = `
-      <details>
-        <summary><b>附录B｜Band 对照表（Raw → Band）</b></summary>
-        <div style="margin-top:10px;">
-          ${
-            bandTable.length
-              ? bandTable
-                  .map((row) => {
-                    const raw = row?.raw ?? "";
-                    const band = row?.band ?? "";
-                    const isMine =
-                      String(rawCorrect) &&
-                      typeof raw === "string" &&
-                      raw.includes("–") &&
-                      (() => {
-                        const parts = raw.split("–").map((x) => parseInt(x, 10));
-                        if (parts.length !== 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return false;
-                        return rawCorrect >= parts[0] && rawCorrect <= parts[1];
-                      })();
-
-                    return `
-                      <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px; ${isMine ? "background:#f7f7f7;" : ""}">
-                        <div class="sectionLeft">
-                          <div class="sectionTitle">${esc("Raw " + raw)}</div>
-                        </div>
-                        <div style="font-weight:700; font-size:18px;">${esc(band)}</div>
-                      </div>
-                    `;
-                  })
-                  .join("")
-              : `<div class="muted">暂无 Band 对照表数据。</div>`
-          }
-        </div>
-      </details>
-    `;
-
-    const appendixC = `
-      <details>
-        <summary><b>附录C｜原始数据（调试用）</b></summary>
-        <div class="muted" style="margin-top:10px;">version：<b>${esc(data?.version || "")}</b></div>
-        <div class="muted" style="margin-top:6px;">attemptId：<b>${esc(attemptId)}</b></div>
-        <details style="margin-top:10px;">
-          <summary>查看原始 JSON</summary>
-          <pre>${esc(JSON.stringify(data, null, 2))}</pre>
-        </details>
-      </details>
-    `;
-
-    const appendixWrap = `
-      <div class="card" style="grid-column:1/-1;">
-        <h2>附录（可折叠）</h2>
-        <div class="hr"></div>
-        ${appendixA}
-        <div style="height:10px;"></div>
-        ${appendixB}
-        <div style="height:10px;"></div>
-        ${appendixC}
+    <!-- 附录A：对照表（仅参考） -->
+    <details>
+      <summary><b>附录A｜对照表（Approximate / For reference only）</b></summary>
+      <div class="muted" style="margin-top:10px; line-height:1.7;">
+        <b>重要：</b>以下对照为 <b>Approximate / For reference only</b>，用于帮助理解大致区间，
+        不代表官方“精确映射”，不同考试版本与场次可能存在差异。
       </div>
-    `;
+
+      <div class="hr"></div>
+
+      <h3 style="margin: 10px 0;">A1. 答对题数 vs IELTS Band 对照表（仅参考）</h3>
+      <div class="muted" style="margin-bottom:8px;">
+        Approximate / For reference only. 仅用于展示常见区间参考。
+      </div>
+
+      ${
+        Array.isArray(data?.bandTable) && data.bandTable.length
+          ? `
+            <div class="list">
+              ${data.bandTable
+                .map((row) => {
+                  const raw = row?.raw ?? "";
+                  const band = row?.band ?? "";
+                  return `
+                    <div class="listRow">
+                      <div><b>Raw ${esc(raw)}</b></div>
+                      <div style="text-align:right;"><b>${esc(band)}</b></div>
+                    </div>
+                  `;
+                })
+                .join("")}
+            </div>
+          `
+          : `
+            <div class="muted">
+              暂无 bandTable 数据（如需展示，请确保 /api/report 返回 bandTable）。
+            </div>
+          `
+      }
+
+      <div class="hr"></div>
+
+      <h3 style="margin: 10px 0;">A2. CEFR vs IELTS 对照表（仅参考）</h3>
+      <div class="muted" style="margin-bottom:8px;">
+        Approximate / For reference only. 仅用于理解区间，不代表官方精确映射。
+      </div>
+
+      <div class="list">
+        <div class="listRow"><div><b>CEFR C2</b></div><div style="text-align:right;"><b>IELTS 8.5–9.0</b></div></div>
+        <div class="listRow"><div><b>CEFR C1</b></div><div style="text-align:right;"><b>IELTS 7.0–8.0</b></div></div>
+        <div class="listRow"><div><b>CEFR B2</b></div><div style="text-align:right;"><b>IELTS 5.5–6.5</b></div></div>
+        <div class="listRow"><div><b>CEFR B1</b></div><div style="text-align:right;"><b>IELTS 4.0–5.0</b></div></div>
+        <div class="listRow"><div><b>CEFR A2</b></div><div style="text-align:right;"><b>IELTS 3.0–3.5</b></div></div>
+        <div class="listRow"><div><b>CEFR A1</b></div><div style="text-align:right;"><b>IELTS ≤2.5</b></div></div>
+      </div>
+
+      <div class="muted" style="margin-top:10px; line-height:1.7;">
+        <b>Note:</b> CEFR 与 IELTS 的对应关系在不同机构与研究中会有不同版本；本处仅作信息参考（Approximate）。
+      </div>
+    </details>
+
+    <div class="hr"></div>
+
+    <!-- 附录B：严格评分规则 -->
+    <details>
+      <summary><b>附录B｜Marking Rules（严格评分规则）</b></summary>
+
+      <div class="muted" style="margin-top:10px; line-height:1.7;">
+        以下规则建议以可展开方式呈现。<b>原文需保留</b>；如需中文解释可附在后面。
+      </div>
+
+      <div class="hr"></div>
+
+      <ul style="line-height:1.8; padding-left:20px; margin: 10px 0;">
+        <li><b>Spelling must be correct. Misspellings are marked wrong.</b>
+          <div class="muted">拼写必须正确；拼错判错。</div>
+        </li>
+        <li><b>Grammar must be correct where required by the sentence.</b>
+          <div class="muted">在句子要求语法正确的地方，语法错误判错。</div>
+        </li>
+        <li><b>Word limit must be respected (e.g., ONE WORD AND/OR A NUMBER).</b>
+          <div class="muted">必须遵守字数限制（例如：ONE WORD AND/OR A NUMBER）。</div>
+        </li>
+        <li><b>Numbers may be written in digits or words only if the word limit allows (e.g., 8:30 / 8.30; ‘eight thirty’ only when permitted).</b>
+          <div class="muted">数字可用阿拉伯数字或英文拼写，但必须符合字数限制（如 8:30 / 8.30；只有在允许时 ‘eight thirty’ 才算对）。</div>
+        </li>
+        <li><b>Hyphenation/spacing variants may be accepted when meaning is unchanged (e.g., part-time / part time).</b>
+          <div class="muted">当意义不变时，连字符/空格变体可能被接受（如 part-time / part time）。</div>
+        </li>
+        <li><b>No free synonym acceptance unless explicitly allowed in the answer key.</b>
+          <div class="muted">除非题库答案明确允许，否则不做“同义词自由放宽”。</div>
+        </li>
+        <li><b>补充（口径锁定）：所有“可接受变体（accepted variants）”必须在题库 Answer Key 层明确配置并随题发布；评分引擎/前端不做主观放宽。</b></li>
+      </ul>
+    </details>
+
+    <div class="hr"></div>
+
+    <!-- 附录C：报告计算方法 -->
+    <details>
+      <summary><b>附录C｜Report Method（报告计算方法）</b></summary>
+
+      <div class="muted" style="margin-top:10px; line-height:1.7;">
+        说明：本附录用于解释报告的计算逻辑与后续 Premium 模块生成方式（可扩展）。
+      </div>
+
+      <div class="hr"></div>
+
+      <ul style="line-height:1.8; padding-left:20px; margin: 10px 0;">
+        <li><b>Raw score = total correct answers (0–40).</b></li>
+        <li><b>Section score = correct answers within each section.</b></li>
+        <li><b>Dimension score (Dx) = Correct_Dx / Total_Dx × 100.</b></li>
+        <li><b>Optional Premium weighting by section difficulty can be used, but keep UI simple and explain weighting here (expandable).</b>
+          <div class="muted">可选：按 Section 难度做 Premium 加权；UI 保持简洁，权重细节只在这里说明。</div>
+        </li>
+        <li><b>Evidence Snapshot 生成逻辑：</b>
+          <div style="margin-top:6px;">
+            (a) 最低的 Dx 维度（Top 2–3）<br/>
+            (b) 错题的题号范围聚类（clustered ranges）<br/>
+            (c) 主导错误标签（dominant error labels，必须来自附录D Error Taxonomy）
+          </div>
+        </li>
+      </ul>
+
+      <div class="muted" style="margin-top:10px; line-height:1.7;">
+        <b>版本说明：</b>本文件为评分页信息架构与文案结构总稿，用于前端开发与内容锁定。
+      </div>
+    </details>
+  </div>
+`;
+
 
     // ---- 渲染总布局（模块0放在总分卡片上方）----
     app.className = "grid two";
