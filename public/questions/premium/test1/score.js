@@ -97,7 +97,7 @@
       <div class="card">
         <h2>考试结果总览</h2>
         <div class="bigScore">${esc(rawCorrect)} / ${esc(rawTotal)}</div>
-        <div class="bigScore" style="margin-top:6px;">Band：${esc(bandFromOverall(overall))}（后端复算）</div>
+        <div class="bigScore" style="margin-top:6px;">Band：${esc(bandFromOverall(overall))}</div>
 
         <div class="muted" style="margin-top:10px;">正确率：${esc(overallPct)}%</div>
         <div class="bar"><div style="width:${overallPct}%"></div></div>
@@ -109,17 +109,17 @@
 
         <div class="hr"></div>
 
-        <div><b>一句话结论：</b><span class="muted">${esc(headlineCn)}z</span></div>
+    
         <div class="muted" style="margin-top:8px;">
           提示：本报告基于你提交的答案生成，评分规则在「附录A」可查看。
         </div>
       </div>
     `;
 
-    // ---- 右侧：每个 Section 得分 ----
+    // ---- 右侧：Section 得分 ----
     const module1Sections = `
       <div class="card">
-        <h2>每个Section得分</h2>
+        <h2>Section得分</h2>
         ${
           sections.length
             ? sections
@@ -199,7 +199,7 @@
     // ---- Module 4/4.5/5/6：占位（保持你现有结构）----
     const module4 = `
       <div class="card" style="grid-column:1/-1;">
-        <h2>模块4｜Listening Skills Profile（12维能力画像）</h2>
+        <h2>Listening Skills Profile（12维能力画像）</h2>
         <div class="muted">你将看到 12 个核心能力维度的强弱分布（如：同义替换识别、信息定位、数字拼写、干扰项抗性等）。</div>
         <div class="hr"></div>
         <div class="muted">当前为预览版：解锁后展示完整能力条 + 你的关键短板 Top 3。</div>
@@ -208,7 +208,7 @@
 
     const module45 = `
       <div class="card" style="grid-column:1/-1;">
-        <h2>模块4.5｜Evidence Snapshot（证据快照）</h2>
+        <h2>Evidence Snapshot（证据快照）</h2>
         <div class="muted">我们不会只给“结论”，还会给“证据”。解锁后你会看到每一类错因对应的证据快照（你的答案 vs 标准答案 vs 规则）。</div>
         <div class="hr"></div>
         <div class="muted">示例（占位）：</div>
@@ -222,7 +222,7 @@
 
     const module5 = `
       <div class="card" style="grid-column:1/-1;">
-        <h2>模块5｜你的关键短板结论（解锁后生成）</h2>
+        <h2>你的关键短板结论（解锁后生成）</h2>
         <div class="muted">你将获得：1句总诊断 + 3个关键短板 + 每个短板的根因解释（带证据）。</div>
         <div class="hr"></div>
         <div class="muted">示例（占位）：</div>
@@ -236,7 +236,7 @@
 
     const module6 = `
       <div class="card" style="grid-column:1/-1;">
-        <h2>模块6｜7/14 天可执行训练计划（解锁后生成）</h2>
+        <h2>14 天可执行训练计划（解锁后生成）</h2>
         <div class="muted">今天就能做（3选1）：</div>
         <ol class="muted" style="margin-top:8px; padding-left:18px;">
           <li><b>数字/日期快练 8 分钟</b>：只练时间、日期、数字连读（正确率&gt;90%再加速）</li>
@@ -251,13 +251,13 @@
     // ---- Module 7：付费解锁模块（CTA 文案改）----
     const module7 = `
       <div class="card" style="grid-column:1/-1;">
-        <h2>模块7｜解锁完整版诊断（Premium）</h2>
+        <h2>解锁完整版诊断（Premium）</h2>
         <div class="muted">解锁后你将获得：</div>
         <ul class="muted" style="margin-top:10px; padding-left:18px;">
           <li>✅ 12维能力画像（强弱分布 + Top3短板）</li>
           <li>✅ 高频错因标签（你最常见的失分模式）</li>
           <li>✅ Evidence Snapshot（每类错因的证据快照）</li>
-          <li>✅ 7/14天行动计划（可直接照做）</li>
+          <li>✅ 14天行动计划（可直接照做）</li>
           <li>✅ 课程/训练入口（按短板匹配）</li>
         </ul>
         <div class="hr"></div>
