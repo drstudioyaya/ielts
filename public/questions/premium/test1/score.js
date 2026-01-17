@@ -285,97 +285,63 @@
     // =========================
 
     // ---- 附录A（可展开）：对照表（仅参考）----
-    const appendixA = `
-      <details>
-        <summary><b>附录A｜对照表（Approximate / For reference only）</b></summary>
-        <div class="muted" style="margin-top:10px; line-height:1.7;">
-          <b>重要：</b>以下对照为 <b>Approximate / For reference only</b>，用于帮助理解大致区间，
-          不代表官方“精确映射”，不同考试版本与场次可能存在差异。
-        </div>
+   // ===== 在 appendixA 里，把 “A2. CEFR vs IELTS 对照表（仅参考）” 这一段替换为下面 =====
 
-        <div class="hr"></div>
+<h3 style="margin: 10px 0;">A2. CEFR vs IELTS 对照表（仅参考）</h3>
 
-        <h3 style="margin: 10px 0;">A1. 答对题数 vs IELTS 对照表（仅参考）</h3>
-        <div class="muted" style="margin-bottom:8px;">
-          <b>Approximate / For reference only</b>（仅用于展示常见区间参考）
-        </div>
+<div style="margin-top:10px; overflow-x:auto;">
+  <table style="width:100%; border-collapse:collapse; font-size:14px;">
+    <thead>
+      <tr>
+        <th style="border:1px solid #111; padding:10px 12px; text-align:center; background:#f3f3f3;">
+          CEFR Level
+        </th>
+        <th style="border:1px solid #111; padding:10px 12px; text-align:center; background:#f3f3f3;">
+          Approx. IELTS Listening Band
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">A1</td>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">Below 3.0 (not reliably assessed)</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">A2</td>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">3.0 – 4.0</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">B1</td>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">4.5 – 5.0</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">B1 (High)</td>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">5.5</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">B2</td>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">6.0 – 6.5</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">B2 (High)</td>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">7.0</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">C1</td>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">7.5 – 8.0</td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">C2</td>
+        <td style="border:1px solid #111; padding:10px 12px; text-align:center;">8.5 – 9.0</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
-        <div style="margin-top:10px;">
-          ${
-            bandTable.length
-              ? bandTable
-                  .map((row) => {
-                    const raw = row?.raw ?? "";
-                    const band = row?.band ?? "";
-                    const isMine =
-                      String(rawCorrect) &&
-                      typeof raw === "string" &&
-                      raw.includes("–") &&
-                      (() => {
-                        const parts = raw.split("–").map((x) => parseInt(x, 10));
-                        if (
-                          parts.length !== 2 ||
-                          Number.isNaN(parts[0]) ||
-                          Number.isNaN(parts[1])
-                        )
-                          return false;
-                        return rawCorrect >= parts[0] && rawCorrect <= parts[1];
-                      })();
+<div class="muted" style="margin-top:8px;">
+  Footnote: This mapping is approximate and provided for reference only.
+</div>
 
-                    return `
-                      <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px; ${
-                        isMine ? "background:#f7f7f7;" : ""
-                      }">
-                        <div class="sectionLeft">
-                          <div class="sectionTitle">${esc("Raw " + raw)}</div>
-                          <div class="muted">Approximate / For reference only</div>
-                        </div>
-                        <div style="font-weight:700; font-size:18px;">${esc(band)}</div>
-                      </div>
-                    `;
-                  })
-                  .join("")
-              : `<div class="muted">暂无对照表数据（请确保 /api/report 返回 bandTable）。</div>`
-          }
-        </div>
-
-        <div class="hr"></div>
-
-        <h3 style="margin: 10px 0;">A2. CEFR vs IELTS 对照表（仅参考）</h3>
-        <div class="muted" style="margin-bottom:8px;">
-          <b>Approximate / For reference only</b>（避免“精确映射”争议）
-        </div>
-
-        <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px;">
-          <div class="sectionLeft"><div class="sectionTitle">CEFR C2</div></div>
-          <div style="font-weight:700;">IELTS 8.5–9.0</div>
-        </div>
-        <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px;">
-          <div class="sectionLeft"><div class="sectionTitle">CEFR C1</div></div>
-          <div style="font-weight:700;">IELTS 7.0–8.0</div>
-        </div>
-        <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px;">
-          <div class="sectionLeft"><div class="sectionTitle">CEFR B2</div></div>
-          <div style="font-weight:700;">IELTS 5.5–6.5</div>
-        </div>
-        <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px;">
-          <div class="sectionLeft"><div class="sectionTitle">CEFR B1</div></div>
-          <div style="font-weight:700;">IELTS 4.0–5.0</div>
-        </div>
-        <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px;">
-          <div class="sectionLeft"><div class="sectionTitle">CEFR A2</div></div>
-          <div style="font-weight:700;">IELTS 3.0–3.5</div>
-        </div>
-        <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px;">
-          <div class="sectionLeft"><div class="sectionTitle">CEFR A1</div></div>
-          <div style="font-weight:700;">IELTS ≤2.5</div>
-        </div>
-
-        <div class="muted" style="margin-top:10px; line-height:1.7;">
-          <b>Important:</b> Approximate / For reference only.
-        </div>
-      </details>
-    `;
 
     // ---- 附录B（可展开）：Marking Rules（严格评分规则）----
     const appendixB = `
