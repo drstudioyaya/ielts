@@ -109,7 +109,8 @@
 
         <div class="hr"></div>
 
-    
+        <div><b>一句话结论：</b><span class="muted">${esc(headlineCn)}z</span></div>
+
         <div class="muted" style="margin-top:8px;">
           提示：本报告基于你提交的答案生成，评分规则在「附录A」可查看。
         </div>
@@ -119,7 +120,7 @@
     // ---- 右侧：Section 得分 ----
     const module1Sections = `
       <div class="card">
-        <h2>Section得分</h2>
+        <h2>每个Section得分</h2>
         ${
           sections.length
             ? sections
@@ -268,7 +269,6 @@
     `;
 
     // ---- 分享与复盘：改为“邀请其他同学一起免费测试” + 两个按钮 ----
-    // 说明文字删掉；按钮改为：复制考试链接 / 邀请微信好友一起免费测试
     const moduleShare = `
       <div class="card" style="grid-column:1/-1;">
         <h2>邀请其他同学一起免费测试</h2>
@@ -280,21 +280,26 @@
       </div>
     `;
 
- // ---- 附录（可折叠）：A/B/C ----
+    // =========================
+    // 仅修改这里：附录 A/B/C
+    // =========================
+
+    // ---- 附录A（可展开）：对照表（仅参考）----
     const appendixA = `
       <details>
-        <summary><b>附录A｜评分规则与判分口径</b></summary>
-        <div class="muted" style="margin-top:10px;">
-          <div><b>判分口径：</b>大小写不敏感；去除首尾多余标点；货币符号忽略；按题干字数限制严格判分。</div>
-          <div style="margin-top:8px;"><b>字数限制：</b>超过题干要求的词数/格式，按 IELTS 规则记 0 分。</div>
-          <div style="margin-top:8px;"><b>日期/时间：</b>常见格式可接受（例如 8:30 / 8.30；7/14 / 14/7 / 7-14 等，按题库与 normalize 规则）。</div>
+        <summary><b>附录A｜对照表（Approximate / For reference only）</b></summary>
+        <div class="muted" style="margin-top:10px; line-height:1.7;">
+          <b>重要：</b>以下对照为 <b>Approximate / For reference only</b>，用于帮助理解大致区间，
+          不代表官方“精确映射”，不同考试版本与场次可能存在差异。
         </div>
-      </details>
-    `;
 
-    const appendixB = `
-      <details>
-        <summary><b>附录B｜Band 对照表（Raw → Band）</b></summary>
+        <div class="hr"></div>
+
+        <h3 style="margin: 10px 0;">A1. 答对题数 vs IELTS 对照表（仅参考）</h3>
+        <div class="muted" style="margin-bottom:8px;">
+          <b>Approximate / For reference only</b>（仅用于展示常见区间参考）
+        </div>
+
         <div style="margin-top:10px;">
           ${
             bandTable.length
@@ -308,35 +313,123 @@
                       raw.includes("–") &&
                       (() => {
                         const parts = raw.split("–").map((x) => parseInt(x, 10));
-                        if (parts.length !== 2 || Number.isNaN(parts[0]) || Number.isNaN(parts[1])) return false;
+                        if (
+                          parts.length !== 2 ||
+                          Number.isNaN(parts[0]) ||
+                          Number.isNaN(parts[1])
+                        )
+                          return false;
                         return rawCorrect >= parts[0] && rawCorrect <= parts[1];
                       })();
 
                     return `
-                      <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px; ${isMine ? "background:#f7f7f7;" : ""}">
+                      <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px; ${
+                        isMine ? "background:#f7f7f7;" : ""
+                      }">
                         <div class="sectionLeft">
                           <div class="sectionTitle">${esc("Raw " + raw)}</div>
+                          <div class="muted">Approximate / For reference only</div>
                         </div>
                         <div style="font-weight:700; font-size:18px;">${esc(band)}</div>
                       </div>
                     `;
                   })
                   .join("")
-              : `<div class="muted">暂无 Band 对照表数据。</div>`
+              : `<div class="muted">暂无对照表数据（请确保 /api/report 返回 bandTable）。</div>`
           }
+        </div>
+
+        <div class="hr"></div>
+
+        <h3 style="margin: 10px 0;">A2. CEFR vs IELTS 对照表（仅参考）</h3>
+        <div class="muted" style="margin-bottom:8px;">
+          <b>Approximate / For reference only</b>（避免“精确映射”争议）
+        </div>
+
+        <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px;">
+          <div class="sectionLeft"><div class="sectionTitle">CEFR C2</div></div>
+          <div style="font-weight:700;">IELTS 8.5–9.0</div>
+        </div>
+        <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px;">
+          <div class="sectionLeft"><div class="sectionTitle">CEFR C1</div></div>
+          <div style="font-weight:700;">IELTS 7.0–8.0</div>
+        </div>
+        <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px;">
+          <div class="sectionLeft"><div class="sectionTitle">CEFR B2</div></div>
+          <div style="font-weight:700;">IELTS 5.5–6.5</div>
+        </div>
+        <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px;">
+          <div class="sectionLeft"><div class="sectionTitle">CEFR B1</div></div>
+          <div style="font-weight:700;">IELTS 4.0–5.0</div>
+        </div>
+        <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px;">
+          <div class="sectionLeft"><div class="sectionTitle">CEFR A2</div></div>
+          <div style="font-weight:700;">IELTS 3.0–3.5</div>
+        </div>
+        <div class="sectionItem" style="padding:12px 14px; border:1px solid #eee; border-radius:14px; margin-top:10px;">
+          <div class="sectionLeft"><div class="sectionTitle">CEFR A1</div></div>
+          <div style="font-weight:700;">IELTS ≤2.5</div>
+        </div>
+
+        <div class="muted" style="margin-top:10px; line-height:1.7;">
+          <b>Important:</b> Approximate / For reference only.
         </div>
       </details>
     `;
 
+    // ---- 附录B（可展开）：Marking Rules（严格评分规则）----
+    const appendixB = `
+      <details>
+        <summary><b>附录B｜Marking Rules（严格评分规则）</b></summary>
+
+        <div class="muted" style="margin-top:10px; line-height:1.7;">
+          以下规则建议在前端以可展开方式呈现（中文解释可附，但<b>原文需保留</b>）：
+        </div>
+
+        <div class="hr"></div>
+
+        <ul class="muted" style="margin-top:8px; padding-left:18px; line-height:1.9;">
+          <li><b>Spelling must be correct. Misspellings are marked wrong.</b></li>
+          <li><b>Grammar must be correct where required by the sentence.</b></li>
+          <li><b>Word limit must be respected (e.g., ONE WORD AND/OR A NUMBER).</b></li>
+          <li><b>Numbers may be written in digits or words only if the word limit allows (e.g., 8:30 / 8.30; ‘eight thirty’ only when permitted).</b></li>
+          <li><b>Hyphenation/spacing variants may be accepted when meaning is unchanged (e.g., part-time / part time).</b></li>
+          <li><b>No free synonym acceptance unless explicitly allowed in the answer key.</b></li>
+          <li><b>补充（口径锁定）：所有“可接受变体（accepted variants）”必须在题库 Answer Key 层明确配置并随题发布；评分引擎/前端不做主观放宽。</b></li>
+        </ul>
+      </details>
+    `;
+
+    // ---- 附录C（可展开）：Report Method（报告计算方法）----
     const appendixC = `
       <details>
-        <summary><b>附录C｜原始数据（调试用）</b></summary>
-        <div class="muted" style="margin-top:10px;">version：<b>${esc(data?.version || "")}</b></div>
-        <div class="muted" style="margin-top:6px;">attemptId：<b>${esc(attemptId)}</b></div>
-        <details style="margin-top:10px;">
-          <summary>查看原始 JSON</summary>
-          <pre>${esc(JSON.stringify(data, null, 2))}</pre>
-        </details>
+        <summary><b>附录C｜Report Method（报告计算方法）</b></summary>
+
+        <div class="muted" style="margin-top:10px; line-height:1.7;">
+          以下用于解释报告如何计算（保持 UI 简洁，细节放在此处）：
+        </div>
+
+        <div class="hr"></div>
+
+        <ul class="muted" style="margin-top:8px; padding-left:18px; line-height:1.9;">
+          <li><b>Raw score = total correct answers (0–40).</b></li>
+          <li><b>Section score = correct answers within each section.</b></li>
+          <li><b>Dimension score (Dx) = Correct_Dx / Total_Dx × 100.</b></li>
+          <li><b>Optional Premium weighting by section difficulty can be used, but keep UI simple and explain weighting here (expandable).</b></li>
+          <li>
+            <b>Evidence Snapshot 生成逻辑：</b>
+            <div style="margin-top:6px;">
+              (a) 最低的 Dx 维度（Top 2–3）<br/>
+              (b) 错题的题号范围聚类（clustered ranges）<br/>
+              (c) 主导错误标签（dominant error labels，必须来自附录D Error Taxonomy）
+            </div>
+          </li>
+        </ul>
+
+        <div class="hr"></div>
+        <div class="muted" style="line-height:1.7;">
+          <b>版本说明：</b>本文件为评分页信息架构与文案结构总稿，用于前端开发与内容锁定。
+        </div>
       </details>
     `;
 
@@ -352,8 +445,6 @@
       </div>
     `;
 
-
-
     // ---- 渲染总布局（模块0放在总分卡片上方）----
     app.className = "grid two";
     app.innerHTML = `
@@ -362,7 +453,7 @@
       ${module1Overall}
       ${module1Sections}
 
-      <!-- 模块2已按你的要求删除（Band 对照表保留在附录B） -->
+      <!-- 模块2已按你的要求删除（对照表已放在附录A） -->
 
       ${module3}
       ${moduleDiagPreview}
@@ -427,7 +518,6 @@
     if (h1) h1.textContent = "《雅思听力全方位诊断报告》";
 
     // 2) 删掉副标题那行“基于你提交的答案生成...”（尽量不改 HTML，JS 里隐藏）
-    //    做法：找到包含该关键句的元素并隐藏
     const allTextNodes = Array.from(document.querySelectorAll("p, .muted, .subtitle, .subTitle, .desc"));
     for (const el of allTextNodes) {
       const t = (el.textContent || "").trim();
@@ -471,12 +561,6 @@
   }
 
   // ===== 顶部按钮：按你的要求改文案 & 改逻辑 =====
-  // 你要求：
-  // - “复制AttemptId”删掉
-  // - “刷新”删掉，改成“邀请微信好友一起免费测试”
-  // - “复制报告链接”改成“复制考试链接”
-  // 为了不改 HTML（保留结构/ID/大逻辑），这里直接“隐藏/复用”原按钮。
-
   const copyAttemptBtn = $("#copyAttemptBtn");
   if (copyAttemptBtn) copyAttemptBtn.style.display = "none";
 
@@ -521,4 +605,3 @@
 
   load();
 })();
-
