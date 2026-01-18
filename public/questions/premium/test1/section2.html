@@ -6,38 +6,15 @@
 <title>IELTS Listening Test 1 – Section 2</title>
 
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    max-width: 760px;
-    margin: auto;
-    padding: 25px;
-    line-height: 1.6;
-  }
+  body { font-family: Arial, sans-serif; max-width: 760px; margin: auto; padding: 25px; line-height: 1.6; }
   h1 { text-align: center; margin-bottom: 10px; }
-  .countdown {
-    text-align: center;
-    color: #b00000;
-    font-weight: bold;
-    margin-bottom: 20px;
-  }
-  .inst-block {
-    background: #f7f7f7;
-    border-left: 4px solid #333;
-    padding: 15px;
-    margin: 25px 0 15px;
-  }
+  .countdown { text-align: center; color: #b00000; font-weight: bold; margin-bottom: 20px; }
+  .inst-block { background: #f7f7f7; border-left: 4px solid #333; padding: 15px; margin: 25px 0 15px; }
   .question { margin-top: 18px; font-weight: bold; }
-  input[type="text"] {
-    width: 100%;
-    padding: 8px;
-    margin-top: 6px;
-    font-size: 15px;
-    box-sizing: border-box;
-  }
+  input[type="text"] { width: 100%; padding: 8px; margin-top: 6px; font-size: 15px; box-sizing:border-box; }
   .options { margin-left: 20px; margin-top: 6px; }
   .map-box { text-align: center; margin: 20px 0; }
   .map-box img { max-width: 100%; border: 1px solid #ccc; }
-
   audio { width: 100%; pointer-events: none; }
   .audio-note { text-align: center; font-style: italic; margin-top: 10px; }
 
@@ -57,7 +34,6 @@
   The recording will begin in <span id="time">10</span> seconds.
 </div>
 
-<!-- 音频 -->
 <audio id="audio" preload="auto">
   <source src="/public/audio/premium/test1/Premium_IELTS_Listening_Test1_Section2.mp3" type="audio/mpeg">
 </audio>
@@ -66,7 +42,6 @@
   The recording is ready. Click the play button to start.
 </div>
 
-<!-- Questions 11–14 -->
 <div class="inst-block">
   <strong>Questions 11–14</strong><br>
   Label the map below.<br>
@@ -101,7 +76,6 @@
   <input type="text" name="q14" class="inline-input">
 </div>
 
-<!-- Questions 15–16 -->
 <div class="inst-block">
   <strong>Questions 15–16</strong><br>
   Write <strong>ONE WORD AND/OR A NUMBER</strong> for each answer.
@@ -113,7 +87,6 @@
 <div class="question">16. Students must show their __________ to enter the library.</div>
 <input type="text" name="q16">
 
-<!-- Questions 17–20 -->
 <div class="inst-block">
   <strong>Questions 17–20</strong><br>
   Choose the correct letter <strong>A, B or C</strong>.
@@ -121,109 +94,70 @@
 
 <div class="question">17. What support service does the speaker mention first?</div>
 <div class="options">
-  <label><input type="radio" name="q17" value="Accommodation help"> A. Accommodation help</label><br>
-  <label><input type="radio" name="q17" value="Language support"> B. Language support</label><br>
-  <label><input type="radio" name="q17" value="IT assistance"> C. IT assistance</label>
+  <label><input type="radio" name="q17" value="A"> A. Accommodation help</label><br>
+  <label><input type="radio" name="q17" value="B"> B. Language support</label><br>
+  <label><input type="radio" name="q17" value="C"> C. IT assistance</label>
 </div>
 
 <div class="question">18. What does the speaker advise students to do during breaks?</div>
 <div class="options">
-  <label><input type="radio" name="q18" value="Meet in the cafeteria"> A. Meet in the cafeteria</label><br>
-  <label><input type="radio" name="q18" value="Relax on the lawn"> B. Relax on the lawn</label><br>
-  <label><input type="radio" name="q18" value="Visit the student centre"> C. Visit the student centre</label>
+  <label><input type="radio" name="q18" value="A"> A. Meet in the cafeteria</label><br>
+  <label><input type="radio" name="q18" value="B"> B. Relax on the lawn</label><br>
+  <label><input type="radio" name="q18" value="C"> C. Visit the student centre</label>
 </div>
 
 <div class="question">19. What should students do if they have questions after the tour?</div>
 <div class="options">
-  <label><input type="radio" name="q19" value="Email the guide"> A. Email the guide</label><br>
-  <label><input type="radio" name="q19" value="Go to the info desk"> B. Go to the info desk</label><br>
-  <label><input type="radio" name="q19" value="Ask another student volunteer"> C. Ask another student volunteer</label>
+  <label><input type="radio" name="q19" value="A"> A. Email the guide</label><br>
+  <label><input type="radio" name="q19" value="B"> B. Go to the info desk</label><br>
+  <label><input type="radio" name="q19" value="C"> C. Ask another student volunteer</label>
 </div>
 
 <div class="question">20. What does the speaker suggest students check online?</div>
 <div class="options">
-  <label><input type="radio" name="q20" value="The campus map"> A. The campus map</label><br>
-  <label><input type="radio" name="q20" value="Upcoming events"> B. Upcoming events</label><br>
-  <label><input type="radio" name="q20" value="Course registration dates"> C. Course registration dates</label>
+  <label><input type="radio" name="q20" value="A"> A. The campus map</label><br>
+  <label><input type="radio" name="q20" value="B"> B. Upcoming events</label><br>
+  <label><input type="radio" name="q20" value="C"> C. Course registration dates</label>
 </div>
 
 <script>
-  // =========================
-  // ✅ attemptId：确保存在（URL优先，其次localStorage；都没有就生成）
-  // ✅ answers：实时写入 localStorage（answers_<attemptId>）
-  // =========================
-  function ensureAttemptId() {
+  // ============= attemptId + localStorage helpers =============
+  function getAttemptId() {
     const params = new URLSearchParams(location.search);
     let id = (params.get("attemptId") || "").trim();
-
     if (!id) id = (localStorage.getItem("attemptId") || "").trim();
     if (!id) id = (localStorage.getItem("attempt_id") || "").trim();
-
-    if (!id) id = "a_" + Date.now() + "_" + Math.random().toString(16).slice(2, 10);
-
-    localStorage.setItem("attemptId", id);
-    localStorage.setItem("attempt_id", id);
-
-    if (!params.get("attemptId")) {
-      params.set("attemptId", id);
-      history.replaceState(null, "", location.pathname + "?" + params.toString());
-    }
-
     return id;
   }
+  const attemptId = getAttemptId();
+  if (attemptId) {
+    localStorage.setItem("attemptId", attemptId);
+    localStorage.setItem("attempt_id", attemptId);
+  }
 
-  const attemptId = ensureAttemptId();
-  const ANSWERS_KEY = "answers_" + attemptId;
-
-  function readAllAnswers() {
-    try {
-      const raw = localStorage.getItem(ANSWERS_KEY);
-      return raw ? JSON.parse(raw) : {};
-    } catch {
-      return {};
+  function collectSection2Answers() {
+    const out = {};
+    for (let n = 11; n <= 20; n++) {
+      const input = document.querySelector(`input[name="q${n}"]`);
+      if (input && input.type === "text") {
+        out[n] = (input.value || "").trim();
+      } else {
+        const chosen = document.querySelector(`input[name="q${n}"]:checked`);
+        out[n] = (chosen?.value || "").trim();
+      }
     }
+    return out;
   }
 
-  function writeAllAnswers(obj) {
-    try { localStorage.setItem(ANSWERS_KEY, JSON.stringify(obj || {})); } catch {}
+  function mergeIntoLocalAnswers(sectionAnswers) {
+    if (!attemptId) return;
+    const key = `answers_${attemptId}`;
+    let base = {};
+    try { base = JSON.parse(localStorage.getItem(key) || "{}"); } catch { base = {}; }
+    const merged = { ...base, ...sectionAnswers };
+    localStorage.setItem(key, JSON.stringify(merged));
   }
 
-  function saveAnswer(qNum, value) {
-    const all = readAllAnswers();
-    all[String(qNum)] = value ?? "";
-    writeAllAnswers(all);
-  }
-
-  function hydrateAnswer(qNum) {
-    const all = readAllAnswers();
-    return all[String(qNum)] ?? "";
-  }
-
-  // ============= 绑定输入：回填 + 实时保存 =============
-  function bindText(qNum) {
-    const el = document.querySelector(`input[name="q${qNum}"]`);
-    if (!el) return;
-    el.value = hydrateAnswer(qNum);
-    el.addEventListener("input", () => saveAnswer(qNum, el.value || ""));
-  }
-
-  function bindRadio(qNum) {
-    const saved = hydrateAnswer(qNum);
-    const nodes = document.querySelectorAll(`input[type="radio"][name="q${qNum}"]`);
-    nodes.forEach(r => {
-      if (saved && r.value === saved) r.checked = true;
-      r.addEventListener("change", () => {
-        if (r.checked) saveAnswer(qNum, r.value || "");
-      });
-    });
-  }
-
-  // Q11–16 文本
-  [11,12,13,14,15,16].forEach(bindText);
-  // Q17–20 选择
-  [17,18,19,20].forEach(bindRadio);
-
-  // ============= 倒计时 + 自动播放 =============
   const audio = document.getElementById("audio");
   const countdownBox = document.getElementById("countdown");
   const audioNote = document.getElementById("audioNote");
@@ -252,10 +186,14 @@
     audio.currentTime = audio.currentTime;
   });
 
-  // 音频结束 → 跳转 Section 3（带 attemptId）
+  // ✅ 音频结束 → 保存本页 11-20 → 跳转 Section3（带 attemptId）
   audio.addEventListener("ended", () => {
-    localStorage.setItem("attemptId", attemptId);
-    localStorage.setItem("attempt_id", attemptId);
+    if (!attemptId) {
+      alert("缺少 attemptId，请从 start.html 入口重新进入。");
+      return;
+    }
+    const s2 = collectSection2Answers();
+    mergeIntoLocalAnswers(s2);
     window.location.href = "./section3.html?attemptId=" + encodeURIComponent(attemptId);
   });
 </script>
