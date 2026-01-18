@@ -6,97 +6,23 @@
   <title>IELTS Listening Test 1 – Section 3</title>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 760px;
-      margin: auto;
-      padding: 25px;
-      line-height: 1.6;
-    }
+    body { font-family: Arial, sans-serif; max-width: 760px; margin: auto; padding: 25px; line-height: 1.6; }
+    h1 { text-align: center; margin-bottom: 10px; }
+    .countdown { text-align: center; color: #b00000; font-weight: bold; margin-bottom: 20px; }
+    .inst-block { background: #f7f7f7; border-left: 4px solid #333; padding: 15px; margin: 25px 0 15px; }
+    .question { margin-top: 18px; font-weight: bold; }
+    input[type="text"] { width: 100%; padding: 8px; margin-top: 6px; font-size: 15px; box-sizing:border-box; }
+    .options { margin-left: 20px; margin-top: 6px; }
+    audio { width: 100%; pointer-events: none; }
+    .audio-note { text-align: center; font-style: italic; margin-top: 10px; }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
+    .match-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
+    .match-row .qnum { width: 34px; font-weight: bold; }
+    .match-row .who { width: 120px; }
+    .match-row input[type="text"] { margin-top: 0; max-width: 120px; text-transform: uppercase; }
 
-    .countdown {
-      text-align: center;
-      color: #b00000;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-
-    .inst-block {
-      background: #f7f7f7;
-      border-left: 4px solid #333;
-      padding: 15px;
-      margin: 25px 0 15px;
-    }
-
-    .question {
-      margin-top: 18px;
-      font-weight: bold;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 8px;
-      margin-top: 6px;
-      font-size: 15px;
-      box-sizing: border-box;
-    }
-
-    .options {
-      margin-left: 20px;
-      margin-top: 6px;
-    }
-
-    audio {
-      width: 100%;
-      pointer-events: none; /* 禁止操作（机考风格） */
-    }
-
-    .audio-note {
-      text-align: center;
-      font-style: italic;
-      margin-top: 10px;
-    }
-
-    /* Matching layout (24–26) */
-    .match-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 10px 0;
-    }
-    .match-row .qnum {
-      width: 34px;
-      font-weight: bold;
-    }
-    .match-row .who {
-      width: 120px;
-    }
-    .match-row input[type="text"] {
-      margin-top: 0;
-      max-width: 120px;
-      text-transform: uppercase;
-    }
-
-    /* Notes list (27–30) */
-    .notes {
-      margin-top: 10px;
-      padding-left: 0;
-      list-style: none;
-    }
-    .notes li {
-      margin: 10px 0;
-    }
-    .blank {
-      display: inline-block;
-      min-width: 160px;
-      border-bottom: 2px solid #333;
-      transform: translateY(-2px);
-    }
+    .notes { margin-top: 10px; padding-left: 0; list-style: none; }
+    .notes li { margin: 10px 0; }
   </style>
 </head>
 
@@ -109,7 +35,6 @@
     The recording will begin in <span id="time">10</span> seconds.
   </div>
 
-  <!-- Audio (controls shown but locked via pointer-events) -->
   <audio id="audio" controls preload="auto" controlslist="nodownload noplaybackrate">
     <source src="/public/audio/premium/test1/Premium_IELTS_Listening_Test1_Section3.mp3" type="audio/mpeg">
   </audio>
@@ -118,7 +43,6 @@
     The recording is ready. Click the play button to start.
   </div>
 
-  <!-- Questions 21–23 -->
   <div class="inst-block">
     <strong>Questions 21–23</strong><br>
     Choose the correct letter <strong>A, B or C</strong>.
@@ -145,7 +69,6 @@
     <label><input type="radio" name="q23" value="C"> C. Previous studies used a similar method</label>
   </div>
 
-  <!-- Questions 24–26 -->
   <div class="inst-block">
     <strong>Questions 24–26</strong><br>
     Match each student with the responsibility they will take on.<br>
@@ -177,7 +100,6 @@
     <input type="text" name="q26" maxlength="1" aria-label="Question 26">
   </div>
 
-  <!-- Questions 27–30 -->
   <div class="inst-block">
     <strong>Questions 27–30</strong><br>
     Complete the notes below.<br>
@@ -193,90 +115,57 @@
   </ul>
 
   <script>
-    // =========================
-    // ✅ attemptId：确保存在（URL优先，其次localStorage；都没有就生成）
-    // ✅ answers：实时写入 localStorage（answers_<attemptId>）
-    // =========================
-    function ensureAttemptId() {
+    // ============= attemptId + localStorage helpers =============
+    function getAttemptId() {
       const params = new URLSearchParams(location.search);
       let id = (params.get("attemptId") || "").trim();
-
       if (!id) id = (localStorage.getItem("attemptId") || "").trim();
       if (!id) id = (localStorage.getItem("attempt_id") || "").trim();
-
-      if (!id) id = "a_" + Date.now() + "_" + Math.random().toString(16).slice(2, 10);
-
-      localStorage.setItem("attemptId", id);
-      localStorage.setItem("attempt_id", id);
-
-      if (!params.get("attemptId")) {
-        params.set("attemptId", id);
-        history.replaceState(null, "", location.pathname + "?" + params.toString());
-      }
-
       return id;
     }
+    const attemptId = getAttemptId();
+    if (attemptId) {
+      localStorage.setItem("attemptId", attemptId);
+      localStorage.setItem("attempt_id", attemptId);
+    }
 
-    const attemptId = ensureAttemptId();
-    const ANSWERS_KEY = "answers_" + attemptId;
+    function mergeIntoLocalAnswers(sectionAnswers) {
+      if (!attemptId) return;
+      const key = `answers_${attemptId}`;
+      let base = {};
+      try { base = JSON.parse(localStorage.getItem(key) || "{}"); } catch { base = {}; }
+      const merged = { ...base, ...sectionAnswers };
+      localStorage.setItem(key, JSON.stringify(merged));
+    }
 
-    function readAllAnswers() {
-      try {
-        const raw = localStorage.getItem(ANSWERS_KEY);
-        return raw ? JSON.parse(raw) : {};
-      } catch {
-        return {};
+    function collectSection3Answers() {
+      const out = {};
+      for (let n = 21; n <= 30; n++) {
+        const textEl = document.querySelector(`input[name="q${n}"]`);
+        if (textEl && textEl.type === "text") {
+          out[n] = (textEl.value || "").trim();
+        } else {
+          const chosen = document.querySelector(`input[name="q${n}"]:checked`);
+          out[n] = (chosen?.value || "").trim();
+        }
       }
+      return out;
     }
 
-    function writeAllAnswers(obj) {
-      try { localStorage.setItem(ANSWERS_KEY, JSON.stringify(obj || {})); } catch {}
-    }
-
-    function saveAnswer(qNum, value) {
-      const all = readAllAnswers();
-      all[String(qNum)] = value ?? "";
-      writeAllAnswers(all);
-    }
-
-    function hydrateAnswer(qNum) {
-      const all = readAllAnswers();
-      return all[String(qNum)] ?? "";
-    }
-
-    function bindRadio(qNum) {
-      const saved = hydrateAnswer(qNum);
-      const nodes = document.querySelectorAll(`input[type="radio"][name="q${qNum}"]`);
-      nodes.forEach(r => {
-        if (saved && r.value === saved) r.checked = true;
-        r.addEventListener("change", () => {
-          if (r.checked) saveAnswer(qNum, r.value || "");
+    // ✅ 24–26 自动转大写、只保留 1 个字母（大小写都算对；这里帮你规范输入）
+    function setupMatchInputs() {
+      [24,25,26].forEach(n => {
+        const el = document.querySelector(`input[name="q${n}"]`);
+        if (!el) return;
+        el.addEventListener("input", () => {
+          let v = (el.value || "").toString().toUpperCase();
+          v = v.replace(/[^A-Z]/g, "").slice(0, 1);
+          el.value = v;
         });
       });
     }
+    setupMatchInputs();
 
-    function bindText(qNum, opts) {
-      const el = document.querySelector(`input[name="q${qNum}"]`);
-      if (!el) return;
-      el.value = hydrateAnswer(qNum);
-
-      el.addEventListener("input", () => {
-        let v = el.value || "";
-        if (opts?.upper) v = v.toUpperCase();
-        if (opts?.oneChar) v = v.replace(/[^A-Z]/g, "").slice(0, 1); // 只保留 1 个字母
-        if (v !== el.value) el.value = v;
-        saveAnswer(qNum, v);
-      });
-    }
-
-    // Q21–23 单选
-    [21,22,23].forEach(bindRadio);
-    // Q24–26 单字母
-    [24,25,26].forEach(n => bindText(n, { upper: true, oneChar: true }));
-    // Q27–30 文本
-    [27,28,29,30].forEach(bindText);
-
-    // ============= 倒计时 + 自动播放逻辑 =============
     const audio = document.getElementById("audio");
     const countdownBox = document.getElementById("countdown");
     const audioNote = document.getElementById("audioNote");
@@ -305,10 +194,14 @@
       audio.currentTime = audio.currentTime;
     });
 
-    // Audio end -> go Section 4（带 attemptId）
+    // ✅ 音频结束 → 保存本页 21-30 → 跳转 Section4（带 attemptId）
     audio.addEventListener("ended", () => {
-      localStorage.setItem("attemptId", attemptId);
-      localStorage.setItem("attempt_id", attemptId);
+      if (!attemptId) {
+        alert("缺少 attemptId，请从 start.html 入口重新进入。");
+        return;
+      }
+      const s3 = collectSection3Answers();
+      mergeIntoLocalAnswers(s3);
       window.location.href = "./section4.html?attemptId=" + encodeURIComponent(attemptId);
     });
   </script>
