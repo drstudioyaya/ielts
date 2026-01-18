@@ -135,47 +135,69 @@
 
   
   <script>
-    const audio = document.getElementById("audio");
-    const countdownBox = document.getElementById("countdown");
-    const audioNote = document.getElementById("audioNote");
-    let timeLeft = 10;
+  const audio = document.getElementById("audio");
+  const countdownBox = document.getElementById("countdown");
+  const audioNote = document.getElementById("audioNote");
+  let timeLeft = 10;
 
-    // Countdown
-    const timer = setInterval(() => {
-      timeLeft--;
-      document.getElementById("time").innerText = timeLeft;
+  // ✅ 关键：拿到 attemptId（优先 URL，其次 localStorage）
+  function getAttemptId() {
+    const params = new URLSearchParams(location.search);
+    let id = (params.get("attemptId") || "").trim();
+    if (!id) id = (localStorage.getItem("attemptId") || "").trim();
+    if (!id) id = (localStorage.getItem("attempt_id") || "").trim();
+    return id;
+  }
 
-      if (timeLeft === 0) {
-        clearInterval(timer);
-        countdownBox.style.display = "none";
+  const attemptId = getAttemptId();
 
-        audio.play().catch(() => {
-          audioNote.style.display = "block";
-          audio.controls = true;
-          audio.style.pointerEvents = "auto"; // 仅在被拦截时允许点击播放
-        });
-      }
-    }, 1000);
+  // Countdown
+  const timer = setInterval(() => {
+    timeLeft--;
+    document.getElementById("time").innerText = timeLeft;
 
-    // Prevent pause / seeking (exam mode)
-    audio.addEventListener("pause", () => {
-      if (!audio.ended) audio.play();
-    });
-    audio.addEventListener("seeking", () => {
-      audio.currentTime = audio.currentTime;
-    });
+    if (timeLeft === 0) {
+      clearInterval(timer);
+      countdownBox.style.display = "none";
 
+      audio.play().catch(() => {
+        audioNote.style.display = "block";
+        audio.controls = true;
+        audio.style.pointerEvents = "auto"; // 仅在被拦截时允许点击播放
+      });
+    }
+  }, 1000);
 
-// 音频结束 → 自动提交
-audio.addEventListener("ended", () => {
-  submitTest();
-});
+  // Prevent pause / seeking (exam mode)
+  audio.addEventListener("pause", () => {
+    if (!audio.ended) audio.play().catch(() => {});
+  });
+  audio.addEventListener("seeking", () => {
+    audio.currentTime = audio.currentTime;
+  });
 
-function submitTest() {
-  // 这里后续可接评分页
-  window.location.href = "/public/questions/premium/test1/score.html?attemptId=" + encodeURIComponent(attemptId);
-}
+  // 音频结束 → 自动提交
+  audio.addEventListener("ended", () => {
+    submitTest();
+  });
+
+  let submitting = false;
+  function submitTest() {
+    if (submitting) return;
+    submitting = true;
+
+    if (!attemptId) {
+      alert("缺少 attemptId，无法生成报告。请从 Full Test 入口重新进入。");
+      submitting = false;
+      return;
+    }
+
+    window.location.href =
+      "/public/questions/premium/test1/score.html?attemptId=" +
+      encodeURIComponent(attemptId);
+  }
 </script>
+
 
 </body>
 </html>
