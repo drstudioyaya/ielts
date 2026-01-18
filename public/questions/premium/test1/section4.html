@@ -84,11 +84,10 @@
 
   <h1>SECTION 4</h1>
 
-
   <div id="countdown" class="countdown">
-    You now have some time to look at Questions 21–30.<br>
+    You now have some time to look at Questions 31–40.<br>
     The recording will begin in <span id="time">10</span> seconds.
-</div>
+  </div>
 
   <!-- Audio (controls shown but locked via pointer-events) -->
   <audio id="audio" controls preload="auto" controlslist="nodownload noplaybackrate">
@@ -104,100 +103,148 @@
     <strong>Questions 31–40</strong><br>
     Complete the notes below.<br>
     Write <strong>ONE WORD AND/OR A NUMBER</strong> for each answer.
-</div>
+  </div>
 
-<div class="question">Sustainable Cities</div>
-<ul class="notes">
-  <li> One major goal of sustainable cities is to reduce <strong>31.</strong> <input type="text" name="q31" style="max-width:160px; display:inline-block;"> emissions.</li>
-  <li> Public transport systems are designed to be more <strong>32.</strong> <input type="text" name="q32" style="max-width:160px; display:inline-block;"> and affordable</li>
-  <li> Many cities encourage the use of renewable energy, such as solar and <strong>33.</strong> <input type="text" name="q33" style="max-width:160px; display:inline-block;"> power.</li>
-  <li> Urban planners aim to increase access to green spaces, including parks and <strong>34.</strong> <input type="text" name="q34" style="max-width:160px; display:inline-block;"> .</li>
-  <li> High-density housing helps to limit urban <strong>35.</strong> <input type="text" name="q35" style="max-width:160px; display:inline-block;"> .</li>  
-</ul>
-      
-<div class="question">Sustainable Infrastructure</div>
-<ul class="notes">
-  <li> Modern buildings often include systems to reduce water <strong>36.</strong> <input type="text" name="q36" style="max-width:160px; display:inline-block;"> .</li>
-  <li> Waste management focuses on recycling and <strong>37.</strong> <input type="text" name="q37" style="max-width:160px; display:inline-block;"> .</li>
-  <li> Sustainable cities prioritise pedestrian and <strong>38.</strong> <input type="text" name="q38" style="max-width:160px; display:inline-block;"> friendly streets.</li>
-  <li> Smart technology is used to monitor energy use and traffic <strong>39.</strong> <input type="text" name="q39" style="max-width:160px; display:inline-block;"> .</li>
-  <li> Long-term planning requires cooperation between governments and local <strong>40.</strong> <input type="text" name="q40" style="max-width:160px; display:inline-block;"> .</li>
-</ul>
+  <div class="question">Sustainable Cities</div>
+  <ul class="notes">
+    <li> One major goal of sustainable cities is to reduce <strong>31.</strong> <input type="text" name="q31" style="max-width:160px; display:inline-block;"> emissions.</li>
+    <li> Public transport systems are designed to be more <strong>32.</strong> <input type="text" name="q32" style="max-width:160px; display:inline-block;"> and affordable</li>
+    <li> Many cities encourage the use of renewable energy, such as solar and <strong>33.</strong> <input type="text" name="q33" style="max-width:160px; display:inline-block;"> power.</li>
+    <li> Urban planners aim to increase access to green spaces, including parks and <strong>34.</strong> <input type="text" name="q34" style="max-width:160px; display:inline-block;"> .</li>
+    <li> High-density housing helps to limit urban <strong>35.</strong> <input type="text" name="q35" style="max-width:160px; display:inline-block;"> .</li>
+  </ul>
 
+  <div class="question">Sustainable Infrastructure</div>
+  <ul class="notes">
+    <li> Modern buildings often include systems to reduce water <strong>36.</strong> <input type="text" name="q36" style="max-width:160px; display:inline-block;"> .</li>
+    <li> Waste management focuses on recycling and <strong>37.</strong> <input type="text" name="q37" style="max-width:160px; display:inline-block;"> .</li>
+    <li> Sustainable cities prioritise pedestrian and <strong>38.</strong> <input type="text" name="q38" style="max-width:160px; display:inline-block;"> friendly streets.</li>
+    <li> Smart technology is used to monitor energy use and traffic <strong>39.</strong> <input type="text" name="q39" style="max-width:160px; display:inline-block;"> .</li>
+    <li> Long-term planning requires cooperation between governments and local <strong>40.</strong> <input type="text" name="q40" style="max-width:160px; display:inline-block;"> .</li>
+  </ul>
 
+  <button id="submitBtn" class="submit-btn" type="button" onclick="submitTest()">
+    Submit Answers
+  </button>
 
-
-<button class="submit-btn" type="button" onclick="submitTest()">
-  Submit Answers
-</button>
-
-
-
-  
   <script>
-  const audio = document.getElementById("audio");
-  const countdownBox = document.getElementById("countdown");
-  const audioNote = document.getElementById("audioNote");
-  let timeLeft = 10;
+    const audio = document.getElementById("audio");
+    const countdownBox = document.getElementById("countdown");
+    const audioNote = document.getElementById("audioNote");
+    const submitBtn = document.getElementById("submitBtn");
+    let timeLeft = 10;
 
-  // ✅ 关键：拿到 attemptId（优先 URL，其次 localStorage）
-  function getAttemptId() {
-    const params = new URLSearchParams(location.search);
-    let id = (params.get("attemptId") || "").trim();
-    if (!id) id = (localStorage.getItem("attemptId") || "").trim();
-    if (!id) id = (localStorage.getItem("attempt_id") || "").trim();
-    return id;
-  }
-
-  const attemptId = getAttemptId();
-
-  // Countdown
-  const timer = setInterval(() => {
-    timeLeft--;
-    document.getElementById("time").innerText = timeLeft;
-
-    if (timeLeft === 0) {
-      clearInterval(timer);
-      countdownBox.style.display = "none";
-
-      audio.play().catch(() => {
-        audioNote.style.display = "block";
-        audio.controls = true;
-        audio.style.pointerEvents = "auto"; // 仅在被拦截时允许点击播放
-      });
+    // ✅ attemptId：优先 URL，其次 localStorage
+    function getAttemptId() {
+      const params = new URLSearchParams(location.search);
+      let id = (params.get("attemptId") || "").trim();
+      if (!id) id = (localStorage.getItem("attemptId") || "").trim();
+      if (!id) id = (localStorage.getItem("attempt_id") || "").trim();
+      return id;
     }
-  }, 1000);
+    const attemptId = getAttemptId();
 
-  // Prevent pause / seeking (exam mode)
-  audio.addEventListener("pause", () => {
-    if (!audio.ended) audio.play().catch(() => {});
-  });
-  audio.addEventListener("seeking", () => {
-    audio.currentTime = audio.currentTime;
-  });
+    // Countdown
+    const timer = setInterval(() => {
+      timeLeft--;
+      document.getElementById("time").innerText = timeLeft;
 
-  // 音频结束 → 自动提交
-  audio.addEventListener("ended", () => {
-    submitTest();
-  });
+      if (timeLeft === 0) {
+        clearInterval(timer);
+        countdownBox.style.display = "none";
 
-  let submitting = false;
-  function submitTest() {
-    if (submitting) return;
-    submitting = true;
+        audio.play().catch(() => {
+          audioNote.style.display = "block";
+          audio.controls = true;
+          audio.style.pointerEvents = "auto"; // 被拦截时允许点击播放
+        });
+      }
+    }, 1000);
 
-    if (!attemptId) {
-      alert("缺少 attemptId，无法生成报告。请从 Full Test 入口重新进入。");
-      submitting = false;
-      return;
+    // Prevent pause / seeking (exam mode)
+    audio.addEventListener("pause", () => {
+      if (!audio.ended) audio.play().catch(() => {});
+    });
+    audio.addEventListener("seeking", () => {
+      audio.currentTime = audio.currentTime;
+    });
+
+    // 音频结束 → 自动提交
+    audio.addEventListener("ended", () => {
+      submitTest();
+    });
+
+    // ✅ 收集本页答案（31-40）
+    function collectSection4Answers() {
+      const out = {};
+      for (let n = 31; n <= 40; n++) {
+        const el = document.querySelector(`input[name="q${n}"]`);
+        out[n] = (el?.value || "").trim();
+      }
+      return out;
     }
 
-    window.location.href =
-      "/public/questions/premium/test1/score.html?attemptId=" +
-      encodeURIComponent(attemptId);
-  }
-</script>
+    // ✅ 合并写入 localStorage：answers_${attemptId}
+    function mergeIntoLocalAnswers(sectionAnswers) {
+      if (!attemptId) return null;
+      const key = `answers_${attemptId}`;
+      let base = {};
+      try { base = JSON.parse(localStorage.getItem(key) || "{}"); } catch { base = {}; }
+      const merged = { ...base, ...sectionAnswers };
+      localStorage.setItem(key, JSON.stringify(merged));
+      return merged;
+    }
 
+    let submitting = false;
+
+    // ✅ 关键：submitTest 先 POST /api/attempts，再跳 score.html（用后端返回的 attemptId）
+    async function submitTest() {
+      if (submitting) return;
+      submitting = true;
+
+      if (!attemptId) {
+        alert("缺少 attemptId，无法生成报告。请从 start.html 入口重新进入。");
+        submitting = false;
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting...";
+
+      // 1) 本页答案写入 localStorage
+      const s4 = collectSection4Answers();
+      const mergedAnswers = mergeIntoLocalAnswers(s4) || s4;
+
+      // 2) 提交到后端生成真实 attempt
+      try {
+        const payload = {
+          testId: "premium-test1",
+          section: "full",
+          scoreLocal: 0,
+          answers: mergedAnswers
+        };
+
+        const r = await fetch("/api/attempts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await r.json();
+        if (!r.ok) throw new Error(data?.error || `API error (${r.status})`);
+
+        // 3) 用后端返回的 attemptId 跳转报告页（不会再 attempt_not_found）
+        window.location.href =
+          "/public/questions/premium/test1/score.html?attemptId=" +
+          encodeURIComponent(data.attemptId);
+      } catch (e) {
+        alert("Submit failed: " + (e?.message || e));
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit Answers";
+        submitting = false;
+      }
+    }
+  </script>
 
 </body>
 </html>
