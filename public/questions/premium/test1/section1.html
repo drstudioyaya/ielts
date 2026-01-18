@@ -127,6 +127,64 @@
   </template>
 
   <script>
+    // =========================
+    // ✅ attemptId：确保存在（URL优先，其次localStorage；都没有就生成）
+    // ✅ answers：实时写入 localStorage（answers_<attemptId>）
+    // =========================
+    function ensureAttemptId() {
+      const params = new URLSearchParams(location.search);
+      let id = (params.get("attemptId") || "").trim();
+
+      if (!id) id = (localStorage.getItem("attemptId") || "").trim();
+      if (!id) id = (localStorage.getItem("attempt_id") || "").trim();
+
+      if (!id) {
+        id = "a_" + Date.now() + "_" + Math.random().toString(16).slice(2, 10);
+      }
+
+      // 统一写入 localStorage
+      localStorage.setItem("attemptId", id);
+      localStorage.setItem("attempt_id", id);
+
+      // 如果 URL 没带 attemptId，把它写回 URL（不刷新页面）
+      if (!params.get("attemptId")) {
+        params.set("attemptId", id);
+        const newUrl = location.pathname + "?" + params.toString();
+        history.replaceState(null, "", newUrl);
+      }
+
+      return id;
+    }
+
+    const attemptId = ensureAttemptId();
+    const ANSWERS_KEY = "answers_" + attemptId;
+
+    function readAllAnswers() {
+      try {
+        const raw = localStorage.getItem(ANSWERS_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function writeAllAnswers(obj) {
+      try {
+        localStorage.setItem(ANSWERS_KEY, JSON.stringify(obj || {}));
+      } catch {}
+    }
+
+    function saveAnswer(qNum, value) {
+      const all = readAllAnswers();
+      all[String(qNum)] = value ?? "";
+      writeAllAnswers(all);
+    }
+
+    function hydrateAnswer(qNum) {
+      const all = readAllAnswers();
+      return all[String(qNum)] ?? "";
+    }
+
     // ============= 加载 Section 1 题库 =============
     const sectionData =
       window.PREMIUM_TEST1 && window.PREMIUM_TEST1.section1;
@@ -157,6 +215,15 @@
         const input = document.createElement("input");
         input.type = "text";
         input.id = `q${q.number}`;
+
+        // ✅ 回填
+        input.value = hydrateAnswer(q.number);
+
+        // ✅ 实时保存
+        input.addEventListener("input", (e) => {
+          saveAnswer(q.number, e.target.value || "");
+        });
+
         wrapper.appendChild(input);
       }
 
@@ -164,12 +231,22 @@
         const optBox = document.createElement("div");
         optBox.className = "options";
 
+        const saved = hydrateAnswer(q.number);
+
         q.options.forEach((opt, idx) => {
           const label = document.createElement("label");
           const radio = document.createElement("input");
           radio.type = "radio";
           radio.name = `q${q.number}`;
           radio.value = opt;
+
+          // ✅ 回填
+          if (saved && saved === opt) radio.checked = true;
+
+          // ✅ 实时保存
+          radio.addEventListener("change", () => {
+            if (radio.checked) saveAnswer(q.number, radio.value || "");
+          });
 
           const letter = String.fromCharCode(65 + idx); // A,B,C...
           label.appendChild(radio);
@@ -258,17 +335,17 @@
     // 防止手动暂停（键盘之类）
     audio.addEventListener("pause", () => {
       if (!audio.ended && hasStarted) {
-        audio.play().catch(() => {
-          // 如果这里也被拦截，就不再死循环
-        });
+        audio.play().catch(() => {});
       }
     });
 
-    // 音频自然结束 → 跳转 Section 2
+    // ✅ 音频自然结束 → 跳转 Section 2（确保 attemptId 带上）
     audio.addEventListener("ended", () => {
-      const attemptId = new URLSearchParams(location.search).get("attemptId") || "";
-window.location.href = "./section2.html?attemptId=" + encodeURIComponent(attemptId);
+      // 保险：把 attemptId 再写一次
+      localStorage.setItem("attemptId", attemptId);
+      localStorage.setItem("attempt_id", attemptId);
 
+      window.location.href = "./section2.html?attemptId=" + encodeURIComponent(attemptId);
     });
 
     // 页面加载完就启动倒计时
