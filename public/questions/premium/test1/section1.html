@@ -23,7 +23,6 @@
       margin-bottom: 16px;
     }
 
-    /* 顶部预读提示 + 倒计时（红字） */
     .preview-box {
       text-align: center;
       margin-bottom: 16px;
@@ -34,7 +33,6 @@
       margin: 4px 0;
     }
 
-    /* 音频外壳 + 透明遮罩 */
     .audio-wrapper {
       position: relative;
       margin: 8px 0 24px;
@@ -42,7 +40,6 @@
     .audio-wrapper audio {
       width: 100%;
     }
-    /* 覆盖在 audio 上，拦截所有点击和拖动 */
     .audio-overlay {
       position: absolute;
       inset: 0;
@@ -51,7 +48,6 @@
       cursor: not-allowed;
     }
 
-    /* 说明灰框 */
     .inst-block {
       background: #f7f7f7;
       border-left: 4px solid #333;
@@ -91,7 +87,6 @@
 <body>
   <h1>SECTION 1</h1>
 
-  <!-- 预读提示 + 倒计时 -->
   <div class="preview-box">
     <p>You now have some time to look at Questions 1–10.</p>
     <p id="countdownText">
@@ -99,7 +94,6 @@
     </p>
   </div>
 
-  <!-- 音频：有播放条，但被透明层罩住，学生点不到真实按钮 -->
   <div class="audio-wrapper">
     <audio
       id="audioPlayer"
@@ -109,16 +103,13 @@
     <div id="audioOverlay" class="audio-overlay"></div>
   </div>
 
-  <!-- Questions 1–6 说明（始终可见） -->
   <div class="inst-block">
     <strong>Questions 1–6</strong>
     Write <strong>NO MORE THAN TWO WORDS AND/OR A NUMBER</strong> for each answer.
   </div>
 
-  <!-- 题目容器 -->
   <form id="testForm"></form>
 
-  <!-- Questions 7–10 说明模板，会插在第 7 题前 -->
   <template id="inst7to10">
     <div class="inst-block">
       <strong>Questions 7–10</strong>
@@ -127,71 +118,49 @@
   </template>
 
   <script>
-    // =========================
-    // ✅ attemptId：确保存在（URL优先，其次localStorage；都没有就生成）
-    // ✅ answers：实时写入 localStorage（answers_<attemptId>）
-    // =========================
-    function ensureAttemptId() {
+    // ============= attemptId + localStorage helpers =============
+    function getAttemptId() {
       const params = new URLSearchParams(location.search);
       let id = (params.get("attemptId") || "").trim();
-
       if (!id) id = (localStorage.getItem("attemptId") || "").trim();
       if (!id) id = (localStorage.getItem("attempt_id") || "").trim();
-
-      if (!id) {
-        id = "a_" + Date.now() + "_" + Math.random().toString(16).slice(2, 10);
-      }
-
-      // 统一写入 localStorage
-      localStorage.setItem("attemptId", id);
-      localStorage.setItem("attempt_id", id);
-
-      // 如果 URL 没带 attemptId，把它写回 URL（不刷新页面）
-      if (!params.get("attemptId")) {
-        params.set("attemptId", id);
-        const newUrl = location.pathname + "?" + params.toString();
-        history.replaceState(null, "", newUrl);
-      }
-
       return id;
     }
 
-    const attemptId = ensureAttemptId();
-    const ANSWERS_KEY = "answers_" + attemptId;
+    const attemptId = getAttemptId();
+    if (attemptId) {
+      localStorage.setItem("attemptId", attemptId);
+      localStorage.setItem("attempt_id", attemptId);
+    }
 
-    function readAllAnswers() {
-      try {
-        const raw = localStorage.getItem(ANSWERS_KEY);
-        return raw ? JSON.parse(raw) : {};
-      } catch {
-        return {};
+    function collectSectionAnswers(from, to) {
+      const out = {};
+      for (let n = from; n <= to; n++) {
+        const textEl = document.getElementById(`q${n}`);
+        if (textEl) {
+          out[n] = (textEl.value || "").trim();
+          continue;
+        }
+        const chosen = document.querySelector(`input[name="q${n}"]:checked`);
+        out[n] = (chosen?.value || "").trim();
       }
+      return out;
     }
 
-    function writeAllAnswers(obj) {
-      try {
-        localStorage.setItem(ANSWERS_KEY, JSON.stringify(obj || {}));
-      } catch {}
-    }
-
-    function saveAnswer(qNum, value) {
-      const all = readAllAnswers();
-      all[String(qNum)] = value ?? "";
-      writeAllAnswers(all);
-    }
-
-    function hydrateAnswer(qNum) {
-      const all = readAllAnswers();
-      return all[String(qNum)] ?? "";
+    function mergeIntoLocalAnswers(sectionAnswers) {
+      if (!attemptId) return;
+      const key = `answers_${attemptId}`;
+      let base = {};
+      try { base = JSON.parse(localStorage.getItem(key) || "{}"); } catch { base = {}; }
+      const merged = { ...base, ...sectionAnswers };
+      localStorage.setItem(key, JSON.stringify(merged));
     }
 
     // ============= 加载 Section 1 题库 =============
-    const sectionData =
-      window.PREMIUM_TEST1 && window.PREMIUM_TEST1.section1;
+    const sectionData = window.PREMIUM_TEST1 && window.PREMIUM_TEST1.section1;
 
     if (!sectionData || !sectionData.questions) {
-      document.body.innerHTML =
-        "<h1>Section 1</h1><p>Question data not found.</p>";
+      document.body.innerHTML = "<h1>Section 1</h1><p>Question data not found.</p>";
       throw new Error("No section1 data");
     }
 
@@ -199,7 +168,6 @@
     const inst7to10Tpl = document.getElementById("inst7to10").content;
 
     sectionData.questions.forEach((q) => {
-      // 在第 7 题前插入 “Questions 7–10” 灰框
       if (q.number === 7) {
         form.appendChild(inst7to10Tpl.cloneNode(true));
       }
@@ -215,23 +183,12 @@
         const input = document.createElement("input");
         input.type = "text";
         input.id = `q${q.number}`;
-
-        // ✅ 回填
-        input.value = hydrateAnswer(q.number);
-
-        // ✅ 实时保存
-        input.addEventListener("input", (e) => {
-          saveAnswer(q.number, e.target.value || "");
-        });
-
         wrapper.appendChild(input);
       }
 
       if (q.type === "mcq") {
         const optBox = document.createElement("div");
         optBox.className = "options";
-
-        const saved = hydrateAnswer(q.number);
 
         q.options.forEach((opt, idx) => {
           const label = document.createElement("label");
@@ -240,15 +197,7 @@
           radio.name = `q${q.number}`;
           radio.value = opt;
 
-          // ✅ 回填
-          if (saved && saved === opt) radio.checked = true;
-
-          // ✅ 实时保存
-          radio.addEventListener("change", () => {
-            if (radio.checked) saveAnswer(q.number, radio.value || "");
-          });
-
-          const letter = String.fromCharCode(65 + idx); // A,B,C...
+          const letter = String.fromCharCode(65 + idx);
           label.appendChild(radio);
           label.insertAdjacentText("beforeend", ` ${letter}. ${opt}`);
           optBox.appendChild(label);
@@ -282,10 +231,8 @@
             countdownText.textContent = "The recording is now playing.";
           })
           .catch(() => {
-            // 自动播放失败（浏览器拦截）
             if (!fromUser) {
-              countdownText.textContent =
-                "The recording is ready. Click the play button to start.";
+              countdownText.textContent = "The recording is ready. Click the play button to start.";
             }
           });
       } else {
@@ -304,7 +251,6 @@
         if (remaining <= 0) {
           clearInterval(timer);
           countdownText.textContent = "The recording is now starting.";
-          // 尝试自动播放
           tryStartPlayback(false);
         } else {
           countdownSpan.textContent = remaining;
@@ -312,43 +258,37 @@
       }, 1000);
     }
 
-    // 透明遮罩：如果自动播放被拦截，学生点击整条区域 → 我们代替它播放
     overlay.addEventListener("click", () => {
-      if (!hasStarted) {
-        tryStartPlayback(true);
-      }
-      // 播放开始后仍然拦截点击，防止暂停/拖动
+      if (!hasStarted) tryStartPlayback(true);
     });
 
-    // 记录当前播放位置，用于防止拖动进度条
     audio.addEventListener("timeupdate", () => {
       lastTime = audio.currentTime;
     });
 
-    // 防止拖动（进度突然跳动就拉回去）
     audio.addEventListener("seeking", () => {
       if (Math.abs(audio.currentTime - lastTime) > 1) {
         audio.currentTime = lastTime;
       }
     });
 
-    // 防止手动暂停（键盘之类）
     audio.addEventListener("pause", () => {
       if (!audio.ended && hasStarted) {
         audio.play().catch(() => {});
       }
     });
 
-    // ✅ 音频自然结束 → 跳转 Section 2（确保 attemptId 带上）
+    // ✅ 音频结束 → 保存本页 1-10 → 跳转 Section2（带 attemptId）
     audio.addEventListener("ended", () => {
-      // 保险：把 attemptId 再写一次
-      localStorage.setItem("attemptId", attemptId);
-      localStorage.setItem("attempt_id", attemptId);
-
+      if (!attemptId) {
+        alert("缺少 attemptId，请从 start.html 入口重新进入。");
+        return;
+      }
+      const s1 = collectSectionAnswers(1, 10);
+      mergeIntoLocalAnswers(s1);
       window.location.href = "./section2.html?attemptId=" + encodeURIComponent(attemptId);
     });
 
-    // 页面加载完就启动倒计时
     window.addEventListener("load", startCountdown);
   </script>
 </body>
