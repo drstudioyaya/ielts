@@ -266,7 +266,9 @@
 
     // 音频自然结束 → 跳转 Section 2
     audio.addEventListener("ended", () => {
-      window.location.href = "section2.html";
+      const attemptId = new URLSearchParams(location.search).get("attemptId") || "";
+window.location.href = "./section2.html?attemptId=" + encodeURIComponent(attemptId);
+
     });
 
     // 页面加载完就启动倒计时
