@@ -41,7 +41,7 @@
 
 <body>
 
-<h1>IELTS Listening Test 1 – Premium Mode</h1>
+<h1>IELTS Listening Test 1</h1>
 
 <div class="box">
     <h3>Important Instructions</h3>
@@ -59,8 +59,12 @@
 
 <script>
 function startTest() {
-    // 进入 Section 1 倒计时页面
-    window.location.href = "section1.html?section=1";
+  // 1) 生成 attemptId（先本地生成即可，不依赖后端）
+  const attemptId = "a_" + Date.now() + "_" + Math.random().toString(16).slice(2);
+
+  // 2) 跳到 Section 1，并把 attemptId 带过去
+  //    注意：这里不要再用 ?section=1 了
+  window.location.href = `section1.html?attemptId=${encodeURIComponent(attemptId)}`;
 }
 </script>
 
