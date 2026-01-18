@@ -241,7 +241,9 @@ audio.addEventListener("seeking", () => {
 
 // 音频结束 → 跳转 Section 3
 audio.addEventListener("ended", () => {
-    window.location.href = "section3.html";
+    const attemptId = new URLSearchParams(location.search).get("attemptId") || "";
+window.location.href = "./section3.html?attemptId=" + encodeURIComponent(attemptId);
+
 });
 </script>
 
