@@ -236,21 +236,22 @@ const payload = {
         });
 
         const data = await r.json();
-        if (!r.ok) throw new Error(data?.error || `API error (${r.status})`);
+if (!r.ok) throw new Error(data?.error || `API error (${r.status})`);
 
-
-        // ✅ 提交成功后清掉开始时间（避免下次复用旧 t0）
-        localStorage.removeItem(`t0_${attemptId}`);
-
-// ✅ 把开始时间 t0 从旧 attemptId 迁移到后端新 attemptId（否则 score 读不到）
+// ✅ 先取旧 t0
 const oldT0 = localStorage.getItem(`t0_${attemptId}`);
+
+// ✅ 迁移到后端新 attemptId（score 用的是 data.attemptId）
 if (oldT0) localStorage.setItem(`t0_${data.attemptId}`, oldT0);
 
-        
-        // 3) 用后端返回的 attemptId 跳转报告页（不会再 attempt_not_found）
-        window.location.href =
-          "/public/questions/premium/test1/score.html?attemptId=" +
-          encodeURIComponent(data.attemptId);
+// ✅ 再清掉旧的（避免下次复用旧 t0）
+localStorage.removeItem(`t0_${attemptId}`);
+
+// 3) 跳转报告页
+window.location.href =
+  "/public/questions/premium/test1/score.html?attemptId=" +
+  encodeURIComponent(data.attemptId);
+
       } catch (e) {
         alert("Submit failed: " + (e?.message || e));
         submitBtn.disabled = false;
