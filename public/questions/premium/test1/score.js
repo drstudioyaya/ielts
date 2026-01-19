@@ -1,3 +1,14 @@
+function bandToCEFR(band) {
+  const b = Number(band);
+  if (!Number.isFinite(b)) return "NA";
+  if (b < 3.0) return "A1";
+  if (b < 4.5) return "A2";
+  if (b < 5.5) return "B1";
+  if (b < 6.5) return "B2";
+  if (b < 7.5) return "C1";
+  return "C2";
+}
+
 (function () {
   const $ = (sel) => document.querySelector(sel);
 
@@ -81,6 +92,9 @@
     const locked = safeArr(paywall.locked);
     const freeVisible = safeArr(paywall.freeVisible);
 
+    // ✅【新增：CEFR 兜底】如果 overall.cefr 没给，就用 band 推导
+    const cefrDerived = String(overall.cefr || "").trim() || bandToCEFR(overall.band);
+
     // ---- Module 0：情绪锚点（单独一张卡，放在总分卡片上方）----
     const module0 = `
       <div class="card" style="grid-column:1/-1;">
@@ -103,7 +117,7 @@
         <div class="bar"><div style="width:${overallPct}%"></div></div>
 
         <div class="kv" style="margin-top:10px;">
-          <span class="pill">CEFR: <b>${esc(overall.cefr ?? "NA")}</b></span>
+          <span class="pill">CEFR: <b>${esc(cefrDerived)}</b></span>
           <span class="pill">Time: <b>${esc(overall.timeSpentSec ?? 0)}s</b></span>
         </div>
 
@@ -277,9 +291,6 @@
 
     // =========================
     // ---- 附录（可折叠）：A/B/C ----
-    // A：你已确认正确（Raw vs Band + CEFR vs IELTS + Footnote）
-    // B：Marking Rules（严格评分规则）
-    // C：Report Method（报告计算方法）
     // =========================
 
     const appendixA = `
@@ -392,7 +403,6 @@
       </details>
     `;
 
-    // ✅ 附录B：Marking Rules（严格评分规则）
     const appendixB = `
       <details>
         <summary><b>附录B（可展开）：Marking Rules（严格评分规则）</b></summary>
@@ -409,7 +419,6 @@
       </details>
     `;
 
-    // ✅ 附录C：Report Method（报告计算方法）
     const appendixC = `
       <details>
         <summary><b>附录C（可展开）：Report Method（报告计算方法）</b></summary>
@@ -435,16 +444,11 @@
       </div>
     `;
 
-    // ---- 渲染总布局（模块0放在总分卡片上方）----
     app.className = "grid two";
     app.innerHTML = `
       ${module0}
-
       ${module1Overall}
       ${module1Sections}
-
-      <!-- 模块2已按你的要求删除（Band 对照表已放入附录A 的 A1 表格中） -->
-
       ${module3}
       ${moduleDiagPreview}
       ${module4}
@@ -456,11 +460,9 @@
       ${appendixWrap}
     `;
 
-    // 填充顶部 attemptId
     const pill = $("#attemptIdPill");
     if (pill) pill.textContent = attemptId;
 
-    // 页面内分享按钮
     const copyExamLinkInPageBtn = $("#copyExamLinkInPageBtn");
     if (copyExamLinkInPageBtn) {
       copyExamLinkInPageBtn.onclick = async () => {
@@ -502,11 +504,9 @@
   async function load() {
     const attemptId = getAttemptId();
 
-    // 1) 大标题改名（尽量不改 HTML，直接在 JS 里兜底）
     const h1 = document.querySelector("h1");
     if (h1) h1.textContent = "《雅思听力全方位诊断报告》";
 
-    // 2) 删掉副标题那行“基于你提交的答案生成...”（尽量不改 HTML，JS 里隐藏）
     const allTextNodes = Array.from(document.querySelectorAll("p, .muted, .subtitle, .subTitle, .desc"));
     for (const el of allTextNodes) {
       const t = (el.textContent || "").trim();
@@ -515,7 +515,6 @@
       }
     }
 
-    // 顶部 attemptId pill
     const pill = $("#attemptIdPill");
     if (pill) pill.textContent = attemptId || "—";
 
@@ -549,7 +548,6 @@
     }
   }
 
-  // ===== 顶部按钮：按你的要求改文案 & 改逻辑 =====
   const copyAttemptBtn = $("#copyAttemptBtn");
   if (copyAttemptBtn) copyAttemptBtn.style.display = "none";
 
