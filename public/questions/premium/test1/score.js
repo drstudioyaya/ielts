@@ -89,6 +89,13 @@ function bandToCEFR(band) {
   function renderReport(data, attemptId) {
     const app = $("#app");
     const overall = data?.overall || {};
+        // ✅ Time 兜底：若后端没算/为0，则用 localStorage 的 t0_${attemptId} 计算
+    let timeSpentSec = Number(overall.timeSpentSec ?? 0);
+    if (!timeSpentSec || timeSpentSec <= 0) {
+      const t0 = Number(localStorage.getItem(`t0_${attemptId}`) || 0);
+      if (t0 > 0) timeSpentSec = Math.max(1, Math.round((Date.now() - t0) / 1000));
+    }
+
     const rawCorrect = Number(overall.rawCorrect ?? 0);
     const rawTotal = Number(overall.rawTotal ?? 0);
     const headlineCn = overall.headlineCn || "";
@@ -140,7 +147,7 @@ if (!timeDerived) {
 
         <div class="kv" style="margin-top:10px;">
           <span class="pill">CEFR: <b>${esc(cefrDerived)}</b></span>
-          <span class="pill">Time: <b>${esc(timeDerived)}s</b></span>
+          <span class="pill">Time: <b>${esc(timeSpentSec)}s</b></span>
         </div>
 
         <div class="hr"></div>
