@@ -92,8 +92,20 @@ function bandToCEFR(band) {
     const locked = safeArr(paywall.locked);
     const freeVisible = safeArr(paywall.freeVisible);
 
-    // ✅【新增：CEFR 兜底】如果 overall.cefr 没给，就用 band 推导
-    const cefrDerived = String(overall.cefr || "").trim() || bandToCEFR(overall.band);
+// ✅【CEFR 兜底】overall.cefr 可能是 "NA"，这种情况要用 band 推导
+const cefrRaw = String(overall.cefr ?? "").trim();
+const cefrDerived =
+  !cefrRaw || cefrRaw.toUpperCase() === "NA"
+    ? bandToCEFR(overall.band)
+    : cefrRaw;
+
+// ✅【Time 兜底】后端 timeSpentSec 为 0 时，用 localStorage 的 t0_${attemptId} 推导
+let timeDerived = Number(overall.timeSpentSec ?? 0);
+if (!timeDerived) {
+  const t0 = Number(localStorage.getItem(`t0_${attemptId}`) || 0);
+  if (t0) timeDerived = Math.max(0, Math.round((Date.now() - t0) / 1000));
+}
+
 
     // ---- Module 0：情绪锚点（单独一张卡，放在总分卡片上方）----
     const module0 = `
@@ -118,7 +130,7 @@ function bandToCEFR(band) {
 
         <div class="kv" style="margin-top:10px;">
           <span class="pill">CEFR: <b>${esc(cefrDerived)}</b></span>
-          <span class="pill">Time: <b>${esc(overall.timeSpentSec ?? 0)}s</b></span>
+          <span class="pill">Time: <b>${esc(timeDerived)}s</b></span>
         </div>
 
         <div class="hr"></div>
