@@ -62,6 +62,10 @@ function startTest() {
   // 1) 生成 attemptId（先本地生成即可，不依赖后端）
   const attemptId = "a_" + Date.now() + "_" + Math.random().toString(16).slice(2);
 
+  // 这里假设你已经有 attemptId（无论从 URL 生成还是你自己生成）
+localStorage.setItem(`t0_${attemptId}`, localStorage.getItem(`t0_${attemptId}`) || String(Date.now()));
+
+    
   // 2) 跳到 Section 1，并把 attemptId 带过去
   //    注意：这里不要再用 ?section=1 了
   window.location.href = `section1.html?attemptId=${encodeURIComponent(attemptId)}`;
