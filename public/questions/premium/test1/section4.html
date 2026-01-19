@@ -217,12 +217,17 @@
 
       // 2) 提交到后端生成真实 attempt
       try {
-        const payload = {
-          testId: "premium-test1",
-          section: "full",
-          scoreLocal: 0,
-          answers: mergedAnswers
-        };
+        const t0 = Number(localStorage.getItem(`t0_${attemptId}`) || Date.now());
+const timeSec = Math.max(0, Math.round((Date.now() - t0) / 1000));
+
+const payload = {
+  testId: "premium-test1",
+  section: "full",
+  scoreLocal: 0,
+  timeSec,                 // ✅ 新增：把耗时交给后端存
+  answers: mergedAnswers
+};
+
 
         const r = await fetch("/api/attempts", {
           method: "POST",
