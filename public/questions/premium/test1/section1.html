@@ -133,6 +133,12 @@
       localStorage.setItem("attempt_id", attemptId);
     }
 
+    // ✅ 记录开始时间（只记录一次）
+const tKey = `t0_${attemptId}`;
+if (attemptId && !localStorage.getItem(tKey)) {
+  localStorage.setItem(tKey, String(Date.now()));
+}
+
     function collectSectionAnswers(from, to) {
       const out = {};
       for (let n = from; n <= to; n++) {
