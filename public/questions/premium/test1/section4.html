@@ -241,6 +241,11 @@ const payload = {
 
         // ✅ 提交成功后清掉开始时间（避免下次复用旧 t0）
         localStorage.removeItem(`t0_${attemptId}`);
+
+// ✅ 把开始时间 t0 从旧 attemptId 迁移到后端新 attemptId（否则 score 读不到）
+const oldT0 = localStorage.getItem(`t0_${attemptId}`);
+if (oldT0) localStorage.setItem(`t0_${data.attemptId}`, oldT0);
+
         
         // 3) 用后端返回的 attemptId 跳转报告页（不会再 attempt_not_found）
         window.location.href =
