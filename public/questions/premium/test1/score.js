@@ -1,13 +1,22 @@
 function bandToCEFR(band) {
   const b = Number(band);
   if (!Number.isFinite(b)) return "NA";
+
+  // 对齐附录A2（Approx. mapping）
+  // A1: < 3.0
+  // A2: 3.0 – 4.0（这里为了连续性，把 4.0–4.5 也归入 A2）
+  // B1: 4.5 – 5.5
+  // B2: 6.0 – 7.0
+  // C1: 7.5 – 8.0
+  // C2: 8.5 – 9.0
   if (b < 3.0) return "A1";
   if (b < 4.5) return "A2";
-  if (b < 5.5) return "B1";
-  if (b < 6.5) return "B2";
-  if (b < 7.5) return "C1";
+  if (b < 6.0) return "B1";
+  if (b < 7.5) return "B2";
+  if (b < 8.5) return "C1";
   return "C2";
 }
+
 
 (function () {
   const $ = (sel) => document.querySelector(sel);
