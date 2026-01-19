@@ -2,20 +2,21 @@ function bandToCEFR(band) {
   const b = Number(band);
   if (!Number.isFinite(b)) return "NA";
 
-  // 对齐附录A2（Approx. mapping）
-  // A1: < 3.0
-  // A2: 3.0 – 4.0（这里为了连续性，把 4.0–4.5 也归入 A2）
-  // B1: 4.5 – 5.5
-  // B2: 6.0 – 7.0
-  // C1: 7.5 – 8.0
-  // C2: 8.5 – 9.0
+  // 对齐你截图的“通用参考”区间：
+  // A1: ~2.0–2.5  (这里用 <3.0 覆盖低分段)
+  // A2: 3.0–3.5  (这里用 <4.0 覆盖 3.x)
+  // B1: 4.0–4.5  (这里用 <5.5 覆盖 4.x–5.x 的过渡段)
+  // B2: 5.5–6.5  (这里用 <7.0 覆盖到 6.x)
+  // C1: 7.0–8.0  (这里用 <8.5 覆盖到 8.0+ 的过渡段)
+  // C2: 8.5–9.0
   if (b < 3.0) return "A1";
-  if (b < 4.5) return "A2";
-  if (b < 6.0) return "B1";
-  if (b < 7.5) return "B2";
+  if (b < 4.0) return "A2";
+  if (b < 5.5) return "B1";
+  if (b < 7.0) return "B2";
   if (b < 8.5) return "C1";
   return "C2";
 }
+
 
 
 (function () {
@@ -366,61 +367,57 @@ if (!timeDerived) {
 
         <div style="height:14px;"></div>
 
-        <!-- A2：CEFR vs IELTS -->
+               <!-- A2：CEFR vs IELTS -->
         <div>
-          <div style="font-weight:700; margin: 6px 0;">A2. CEFR vs IELTS 对照表（仅参考）</div>
+          <div style="font-weight:700; margin: 6px 0;">A2. CEFR vs IELTS 对照表（通用参考）</div>
           <div style="margin-top:10px; overflow-x:auto;">
             <table style="width:100%; border-collapse:collapse; font-size:14px;">
               <thead>
                 <tr>
-                  <th style="border:1px solid #111; padding:10px 12px; text-align:center; background:#f3f3f3;">
-                    CEFR Level
-                  </th>
-                  <th style="border:1px solid #111; padding:10px 12px; text-align:center; background:#f3f3f3;">
-                    Approx. IELTS Listening Band
-                  </th>
+                  <th style="border:1px solid #111; padding:10px 12px; text-align:center; background:#f3f3f3;">CEFR 级别</th>
+                  <th style="border:1px solid #111; padding:10px 12px; text-align:center; background:#f3f3f3;">描述（能力）</th>
+                  <th style="border:1px solid #111; padding:10px 12px; text-align:center; background:#f3f3f3;">IELTS 分数（大致范围）</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
                   <td style="border:1px solid #111; padding:10px 12px; text-align:center;">A1</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">Below 3.0 (not reliably assessed)</td>
+                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">初级（能理解和使用非常基础的日常短语）</td>
+                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">2.0 – 2.5</td>
                 </tr>
                 <tr>
                   <td style="border:1px solid #111; padding:10px 12px; text-align:center;">A2</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">3.0 – 4.0</td>
+                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">基础（能就熟悉话题进行简单交流）</td>
+                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">3.0 – 3.5</td>
                 </tr>
                 <tr>
                   <td style="border:1px solid #111; padding:10px 12px; text-align:center;">B1</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">4.5 – 5.0</td>
-                </tr>
-                <tr>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">B1 (High)</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">5.5</td>
+                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">中级（能处理日常情境，理解熟悉领域信息）</td>
+                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">4.0 – 4.5</td>
                 </tr>
                 <tr>
                   <td style="border:1px solid #111; padding:10px 12px; text-align:center;">B2</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">6.0 – 6.5</td>
-                </tr>
-                <tr>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">B2 (High)</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">7.0</td>
+                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">中高级（能流畅自如地交流，理解复杂文本）</td>
+                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">5.5 – 6.5</td>
                 </tr>
                 <tr>
                   <td style="border:1px solid #111; padding:10px 12px; text-align:center;">C1</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">7.5 – 8.0</td>
+                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">高级（能流利、灵活运用，理解长篇复杂文本）</td>
+                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">7.0 – 8.0</td>
                 </tr>
                 <tr>
                   <td style="border:1px solid #111; padding:10px 12px; text-align:center;">C2</td>
+                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">精通（接近母语水平）</td>
                   <td style="border:1px solid #111; padding:10px 12px; text-align:center;">8.5 – 9.0</td>
                 </tr>
               </tbody>
             </table>
           </div>
           <div class="muted" style="margin-top:8px;">
-            Footnote: This mapping is approximate and provided for reference only.
+            Footnote: This mapping is approximate and provided for reference only. (IELTS/CEFR 非严格一一对应)
           </div>
         </div>
+
       </details>
     `;
 
