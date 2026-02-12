@@ -147,7 +147,7 @@ if (!timeDerived) {
 
         <div class="kv" style="margin-top:10px;">
           <span class="pill">CEFR: <b>${esc(cefrDerived)}</b></span>
-          <span class="pill">Time: <b>${esc(timeSpentSec)}s</b></span>
+          <span class="pill">Time: <b>${esc(Math.max(1, Math.round(Number(timeSpentSec || 0) / 60)))} mins</b></span>
         </div>
 
         <div class="hr"></div>
