@@ -176,9 +176,9 @@
       margin:16px 0;
     }
 
-    /* 新增：免费版与 Premium 预览区 */
+    /* 免费版与 Premium 预览区 */
     .extra-block{
-      margin-top: 18px;
+      margin-top: 0;
     }
     .extra-block .card{
       margin-top: 14px;
@@ -223,8 +223,8 @@
 
     <div id="app" class="grid"></div>
 
-    <!-- 新增：免费版诊断 + Premium 预览 -->
-   <div class="extra-block" id="extraBlock">
+    <!-- 免费版诊断 + Premium 预览 -->
+    <div class="extra-block" id="extraBlock" style="display:none;">
       <section class="card">
         <h2>当前失分画像（免费版）</h2>
         <p id="freeDiagnosticSummary" class="simple-text">
@@ -290,21 +290,62 @@
 
   <script src="./score.js?v=20251223_1"></script>
   <script>
-  window.addEventListener("load", () => {
-    const extraBlock = document.getElementById("extraBlock");
-    const app = document.getElementById("app");
-    if (!extraBlock || !app) return;
+    (function () {
+      function moveExtraBlockBeforeAppendix() {
+        const app = document.getElementById("app");
+        const extraBlock = document.getElementById("extraBlock");
+        if (!app || !extraBlock) return false;
 
-    const cards = app.querySelectorAll(".card");
-    const appendixCard = Array.from(cards).find(card => {
-      const h2 = card.querySelector("h2");
-      return h2 && h2.textContent.includes("附录");
-    });
+        const cards = app.querySelectorAll(".card");
+        if (!cards.length) return false;
 
-    if (appendixCard) {
-      app.insertBefore(extraBlock, appendixCard);
-    }
-  });
-</script>
+        const appendixCard = Array.from(cards).find(card => {
+          const text = (card.textContent || "").trim();
+          return text.includes("附录") || text.includes("Appendix");
+        });
+
+        if (appendixCard) {
+          app.insertBefore(extraBlock, appendixCard);
+          extraBlock.style.display = "block";
+          return true;
+        }
+
+        return false;
+      }
+
+      function startObserver() {
+        const app = document.getElementById("app");
+        const extraBlock = document.getElementById("extraBlock");
+        if (!app || !extraBlock) return;
+
+        if (moveExtraBlockBeforeAppendix()) return;
+
+        const observer = new MutationObserver(() => {
+          if (moveExtraBlockBeforeAppendix()) {
+            observer.disconnect();
+          }
+        });
+
+        observer.observe(app, {
+          childList: true,
+          subtree: true
+        });
+
+        setTimeout(() => {
+          if (extraBlock.style.display !== "block") {
+            app.appendChild(extraBlock);
+            extraBlock.style.display = "block";
+          }
+          observer.disconnect();
+        }, 5000);
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", startObserver);
+      } else {
+        startObserver();
+      }
+    })();
+  </script>
 </body>
 </html>
