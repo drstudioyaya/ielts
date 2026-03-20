@@ -1,0 +1,262 @@
+[
+  {
+    "qid": "T1_Q01",
+    "section": 1,
+    "questionNumber": 1,
+    "questionType": "form_completion",
+    "audioScene": "summer_camp_registration",
+    "answer": "Ethan Park",
+    "acceptedAnswers": ["Ethan Park"],
+    "wordLimit": "ONE WORD AND/OR A NUMBER",
+    "formatPolicy": {
+      "requiresExactSpelling": true,
+      "numberSensitive": false,
+      "dateSensitive": false,
+      "singularPluralSensitive": false
+    },
+    "dimensions": ["D4", "D1"],
+    "primaryDimension": "D4",
+    "candidateErrors": ["A4", "I2", "I3"],
+    "cueWordsInQuestion": ["Child's Name"],
+    "paraphraseMap": {},
+    "distractors": [],
+    "signalWordType": null,
+    "speakerTracking": null
+  },
+  {
+    "qid": "T1_Q02",
+    "section": 1,
+    "questionNumber": 2,
+    "questionType": "form_completion",
+    "audioScene": "summer_camp_registration",
+    "answer": "9",
+    "acceptedAnswers": ["9", "nine"],
+    "wordLimit": "ONE WORD AND/OR A NUMBER",
+    "formatPolicy": {
+      "requiresExactSpelling": false,
+      "numberSensitive": true,
+      "dateSensitive": false,
+      "singularPluralSensitive": false
+    },
+    "dimensions": ["D4"],
+    "primaryDimension": "D4",
+    "candidateErrors": ["A4", "I4", "D2"],
+    "cueWordsInQuestion": ["Age"],
+    "paraphraseMap": {
+      "Age": "How old"
+    },
+    "distractors": ["eight", "ten"],
+    "signalWordType": null,
+    "speakerTracking": null
+  },
+  {
+    "qid": "T1_Q03",
+    "section": 1,
+    "questionNumber": 3,
+    "questionType": "form_completion",
+    "audioScene": "summer_camp_registration",
+    "answer": "July 14th",
+    "acceptedAnswers": ["7/14", "14/7", "July 14", "14 July", "July 14th"],
+    "wordLimit": "ONE WORD AND/OR A NUMBER",
+    "formatPolicy": {
+      "requiresExactSpelling": false,
+      "numberSensitive": false,
+      "dateSensitive": true,
+      "singularPluralSensitive": false
+    },
+    "dimensions": ["D4", "D7"],
+    "primaryDimension": "D4",
+    "candidateErrors": ["A4", "I4", "D3"],
+    "cueWordsInQuestion": ["Programme Start Date"],
+    "paraphraseMap": {
+      "Programme Start Date": "begins on"
+    },
+    "distractors": [],
+    "signalWordType": null,
+    "speakerTracking": null
+  },
+  {
+    "qid": "T1_Q04",
+    "section": 1,
+    "questionNumber": 4,
+    "questionType": "form_completion",
+    "audioScene": "summer_camp_registration",
+    "answer": "480",
+    "acceptedAnswers": ["$480", "480"],
+    "wordLimit": "ONE WORD AND/OR A NUMBER",
+    "formatPolicy": {
+      "requiresExactSpelling": false,
+      "numberSensitive": true,
+      "dateSensitive": false,
+      "singularPluralSensitive": false
+    },
+    "dimensions": ["D4"],
+    "primaryDimension": "D4",
+    "candidateErrors": ["A4", "I4", "C1"],
+    "cueWordsInQuestion": ["Basic Fee"],
+    "paraphraseMap": {
+      "Basic Fee": "basic programme costs"
+    },
+    "distractors": ["60"],
+    "signalWordType": null,
+    "speakerTracking": null
+  },
+  {
+    "qid": "T1_Q05",
+    "section": 1,
+    "questionNumber": 5,
+    "questionType": "form_completion",
+    "audioScene": "summer_camp_registration",
+    "answer": "60",
+    "acceptedAnswers": ["$60", "60"],
+    "wordLimit": "ONE WORD AND/OR A NUMBER",
+    "formatPolicy": {
+      "requiresExactSpelling": false,
+      "numberSensitive": true,
+      "dateSensitive": false,
+      "singularPluralSensitive": false
+    },
+    "dimensions": ["D4", "D3"],
+    "primaryDimension": "D4",
+    "candidateErrors": ["A4", "I4", "C3"],
+    "cueWordsInQuestion": ["Meal Plan Fee"],
+    "paraphraseMap": {
+      "Meal Plan Fee": "extra"
+    },
+    "distractors": ["480"],
+    "signalWordType": null,
+    "speakerTracking": null
+  },
+  {
+    "qid": "T1_Q06",
+    "section": 1,
+    "questionNumber": 6,
+    "questionType": "form_completion",
+    "audioScene": "summer_camp_registration",
+    "answer": "peanuts",
+    "acceptedAnswers": ["peanuts"],
+    "wordLimit": "ONE WORD AND/OR A NUMBER",
+    "formatPolicy": {
+      "requiresExactSpelling": true,
+      "numberSensitive": false,
+      "dateSensitive": false,
+      "singularPluralSensitive": true
+    },
+    "dimensions": ["D4", "D1"],
+    "primaryDimension": "D4",
+    "candidateErrors": ["A2", "A4", "I3"],
+    "cueWordsInQuestion": ["Allergy Information"],
+    "paraphraseMap": {
+      "Allergy Information": "allergic to"
+    },
+    "distractors": [],
+    "signalWordType": null,
+    "speakerTracking": null
+  },
+  {
+    "qid": "T1_Q07",
+    "section": 1,
+    "questionNumber": 7,
+    "questionType": "single_choice",
+    "audioScene": "summer_camp_registration",
+    "answer": "B",
+    "acceptedAnswers": ["B"],
+    "wordLimit": null,
+    "formatPolicy": {
+      "requiresExactSpelling": false,
+      "numberSensitive": false,
+      "dateSensitive": false,
+      "singularPluralSensitive": false
+    },
+    "dimensions": ["D3", "D9"],
+    "primaryDimension": "D3",
+    "candidateErrors": ["C1", "E1", "B1"],
+    "cueWordsInQuestion": ["suitable programme"],
+    "paraphraseMap": {
+      "suitable": "recommend"
+    },
+    "distractors": ["A", "C"],
+    "signalWordType": null,
+    "speakerTracking": null
+  },
+  {
+    "qid": "T1_Q08",
+    "section": 1,
+    "questionNumber": 8,
+    "questionType": "single_choice",
+    "audioScene": "summer_camp_registration",
+    "answer": "B",
+    "acceptedAnswers": ["B"],
+    "wordLimit": null,
+    "formatPolicy": {
+      "requiresExactSpelling": false,
+      "numberSensitive": false,
+      "dateSensitive": false,
+      "singularPluralSensitive": false
+    },
+    "dimensions": ["D2", "D3"],
+    "primaryDimension": "D2",
+    "candidateErrors": ["B1", "C2", "E2"],
+    "cueWordsInQuestion": ["How long"],
+    "paraphraseMap": {
+      "How long": "runs for",
+      "Two weeks": "two full weeks"
+    },
+    "distractors": ["A", "C"],
+    "signalWordType": null,
+    "speakerTracking": null
+  },
+  {
+    "qid": "T1_Q09",
+    "section": 1,
+    "questionNumber": 9,
+    "questionType": "single_choice",
+    "audioScene": "summer_camp_registration",
+    "answer": "B",
+    "acceptedAnswers": ["B"],
+    "wordLimit": null,
+    "formatPolicy": {
+      "requiresExactSpelling": false,
+      "numberSensitive": false,
+      "dateSensitive": false,
+      "singularPluralSensitive": false
+    },
+    "dimensions": ["D2", "D9"],
+    "primaryDimension": "D2",
+    "candidateErrors": ["B1", "E3", "C2"],
+    "cueWordsInQuestion": ["pay"],
+    "paraphraseMap": {
+      "pay by": "bank transfer"
+    },
+    "distractors": ["A", "C"],
+    "signalWordType": null,
+    "speakerTracking": null
+  },
+  {
+    "qid": "T1_Q10",
+    "section": 1,
+    "questionNumber": 10,
+    "questionType": "single_choice",
+    "audioScene": "summer_camp_registration",
+    "answer": "C",
+    "acceptedAnswers": ["C"],
+    "wordLimit": null,
+    "formatPolicy": {
+      "requiresExactSpelling": false,
+      "numberSensitive": false,
+      "dateSensitive": false,
+      "singularPluralSensitive": false
+    },
+    "dimensions": ["D2", "D9"],
+    "primaryDimension": "D2",
+    "candidateErrors": ["B1", "E1", "E3"],
+    "cueWordsInQuestion": ["receive after completing the online form"],
+    "paraphraseMap": {
+      "receive": "we’ll send you",
+      "bank details": "our bank details"
+    },
+    "distractors": ["A", "B"],
+    "signalWordType": null,
+    "speakerTracking": null
+  }
+]
