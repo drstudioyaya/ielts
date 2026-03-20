@@ -2,13 +2,6 @@ function bandToCEFR(band) {
   const b = Number(band);
   if (!Number.isFinite(b)) return "NA";
 
-  // 对齐你截图的“通用参考”区间：
-  // A1: ~2.0–2.5  (这里用 <3.0 覆盖低分段)
-  // A2: 3.0–3.5  (这里用 <4.0 覆盖 3.x)
-  // B1: 4.0–4.5  (这里用 <5.5 覆盖 4.x–5.x 的过渡段)
-  // B2: 5.5–6.5  (这里用 <7.0 覆盖到 6.x)
-  // C1: 7.0–8.0  (这里用 <8.5 覆盖到 8.0+ 的过渡段)
-  // C2: 8.5–9.0
   if (b < 3.0) return "A1";
   if (b < 4.0) return "A2";
   if (b < 5.5) return "B1";
@@ -16,8 +9,6 @@ function bandToCEFR(band) {
   if (b < 8.5) return "C1";
   return "C2";
 }
-
-
 
 (function () {
   const $ = (sel) => document.querySelector(sel);
@@ -52,7 +43,6 @@ function bandToCEFR(band) {
   }
 
   function guessSectionNote(secNum) {
-    // 先占位：后续你接入“错因/能力维度”后，再动态生成更准的 note
     const map = {
       "1": "通常考：信息定位 + 拼写/数字。",
       "2": "通常考：地图/流程 + 同义替换。",
@@ -86,10 +76,97 @@ function bandToCEFR(band) {
     if (retryBtn) retryBtn.onclick = () => location.reload();
   }
 
+  function getSectionScoreMap(sections) {
+    const map = { "1": 0, "2": 0, "3": 0, "4": 0 };
+    sections.forEach((s) => {
+      const sec = String(s.section || "");
+      if (["1", "2", "3", "4"].includes(sec)) {
+        map[sec] = Number(s.rawCorrect ?? 0);
+      }
+    });
+    return map;
+  }
+
+  function getPriorityOrder(scoreMap) {
+    return Object.entries(scoreMap)
+      .sort((a, b) => a[1] - b[1])
+      .map(([sec]) => `Section ${sec}`)
+      .join(" → ");
+  }
+
+  function buildFreeDiagnosticText(scoreMap, overallBand) {
+    const s1 = Number(scoreMap["1"] || 0);
+    const s2 = Number(scoreMap["2"] || 0);
+    const s3 = Number(scoreMap["3"] || 0);
+    const s4 = Number(scoreMap["4"] || 0);
+    const weakestSec = Object.entries(scoreMap).sort((a, b) => a[1] - b[1])[0]?.[0] || "2";
+    const band = Number(overallBand || 0);
+
+    let summary = "";
+    let action = "";
+
+    if (s2 <= 3 && s3 <= 3) {
+      summary =
+        "你当前的主要失分不只是“没听到”，而是出现在场景切换、同义替换反应和多人对话干扰处理上。也就是说，你的问题更接近“定位不稳、容易被带偏”，而不是单纯词汇不够。";
+      action =
+        "今天先做 1 组 Section 2 或 Section 3，做完后把每道错题的题干关键词改写成 1 个同义表达，并写一句“我是被哪个干扰点带偏的”。";
+    } else if (s1 <= 6) {
+      summary =
+        "你当前在基础拿分区仍有明显丢分，说明问题更可能出在信息定位、数字/拼写、以及听到答案后的落笔执行不够稳。先把本来应该稳定拿下的分数拿住，提分会更快。";
+      action =
+        "今天先练 8 分钟数字 / 日期 / 拼写快写，只练“听到后立刻写对”，不要做整套题。";
+    } else if (s4 >= 7 && (s2 < s4 || s3 < s4)) {
+      summary =
+        "你的长篇讲座理解相对不差，说明你并不是完全听不懂。当前更拉分的是前半段题型中的场景适应、定位速度和干扰项筛选能力，也就是“会做，但不够稳”。";
+      action =
+        "今天先从失分最多的 Section 开始，做 1 组精听复盘：每道错题都写下“正确答案是怎么被换一种说法说出来的”。";
+    } else if (band <= 4) {
+      summary =
+        "你当前最优先的不是做更多题，而是先建立稳定的基础拿分能力。现在的失分说明你在定位、场景词识别和基础细节执行上还不够稳，先把基础 section 做扎实，整体分数会更容易上来。";
+      action =
+        "今天先选失分最多的一个 Section，只做 10 分钟：听一句、停一句、找答案定位词，不求做多，只求每题知道自己为什么对或错。";
+    } else {
+      summary =
+        "你的整体理解没有完全断层，但不同 Section 之间稳定性差异明显。当前更需要做的是把“偶尔能做对”变成“稳定做对”，尤其要先修复失分最集中的部分。";
+      action =
+        `今天先从 ${`Section ${weakestSec}`} 开始，做 1 组题后立即复盘：写下你这组题最常见的 1 个错误原因。`;
+    }
+
+    return {
+      summary,
+      priority: getPriorityOrder(scoreMap),
+      action,
+    };
+  }
+
+  function fillFreeBlocks(data) {
+    const sections = safeArr(data?.sections);
+    const overall = data?.overall || {};
+    const scoreMap = getSectionScoreMap(sections);
+    const { summary, priority, action } = buildFreeDiagnosticText(scoreMap, overall.band);
+
+    let tries = 0;
+    const timer = setInterval(() => {
+      const summaryEl = document.getElementById("freeDiagnosticSummary");
+      const priorityEl = document.getElementById("priorityFixOrder");
+      const actionEl = document.getElementById("todayAction");
+
+      if (summaryEl && priorityEl && actionEl) {
+        summaryEl.textContent = summary;
+        priorityEl.textContent = priority;
+        actionEl.textContent = action;
+        clearInterval(timer);
+      }
+
+      tries += 1;
+      if (tries > 40) clearInterval(timer);
+    }, 150);
+  }
+
   function renderReport(data, attemptId) {
     const app = $("#app");
     const overall = data?.overall || {};
-        // ✅ Time 兜底：若后端没算/为0，则用 localStorage 的 t0_${attemptId} 计算
+
     let timeSpentSec = Number(overall.timeSpentSec ?? 0);
     if (!timeSpentSec || timeSpentSec <= 0) {
       const t0 = Number(localStorage.getItem(`t0_${attemptId}`) || 0);
@@ -98,33 +175,16 @@ function bandToCEFR(band) {
 
     const rawCorrect = Number(overall.rawCorrect ?? 0);
     const rawTotal = Number(overall.rawTotal ?? 0);
-    const headlineCn = overall.headlineCn || "";
-
     const overallPct = pct(rawCorrect, rawTotal);
-
     const sections = safeArr(data?.sections);
     const bandTable = safeArr(data?.bandTable);
 
-    const paywall = data?.paywall || {};
-    const locked = safeArr(paywall.locked);
-    const freeVisible = safeArr(paywall.freeVisible);
+    const cefrRaw = String(overall.cefr ?? "").trim();
+    const cefrDerived =
+      !cefrRaw || cefrRaw.toUpperCase() === "NA"
+        ? bandToCEFR(overall.band)
+        : cefrRaw;
 
-// ✅【CEFR 兜底】overall.cefr 可能是 "NA"，这种情况要用 band 推导
-const cefrRaw = String(overall.cefr ?? "").trim();
-const cefrDerived =
-  !cefrRaw || cefrRaw.toUpperCase() === "NA"
-    ? bandToCEFR(overall.band)
-    : cefrRaw;
-
-// ✅【Time 兜底】后端 timeSpentSec 为 0 时，用 localStorage 的 t0_${attemptId} 推导
-let timeDerived = Number(overall.timeSpentSec ?? 0);
-if (!timeDerived) {
-  const t0 = Number(localStorage.getItem(`t0_${attemptId}`) || 0);
-  if (t0) timeDerived = Math.max(0, Math.round((Date.now() - t0) / 1000));
-}
-
-
-    // ---- Module 0：情绪锚点（单独一张卡，放在总分卡片上方）----
     const module0 = `
       <div class="card" style="grid-column:1/-1;">
         <h2>刷题不涨分，原因不在于你看不懂或听不懂题，往往是缺乏自我认知的能力。</h2>
@@ -135,7 +195,6 @@ if (!timeDerived) {
       </div>
     `;
 
-    // ---- Module 1：考试结果总览（第一屏必须看见）----
     const module1Overall = `
       <div class="card">
         <h2>考试结果总览</h2>
@@ -158,7 +217,6 @@ if (!timeDerived) {
       </div>
     `;
 
-    // ---- 右侧：Section 得分 ----
     const module1Sections = `
       <div class="card">
         <h2>Section得分</h2>
@@ -182,12 +240,11 @@ if (!timeDerived) {
                   `;
                 })
                 .join("")
-            : `<div class="muted">暂无分 Section 数据（例如 mock 报告会是空的，这是正常的）。</div>`
+            : `<div class="muted">暂无分 Section 数据。</div>`
         }
       </div>
     `;
 
-    // ---- Module 3：Section 1–4 表现分析（表格+简短 note）----
     const module3 = `
       <div class="card" style="grid-column:1/-1;">
         <h2>Section 1–4 表现分析</h2>
@@ -226,87 +283,6 @@ if (!timeDerived) {
       </div>
     `;
 
-    // ---- 诊断总览（预览）----
-    const moduleDiagPreview = `
-      <div class="card" style="grid-column:1/-1;">
-        <h2>诊断总览（预览）</h2>
-        <div class="muted">这里未来会显示：12维能力雷达 / 高频错误类型 / 关键证据句（现在先把模块占位搭起来）。</div>
-        <div class="hr"></div>
-        <div class="muted">当前免费可见：<b>${esc(freeVisible.join(", ") || "—")}</b></div>
-        <div class="muted" style="margin-top:6px;">当前锁定：<b>${esc(locked.join(", ") || "—")}</b></div>
-      </div>
-    `;
-
-    // ---- Module 4/4.5/5/6：占位（保持你现有结构）----
-    const module4 = `
-      <div class="card" style="grid-column:1/-1;">
-        <h2>Listening Skills Profile（12维能力画像）</h2>
-        <div class="muted">你将看到 12 个核心能力维度的强弱分布（如：同义替换识别、信息定位、数字拼写、干扰项抗性等）。</div>
-        <div class="hr"></div>
-        <div class="muted">当前为预览版：解锁后展示完整能力条 + 你的关键短板 Top 3。</div>
-      </div>
-    `;
-
-    const module45 = `
-      <div class="card" style="grid-column:1/-1;">
-        <h2>Evidence Snapshot（证据快照）</h2>
-        <div class="muted">我们不会只给“结论”，还会给“证据”。解锁后你会看到每一类错因对应的证据快照（你的答案 vs 标准答案 vs 规则）。</div>
-        <div class="hr"></div>
-        <div class="muted">示例（占位）：</div>
-        <ul class="muted" style="margin-top:8px; padding-left:18px;">
-          <li>字数限制导致 0 分（例如：题干要求 ONE WORD，但输入了 two words）</li>
-          <li>同义替换未识别 → 定位错行</li>
-          <li>选择题被干扰项带走 → 选了“听到的词”而不是“问题要的”</li>
-        </ul>
-      </div>
-    `;
-
-    const module5 = `
-      <div class="card" style="grid-column:1/-1;">
-        <h2>你的关键短板结论（解锁后生成）</h2>
-        <div class="muted">你将获得：1句总诊断 + 3个关键短板 + 每个短板的根因解释（带证据）。</div>
-        <div class="hr"></div>
-        <div class="muted">示例（占位）：</div>
-        <ul class="muted" style="margin-top:8px; padding-left:18px;">
-          <li>短板1：同义替换识别不足 → 导致定位错行</li>
-          <li>短板2：数字/日期格式不稳定 → 明明听对却丢分</li>
-          <li>短板3：干扰项抗性弱 → 选择题容易被误导</li>
-        </ul>
-      </div>
-    `;
-
-    const module6 = `
-      <div class="card" style="grid-column:1/-1;">
-        <h2>14 天可执行训练计划（解锁后生成）</h2>
-        <div class="muted">今天就能做（3选1）：</div>
-        <ol class="muted" style="margin-top:8px; padding-left:18px;">
-          <li><b>数字/日期快练 8 分钟</b>：只练时间、日期、数字连读（正确率&gt;90%再加速）</li>
-          <li><b>同义替换 10 分钟</b>：把题干关键词替换写 3 个同义表达</li>
-          <li><b>干扰项对抗 1 组题</b>：做完必须写“我为什么选错”（一句话）</li>
-        </ol>
-        <div class="hr"></div>
-        <div class="muted">解锁后：Top3短板 → Today Action + 7天计划 + 14天强化计划 + 课程入口。</div>
-      </div>
-    `;
-
-    const module7 = `
-      <div class="card" style="grid-column:1/-1;">
-        <h2>解锁完整版诊断（Premium）</h2>
-        <div class="muted">解锁后你将获得：</div>
-        <ul class="muted" style="margin-top:10px; padding-left:18px;">
-          <li>✅ 12维能力画像（强弱分布 + Top3短板）</li>
-          <li>✅ 高频错因标签（你最常见的失分模式）</li>
-          <li>✅ Evidence Snapshot（每类错因的证据快照）</li>
-          <li>✅ 14天行动计划（可直接照做）</li>
-          <li>✅ 课程/训练入口（按短板匹配）</li>
-        </ul>
-        <div class="hr"></div>
-        <div class="row">
-          <a class="btn primary" href="/pricing" style="text-decoration:none;">解锁完整真诊断（内测报名）</a>
-        </div>
-      </div>
-    `;
-
     const moduleShare = `
       <div class="card" style="grid-column:1/-1;">
         <h2>邀请其他同学一起免费测试</h2>
@@ -318,15 +294,10 @@ if (!timeDerived) {
       </div>
     `;
 
-    // =========================
-    // ---- 附录（可折叠）：A/B/C ----
-    // =========================
-
     const appendixA = `
       <details>
         <summary><b>附录A（可展开）：对照表（仅参考）</b></summary>
 
-        <!-- A1：Raw vs IELTS -->
         <div style="margin-top:12px;">
           <div style="font-weight:700; margin: 6px 0;">A1. 答对题数 vs IELTS 对照表（仅参考）</div>
           <div style="margin-top:10px; overflow-x:auto;">
@@ -374,7 +345,6 @@ if (!timeDerived) {
 
         <div style="height:14px;"></div>
 
-               <!-- A2：CEFR vs IELTS -->
         <div>
           <div style="font-weight:700; margin: 6px 0;">A2. CEFR vs IELTS 对照表（通用参考）</div>
           <div style="margin-top:10px; overflow-x:auto;">
@@ -424,7 +394,6 @@ if (!timeDerived) {
             Footnote: This mapping is approximate and provided for reference only. (IELTS/CEFR 非严格一一对应)
           </div>
         </div>
-
       </details>
     `;
 
@@ -475,12 +444,6 @@ if (!timeDerived) {
       ${module1Overall}
       ${module1Sections}
       ${module3}
-      ${moduleDiagPreview}
-      ${module4}
-      ${module45}
-      ${module5}
-      ${module6}
-      ${module7}
       ${moduleShare}
       ${appendixWrap}
     `;
@@ -524,6 +487,8 @@ if (!timeDerived) {
         }
       };
     }
+
+    fillFreeBlocks(data);
   }
 
   async function load() {
