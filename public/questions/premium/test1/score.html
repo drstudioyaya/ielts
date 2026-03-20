@@ -176,16 +176,15 @@
       margin:16px 0;
     }
 
-    /* 新增：免费版与 Premium 预览区 */
-    .extra-block{
-      margin-top: 0;
+    /* 新增模块 */
+    .inserted-block{
       grid-column: 1 / -1;
-      display: grid;
+      display:grid;
       grid-template-columns: 1fr;
-      gap: 14px;
+      gap:14px;
     }
-    .extra-block .card{
-      margin-top: 0;
+    .inserted-block .card{
+      margin:0;
     }
     .card h3{
       margin: 0 0 8px;
@@ -230,70 +229,6 @@
     </div>
 
     <div id="app" class="grid"></div>
-
-    <!-- 免费版诊断 + Premium 预览 -->
-    <div class="extra-block" id="extraBlock" style="display:none;">
-      <section class="card">
-        <h2>当前失分画像（免费版）</h2>
-        <p id="freeDiagnosticSummary" class="simple-text">
-          这里将显示你的免费版初步诊断。
-        </p>
-
-        <div class="miniBox">
-          <h3>优先修复顺序</h3>
-          <p id="priorityFixOrder" class="simple-text">
-            这里将显示你的优先修复顺序。
-          </p>
-        </div>
-
-        <div class="miniBox">
-          <h3>今天就能开始的 1 个动作</h3>
-          <p id="todayAction" class="simple-text">
-            这里将显示今天就能开始的训练动作。
-          </p>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>完整诊断（Premium 预览）</h2>
-        <p class="simple-text">
-          解锁后可查看你的完整能力画像、关键短板、错因证据和训练计划。
-        </p>
-
-        <details>
-          <summary>12维能力画像（强弱分布 + Top3短板）</summary>
-          <div class="simple-text" style="margin-top:8px;">
-            解锁后查看你的 12 维能力分布，以及最影响提分的 Top3 短板。
-          </div>
-        </details>
-
-        <details>
-          <summary>高频错因标签</summary>
-          <div class="simple-text" style="margin-top:8px;">
-            解锁后查看你最常见的失分模式，例如同义替换、数字拼写、干扰项误判等。
-          </div>
-        </details>
-
-        <details>
-          <summary>Evidence Snapshot（证据快照）</summary>
-          <div class="simple-text" style="margin-top:8px;">
-            解锁后查看“你的答案 vs 标准答案 vs 判分规则”的具体证据。
-          </div>
-        </details>
-
-        <details>
-          <summary>7天 / 14天训练计划</summary>
-          <div class="simple-text" style="margin-top:8px;">
-            解锁后获取按你的薄弱点定制的训练动作。
-          </div>
-        </details>
-
-        <div class="ctaRow">
-          <button type="button" class="btn primary">解锁完整真诊断（内测版）</button>
-          <button type="button" class="btn">添加微信领取完整分析</button>
-        </div>
-      </section>
-    </div>
   </div>
 
   <script src="./score.js?v=20251223_1"></script>
@@ -303,81 +238,181 @@
         const cards = app.querySelectorAll(".card");
         const keywords = [
           "诊断总览（预览）",
+          "Listening Skills Profile（12维能力画像）",
           "Listening Skills Profile",
           "Evidence Snapshot（证据快照）",
           "你的关键短板结论",
           "14 天可执行训练计划",
           "14天可执行训练计划",
           "解锁完整诊断（Premium）",
+          "解锁完整版诊断（Premium）",
           "解锁完整诊断（内测报名）",
           "解锁完整版诊断（Premium）"
         ];
 
         Array.from(cards).forEach(card => {
           const text = (card.textContent || "").trim();
-          const shouldHide = keywords.some(keyword => text.includes(keyword));
-          if (shouldHide) {
+          if (keywords.some(keyword => text.includes(keyword))) {
             card.classList.add("hide-card");
           }
         });
       }
 
-      function moveExtraBlockBeforeAppendix() {
-        const app = document.getElementById("app");
-        const extraBlock = document.getElementById("extraBlock");
-        if (!app || !extraBlock) return false;
+      function buildInsertedBlock() {
+        const wrapper = document.createElement("div");
+        wrapper.className = "inserted-block";
+        wrapper.id = "insertedBlock";
+
+        wrapper.innerHTML = `
+          <section class="card">
+            <h2>当前失分画像（免费版）</h2>
+            <p id="freeDiagnosticSummary" class="simple-text">
+              这里将显示你的免费版初步诊断。
+            </p>
+
+            <div class="miniBox">
+              <h3>优先修复顺序</h3>
+              <p id="priorityFixOrder" class="simple-text">
+                这里将显示你的优先修复顺序。
+              </p>
+            </div>
+
+            <div class="miniBox">
+              <h3>今天就能开始的 1 个动作</h3>
+              <p id="todayAction" class="simple-text">
+                这里将显示今天就能开始的训练动作。
+              </p>
+            </div>
+          </section>
+
+          <section class="card">
+            <h2>完整诊断（Premium 预览）</h2>
+            <p class="simple-text">
+              解锁后可查看你的完整能力画像、关键短板、错因证据和训练计划。
+            </p>
+
+            <details>
+              <summary>12维能力画像（强弱分布 + Top3短板）</summary>
+              <div class="simple-text" style="margin-top:8px;">
+                解锁后查看你的 12 维能力分布，以及最影响提分的 Top3 短板。
+              </div>
+            </details>
+
+            <details>
+              <summary>高频错因标签</summary>
+              <div class="simple-text" style="margin-top:8px;">
+                解锁后查看你最常见的失分模式，例如同义替换、数字拼写、干扰项误判等。
+              </div>
+            </details>
+
+            <details>
+              <summary>Evidence Snapshot（证据快照）</summary>
+              <div class="simple-text" style="margin-top:8px;">
+                解锁后查看“你的答案 vs 标准答案 vs 判分规则”的具体证据。
+              </div>
+            </details>
+
+            <details>
+              <summary>7天 / 14天训练计划</summary>
+              <div class="simple-text" style="margin-top:8px;">
+                解锁后获取按你的薄弱点定制的训练动作。
+              </div>
+            </details>
+
+            <div class="ctaRow">
+              <button type="button" class="btn primary">解锁完整真诊断（内测版）</button>
+              <button type="button" class="btn">添加微信领取完整分析</button>
+            </div>
+          </section>
+        `;
+
+        return wrapper;
+      }
+
+      function insertBlockBeforeAppendix(app) {
+        if (!app) return false;
 
         hideOldPlaceholderCards(app);
 
-        const cards = app.querySelectorAll(".card:not(.hide-card)");
-        if (!cards.length) return false;
+        const oldInserted = document.getElementById("insertedBlock");
+        if (oldInserted) oldInserted.remove();
 
-        const appendixCard = Array.from(cards).find(card => {
+        const appendixCard = Array.from(app.querySelectorAll(".card")).find(card => {
           const text = (card.textContent || "").trim();
-          return text.includes("附录") || text.includes("Appendix");
+          return !card.classList.contains("hide-card") && (text.includes("附录") || text.includes("Appendix"));
         });
 
+        const insertedBlock = buildInsertedBlock();
+
         if (appendixCard) {
-          app.insertBefore(extraBlock, appendixCard);
-          extraBlock.style.display = "grid";
+          app.insertBefore(insertedBlock, appendixCard);
           return true;
         }
 
         return false;
       }
 
-      function startObserver() {
-        const app = document.getElementById("app");
-        const extraBlock = document.getElementById("extraBlock");
-        if (!app || !extraBlock) return;
+      function fallbackInsert(app) {
+        if (!app) return;
+        hideOldPlaceholderCards(app);
 
-        if (moveExtraBlockBeforeAppendix()) return;
+        const oldInserted = document.getElementById("insertedBlock");
+        if (oldInserted) oldInserted.remove();
+
+        const insertedBlock = buildInsertedBlock();
+
+        const inviteCard = Array.from(app.querySelectorAll(".card")).find(card => {
+          const text = (card.textContent || "").trim();
+          return !card.classList.contains("hide-card") && text.includes("邀请其他同学一起免费测试");
+        });
+
+        if (inviteCard && inviteCard.nextSibling) {
+          app.insertBefore(insertedBlock, inviteCard.nextSibling);
+        } else if (inviteCard) {
+          app.appendChild(insertedBlock);
+        } else {
+          app.appendChild(insertedBlock);
+        }
+      }
+
+      function boot() {
+        const app = document.getElementById("app");
+        if (!app) return;
+
+        let done = false;
+
+        const tryInsert = () => {
+          const success = insertBlockBeforeAppendix(app);
+          if (success) {
+            done = true;
+            return true;
+          }
+          return false;
+        };
+
+        if (tryInsert()) return;
 
         const observer = new MutationObserver(() => {
-          if (moveExtraBlockBeforeAppendix()) {
+          if (done) return;
+          if (tryInsert()) {
             observer.disconnect();
           }
         });
 
-        observer.observe(app, {
-          childList: true,
-          subtree: true
-        });
+        observer.observe(app, { childList: true, subtree: true });
 
         setTimeout(() => {
-          hideOldPlaceholderCards(app);
-          if (extraBlock.style.display !== "grid") {
-            app.appendChild(extraBlock);
-            extraBlock.style.display = "grid";
+          if (!done) {
+            fallbackInsert(app);
+            observer.disconnect();
           }
-          observer.disconnect();
         }, 5000);
       }
 
       if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", startObserver);
+        document.addEventListener("DOMContentLoaded", boot);
       } else {
-        startObserver();
+        boot();
       }
     })();
   </script>
