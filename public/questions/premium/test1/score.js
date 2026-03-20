@@ -139,6 +139,42 @@ function bandToCEFR(band) {
     };
   }
 
+  function getFreeTextFromApiOrFallback(data) {
+    const apiFree = data?.freeReport;
+    const sections = safeArr(data?.sections);
+    const overall = data?.overall || {};
+
+    if (
+      apiFree &&
+      typeof apiFree.summary === "string" &&
+      apiFree.summary.trim()
+    ) {
+      const priority = Array.isArray(apiFree.priorityOrder)
+        ? apiFree.priorityOrder.join(" → ")
+        : (apiFree.priorityOrder || "");
+
+      return {
+        summary: apiFree.summary || "",
+        priority: priority || "",
+        action: apiFree.todayAction || ""
+      };
+    }
+
+    const scoreMap = getSectionScoreMap(sections);
+    return buildFreeDiagnosticText(scoreMap, overall.band);
+  }
+
+  function getPremiumPreviewFromApi(data) {
+    const premium = data?.premiumPreview || {};
+    const dims = Array.isArray(premium.topWeakDimensions) ? premium.topWeakDimensions : [];
+    const labels = Array.isArray(premium.topErrorLabels) ? premium.topErrorLabels : [];
+
+    return {
+      dimsText: dims.length ? dims.join(" / ") : "解锁后查看你的 Top3 薄弱维度",
+      labelsText: labels.length ? labels.join(" / ") : "解锁后查看你最常见的失分模式"
+    };
+  }
+
   function renderReport(data, attemptId) {
     const app = $("#app");
     const overall = data?.overall || {};
@@ -154,15 +190,14 @@ function bandToCEFR(band) {
     const overallPct = pct(rawCorrect, rawTotal);
     const sections = safeArr(data?.sections);
     const bandTable = safeArr(data?.bandTable);
+    const freeText = getFreeTextFromApiOrFallback(data);
+    const premiumPreview = getPremiumPreviewFromApi(data);
 
     const cefrRaw = String(overall.cefr ?? "").trim();
     const cefrDerived =
       !cefrRaw || cefrRaw.toUpperCase() === "NA"
         ? bandToCEFR(overall.band)
         : cefrRaw;
-
-    const scoreMap = getSectionScoreMap(sections);
-    const freeText = buildFreeDiagnosticText(scoreMap, overall.band);
 
     const module0 = `
       <div class="card" style="grid-column:1/-1;">
@@ -289,14 +324,14 @@ function bandToCEFR(band) {
         <details>
           <summary>12维能力画像（强弱分布 + Top3短板）</summary>
           <div class="simple-text" style="margin-top:8px;">
-            解锁后查看你的 12 维能力分布，以及最影响提分的 Top3 短板。
+            ${esc(premiumPreview.dimsText)}
           </div>
         </details>
 
         <details>
           <summary>高频错因标签</summary>
           <div class="simple-text" style="margin-top:8px;">
-            解锁后查看你最常见的失分模式，例如同义替换、数字拼写、干扰项误判等。
+            ${esc(premiumPreview.labelsText)}
           </div>
         </details>
 
@@ -527,7 +562,7 @@ function bandToCEFR(band) {
     }
 
     try {
-      const url = `/api/report?attemptId=${encodeURIComponent(attemptId)}&_t=${Date.now()}`;
+      const url = `/api/report_test1?attemptId=${encodeURIComponent(attemptId)}&_t=${Date.now()}`;
       const r = await fetch(url, { method: "GET" });
       const text = await r.text();
 
