@@ -176,12 +176,16 @@
       margin:16px 0;
     }
 
-    /* 免费版与 Premium 预览区 */
+    /* 新增：免费版与 Premium 预览区 */
     .extra-block{
       margin-top: 0;
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
     }
     .extra-block .card{
-      margin-top: 14px;
+      margin-top: 0;
     }
     .card h3{
       margin: 0 0 8px;
@@ -205,6 +209,10 @@
       gap:12px;
       flex-wrap:wrap;
       margin-top:18px;
+    }
+
+    .hide-card{
+      display:none !important;
     }
   </style>
 </head>
@@ -291,12 +299,37 @@
   <script src="./score.js?v=20251223_1"></script>
   <script>
     (function () {
+      function hideOldPlaceholderCards(app) {
+        const cards = app.querySelectorAll(".card");
+        const keywords = [
+          "诊断总览（预览）",
+          "Listening Skills Profile",
+          "Evidence Snapshot（证据快照）",
+          "你的关键短板结论",
+          "14 天可执行训练计划",
+          "14天可执行训练计划",
+          "解锁完整诊断（Premium）",
+          "解锁完整诊断（内测报名）",
+          "解锁完整版诊断（Premium）"
+        ];
+
+        Array.from(cards).forEach(card => {
+          const text = (card.textContent || "").trim();
+          const shouldHide = keywords.some(keyword => text.includes(keyword));
+          if (shouldHide) {
+            card.classList.add("hide-card");
+          }
+        });
+      }
+
       function moveExtraBlockBeforeAppendix() {
         const app = document.getElementById("app");
         const extraBlock = document.getElementById("extraBlock");
         if (!app || !extraBlock) return false;
 
-        const cards = app.querySelectorAll(".card");
+        hideOldPlaceholderCards(app);
+
+        const cards = app.querySelectorAll(".card:not(.hide-card)");
         if (!cards.length) return false;
 
         const appendixCard = Array.from(cards).find(card => {
@@ -306,7 +339,7 @@
 
         if (appendixCard) {
           app.insertBefore(extraBlock, appendixCard);
-          extraBlock.style.display = "block";
+          extraBlock.style.display = "grid";
           return true;
         }
 
@@ -332,9 +365,10 @@
         });
 
         setTimeout(() => {
-          if (extraBlock.style.display !== "block") {
+          hideOldPlaceholderCards(app);
+          if (extraBlock.style.display !== "grid") {
             app.appendChild(extraBlock);
-            extraBlock.style.display = "block";
+            extraBlock.style.display = "grid";
           }
           observer.disconnect();
         }, 5000);
