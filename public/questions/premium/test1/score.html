@@ -176,12 +176,12 @@
       margin:16px 0;
     }
 
-    /* 新增模块 */
     .inserted-block{
       grid-column: 1 / -1;
       display:grid;
       grid-template-columns: 1fr;
       gap:14px;
+      order: 50;
     }
     .inserted-block .card{
       margin:0;
@@ -325,76 +325,65 @@
             </div>
           </section>
         `;
-
         return wrapper;
       }
 
-      function insertBlockBeforeAppendix(app) {
-        if (!app) return false;
+      function applyOrder(app) {
+        const cards = Array.from(app.querySelectorAll(".card:not(.hide-card)"));
 
-        hideOldPlaceholderCards(app);
-
-        const oldInserted = document.getElementById("insertedBlock");
-        if (oldInserted) oldInserted.remove();
-
-        const appendixCard = Array.from(app.querySelectorAll(".card")).find(card => {
+        cards.forEach(card => {
+          card.style.order = "10";
           const text = (card.textContent || "").trim();
-          return !card.classList.contains("hide-card") && (text.includes("附录") || text.includes("Appendix"));
+
+          if (text.includes("考试结果总览") || text.includes("Section得分")) {
+            card.style.order = "10";
+          } else if (text.includes("Section 1–4 表现分析")) {
+            card.style.order = "20";
+            card.style.gridColumn = "1 / -1";
+          } else if (text.includes("邀请其他同学一起免费测试")) {
+            card.style.order = "60";
+            card.style.gridColumn = "1 / -1";
+          } else if (text.includes("附录") || text.includes("Appendix")) {
+            card.style.order = "70";
+            card.style.gridColumn = "1 / -1";
+          } else {
+            card.style.order = "10";
+          }
         });
-
-        const insertedBlock = buildInsertedBlock();
-
-        if (appendixCard) {
-          app.insertBefore(insertedBlock, appendixCard);
-          return true;
-        }
-
-        return false;
       }
 
-      function fallbackInsert(app) {
+      function renderCustomBlocks(app) {
         if (!app) return;
-        hideOldPlaceholderCards(app);
 
-        const oldInserted = document.getElementById("insertedBlock");
-        if (oldInserted) oldInserted.remove();
+        hideOldPlaceholderCards(app);
+        applyOrder(app);
+
+        const old = document.getElementById("insertedBlock");
+        if (old) old.remove();
 
         const insertedBlock = buildInsertedBlock();
-
-        const inviteCard = Array.from(app.querySelectorAll(".card")).find(card => {
-          const text = (card.textContent || "").trim();
-          return !card.classList.contains("hide-card") && text.includes("邀请其他同学一起免费测试");
-        });
-
-        if (inviteCard && inviteCard.nextSibling) {
-          app.insertBefore(insertedBlock, inviteCard.nextSibling);
-        } else if (inviteCard) {
-          app.appendChild(insertedBlock);
-        } else {
-          app.appendChild(insertedBlock);
-        }
+        app.appendChild(insertedBlock);
       }
 
       function boot() {
         const app = document.getElementById("app");
         if (!app) return;
 
-        let done = false;
+        let rendered = false;
 
-        const tryInsert = () => {
-          const success = insertBlockBeforeAppendix(app);
-          if (success) {
-            done = true;
-            return true;
-          }
-          return false;
+        const tryRender = () => {
+          const hasCards = app.querySelectorAll(".card").length > 0;
+          if (!hasCards) return false;
+          renderCustomBlocks(app);
+          rendered = true;
+          return true;
         };
 
-        if (tryInsert()) return;
+        if (tryRender()) return;
 
         const observer = new MutationObserver(() => {
-          if (done) return;
-          if (tryInsert()) {
+          if (rendered) return;
+          if (tryRender()) {
             observer.disconnect();
           }
         });
@@ -402,10 +391,8 @@
         observer.observe(app, { childList: true, subtree: true });
 
         setTimeout(() => {
-          if (!done) {
-            fallbackInsert(app);
-            observer.disconnect();
-          }
+          renderCustomBlocks(app);
+          observer.disconnect();
         }, 5000);
       }
 
