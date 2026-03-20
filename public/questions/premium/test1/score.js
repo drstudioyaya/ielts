@@ -1,7 +1,6 @@
 function bandToCEFR(band) {
   const b = Number(band);
   if (!Number.isFinite(b)) return "NA";
-
   if (b < 3.0) return "A1";
   if (b < 4.0) return "A2";
   if (b < 5.5) return "B1";
@@ -60,6 +59,7 @@ function bandToCEFR(band) {
 
   function renderError(message, raw) {
     const app = $("#app");
+    app.className = "grid";
     app.innerHTML = `
       <div class="card" style="grid-column:1/-1;">
         <h2 class="danger">加载失败</h2>
@@ -129,7 +129,7 @@ function bandToCEFR(band) {
       summary =
         "你的整体理解没有完全断层，但不同 Section 之间稳定性差异明显。当前更需要做的是把“偶尔能做对”变成“稳定做对”，尤其要先修复失分最集中的部分。";
       action =
-        `今天先从 ${`Section ${weakestSec}`} 开始，做 1 组题后立即复盘：写下你这组题最常见的 1 个错误原因。`;
+        `今天先从 Section ${weakestSec} 开始，做 1 组题后立即复盘：写下你这组题最常见的 1 个错误原因。`;
     }
 
     return {
@@ -137,30 +137,6 @@ function bandToCEFR(band) {
       priority: getPriorityOrder(scoreMap),
       action,
     };
-  }
-
-  function fillFreeBlocks(data) {
-    const sections = safeArr(data?.sections);
-    const overall = data?.overall || {};
-    const scoreMap = getSectionScoreMap(sections);
-    const { summary, priority, action } = buildFreeDiagnosticText(scoreMap, overall.band);
-
-    let tries = 0;
-    const timer = setInterval(() => {
-      const summaryEl = document.getElementById("freeDiagnosticSummary");
-      const priorityEl = document.getElementById("priorityFixOrder");
-      const actionEl = document.getElementById("todayAction");
-
-      if (summaryEl && priorityEl && actionEl) {
-        summaryEl.textContent = summary;
-        priorityEl.textContent = priority;
-        actionEl.textContent = action;
-        clearInterval(timer);
-      }
-
-      tries += 1;
-      if (tries > 40) clearInterval(timer);
-    }, 150);
   }
 
   function renderReport(data, attemptId) {
@@ -184,6 +160,9 @@ function bandToCEFR(band) {
       !cefrRaw || cefrRaw.toUpperCase() === "NA"
         ? bandToCEFR(overall.band)
         : cefrRaw;
+
+    const scoreMap = getSectionScoreMap(sections);
+    const freeText = buildFreeDiagnosticText(scoreMap, overall.band);
 
     const module0 = `
       <div class="card" style="grid-column:1/-1;">
@@ -283,6 +262,65 @@ function bandToCEFR(band) {
       </div>
     `;
 
+    const moduleFree = `
+      <div class="card" style="grid-column:1/-1;">
+        <h2>当前失分画像（免费版）</h2>
+        <p class="simple-text">${esc(freeText.summary)}</p>
+
+        <div class="miniBox">
+          <h3>优先修复顺序</h3>
+          <p class="simple-text">${esc(freeText.priority)}</p>
+        </div>
+
+        <div class="miniBox">
+          <h3>今天就能开始的 1 个动作</h3>
+          <p class="simple-text">${esc(freeText.action)}</p>
+        </div>
+      </div>
+    `;
+
+    const modulePremium = `
+      <div class="card" style="grid-column:1/-1;">
+        <h2>完整诊断（Premium 预览）</h2>
+        <p class="simple-text">
+          解锁后可查看你的完整能力画像、关键短板、错因证据和训练计划。
+        </p>
+
+        <details>
+          <summary>12维能力画像（强弱分布 + Top3短板）</summary>
+          <div class="simple-text" style="margin-top:8px;">
+            解锁后查看你的 12 维能力分布，以及最影响提分的 Top3 短板。
+          </div>
+        </details>
+
+        <details>
+          <summary>高频错因标签</summary>
+          <div class="simple-text" style="margin-top:8px;">
+            解锁后查看你最常见的失分模式，例如同义替换、数字拼写、干扰项误判等。
+          </div>
+        </details>
+
+        <details>
+          <summary>Evidence Snapshot（证据快照）</summary>
+          <div class="simple-text" style="margin-top:8px;">
+            解锁后查看“你的答案 vs 标准答案 vs 判分规则”的具体证据。
+          </div>
+        </details>
+
+        <details>
+          <summary>7天 / 14天训练计划</summary>
+          <div class="simple-text" style="margin-top:8px;">
+            解锁后获取按你的薄弱点定制的训练动作。
+          </div>
+        </details>
+
+        <div class="ctaRow">
+          <button type="button" class="btn primary">解锁完整真诊断（内测版）</button>
+          <button type="button" class="btn">添加微信领取完整分析</button>
+        </div>
+      </div>
+    `;
+
     const moduleShare = `
       <div class="card" style="grid-column:1/-1;">
         <h2>邀请其他同学一起免费测试</h2>
@@ -357,36 +395,12 @@ function bandToCEFR(band) {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">A1</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">初级（能理解和使用非常基础的日常短语）</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">2.0 – 2.5</td>
-                </tr>
-                <tr>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">A2</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">基础（能就熟悉话题进行简单交流）</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">3.0 – 3.5</td>
-                </tr>
-                <tr>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">B1</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">中级（能处理日常情境，理解熟悉领域信息）</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">4.0 – 4.5</td>
-                </tr>
-                <tr>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">B2</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">中高级（能流畅自如地交流，理解复杂文本）</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">5.5 – 6.5</td>
-                </tr>
-                <tr>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">C1</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">高级（能流利、灵活运用，理解长篇复杂文本）</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">7.0 – 8.0</td>
-                </tr>
-                <tr>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">C2</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">精通（接近母语水平）</td>
-                  <td style="border:1px solid #111; padding:10px 12px; text-align:center;">8.5 – 9.0</td>
-                </tr>
+                <tr><td style="border:1px solid #111; padding:10px 12px; text-align:center;">A1</td><td style="border:1px solid #111; padding:10px 12px; text-align:center;">初级（能理解和使用非常基础的日常短语）</td><td style="border:1px solid #111; padding:10px 12px; text-align:center;">2.0 – 2.5</td></tr>
+                <tr><td style="border:1px solid #111; padding:10px 12px; text-align:center;">A2</td><td style="border:1px solid #111; padding:10px 12px; text-align:center;">基础（能就熟悉话题进行简单交流）</td><td style="border:1px solid #111; padding:10px 12px; text-align:center;">3.0 – 3.5</td></tr>
+                <tr><td style="border:1px solid #111; padding:10px 12px; text-align:center;">B1</td><td style="border:1px solid #111; padding:10px 12px; text-align:center;">中级（能处理日常情境，理解熟悉领域信息）</td><td style="border:1px solid #111; padding:10px 12px; text-align:center;">4.0 – 4.5</td></tr>
+                <tr><td style="border:1px solid #111; padding:10px 12px; text-align:center;">B2</td><td style="border:1px solid #111; padding:10px 12px; text-align:center;">中高级（能流畅自如地交流，理解复杂文本）</td><td style="border:1px solid #111; padding:10px 12px; text-align:center;">5.5 – 6.5</td></tr>
+                <tr><td style="border:1px solid #111; padding:10px 12px; text-align:center;">C1</td><td style="border:1px solid #111; padding:10px 12px; text-align:center;">高级（能流利、灵活运用，理解长篇复杂文本）</td><td style="border:1px solid #111; padding:10px 12px; text-align:center;">7.0 – 8.0</td></tr>
+                <tr><td style="border:1px solid #111; padding:10px 12px; text-align:center;">C2</td><td style="border:1px solid #111; padding:10px 12px; text-align:center;">精通（接近母语水平）</td><td style="border:1px solid #111; padding:10px 12px; text-align:center;">8.5 – 9.0</td></tr>
               </tbody>
             </table>
           </div>
@@ -444,6 +458,8 @@ function bandToCEFR(band) {
       ${module1Overall}
       ${module1Sections}
       ${module3}
+      ${moduleFree}
+      ${modulePremium}
       ${moduleShare}
       ${appendixWrap}
     `;
@@ -487,8 +503,6 @@ function bandToCEFR(band) {
         }
       };
     }
-
-    fillFreeBlocks(data);
   }
 
   async function load() {
