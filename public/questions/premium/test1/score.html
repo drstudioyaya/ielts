@@ -224,7 +224,7 @@
     <div id="app" class="grid"></div>
 
     <!-- 新增：免费版诊断 + Premium 预览 -->
-    <div class="extra-block">
+   <div class="extra-block" id="extraBlock">
       <section class="card">
         <h2>当前失分画像（免费版）</h2>
         <p id="freeDiagnosticSummary" class="simple-text">
@@ -289,5 +289,22 @@
   </div>
 
   <script src="./score.js?v=20251223_1"></script>
+  <script>
+  window.addEventListener("load", () => {
+    const extraBlock = document.getElementById("extraBlock");
+    const app = document.getElementById("app");
+    if (!extraBlock || !app) return;
+
+    const cards = app.querySelectorAll(".card");
+    const appendixCard = Array.from(cards).find(card => {
+      const h2 = card.querySelector("h2");
+      return h2 && h2.textContent.includes("附录");
+    });
+
+    if (appendixCard) {
+      app.insertBefore(extraBlock, appendixCard);
+    }
+  });
+</script>
 </body>
 </html>
