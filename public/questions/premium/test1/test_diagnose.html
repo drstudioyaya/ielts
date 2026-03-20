@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Test1 自动判因测试</title>
+  <style>
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      background:#fff;
+      color:#111827;
+    }
+    .wrap{
+      max-width:900px;
+      margin:0 auto;
+      padding:24px 16px 60px;
+    }
+    h1{
+      margin:0 0 12px;
+      font-size:32px;
+    }
+    .sub{
+      color:#6b7280;
+      margin-bottom:20px;
+      line-height:1.7;
+    }
+    .card{
+      border:1px solid #e5e7eb;
+      border-radius:14px;
+      background:#f9fafb;
+      padding:16px;
+      margin-top:16px;
+    }
+    .row{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+    input{
+      width:160px;
+      padding:10px 12px;
+      border:1px solid #d1d5db;
+      border-radius:10px;
+      font-size:14px;
+      background:#fff;
+    }
+    button{
+      border:1px solid #111827;
+      background:#111827;
+      color:#fff;
+      border-radius:10px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-size:14px;
+    }
+    pre{
+      white-space:pre-wrap;
+      word-break:break-word;
+      background:#0b1020;
+      color:#e5e7eb;
+      padding:14px;
+      border-radius:12px;
+      font-size:12px;
+      line-height:1.7;
+      overflow:auto;
+    }
+    .muted{
+      color:#6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Test1 自动判因测试</h1>
+    <div class="sub">
+      先手动输入几道题答案，检查 metadata 和 diagnoseAttempt.js 是否能正常输出结果。
+    </div>
+
+    <div class="card">
+      <h2>输入测试答案（先测前 5 题）</h2>
+      <div class="row">
+        <input id="q1" placeholder="Q1答案" />
+        <input id="q2" placeholder="Q2答案" />
+        <input id="q3" placeholder="Q3答案" />
+        <input id="q4" placeholder="Q4答案" />
+        <input id="q5" placeholder="Q5答案" />
+      </div>
+
+      <div class="row">
+        <button id="runBtn">运行自动判因</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>结果输出</h2>
+      <div class="muted">这里会显示每题的 isCorrect / primaryError / secondaryErrors。</div>
+      <pre id="output">等待运行...</pre>
+    </div>
+  </div>
+
+  <script src="./diagnoseAttempt.js"></script>
+  <script>
+    async function loadMetadata() {
+      const res = await fetch("./test1_metadata.json?_t=" + Date.now());
+      if (!res.ok) {
+        throw new Error("test1_metadata.json 读取失败");
+      }
+      return await res.json();
+    }
+
+    function buildUserAnswersMap() {
+      return {
+        "T1_Q01": document.getElementById("q1").value,
+        "T1_Q02": document.getElementById("q2").value,
+        "T1_Q03": document.getElementById("q3").value,
+        "T1_Q04": document.getElementById("q4").value,
+        "T1_Q05": document.getElementById("q5").value
+      };
+    }
+
+    async function runDiagnosis() {
+      const output = document.getElementById("output");
+      output.textContent = "运行中...";
+
+      try {
+        const metadata = await loadMetadata();
+        const userAnswersMap = buildUserAnswersMap();
+
+        const results = diagnoseAttempt(metadata, userAnswersMap)
+          .filter(item => item.questionNumber >= 1 && item.questionNumber <= 5);
+
+        output.textContent = JSON.stringify(results, null, 2);
+      } catch (err) {
+        output.textContent = "报错：\n" + String(err.message || err);
+      }
+    }
+
+    document.getElementById("runBtn").addEventListener("click", runDiagnosis);
+  </script>
+</body>
+</html>
