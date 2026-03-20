@@ -175,6 +175,37 @@
       background:var(--border);
       margin:16px 0;
     }
+
+    /* 新增：免费版与 Premium 预览区 */
+    .extra-block{
+      margin-top: 18px;
+    }
+    .extra-block .card{
+      margin-top: 14px;
+    }
+    .card h3{
+      margin: 0 0 8px;
+      font-size: 15px;
+      color: var(--text);
+    }
+    .simple-text{
+      color: var(--text);
+      line-height: 1.8;
+      font-size: 15px;
+    }
+    .miniBox{
+      margin-top: 16px;
+      padding: 14px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+    }
+    .ctaRow{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-top:18px;
+    }
   </style>
 </head>
 
@@ -191,6 +222,70 @@
     </div>
 
     <div id="app" class="grid"></div>
+
+    <!-- 新增：免费版诊断 + Premium 预览 -->
+    <div class="extra-block">
+      <section class="card">
+        <h2>当前失分画像（免费版）</h2>
+        <p id="freeDiagnosticSummary" class="simple-text">
+          这里将显示你的免费版初步诊断。
+        </p>
+
+        <div class="miniBox">
+          <h3>优先修复顺序</h3>
+          <p id="priorityFixOrder" class="simple-text">
+            这里将显示你的优先修复顺序。
+          </p>
+        </div>
+
+        <div class="miniBox">
+          <h3>今天就能开始的 1 个动作</h3>
+          <p id="todayAction" class="simple-text">
+            这里将显示今天就能开始的训练动作。
+          </p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>完整诊断（Premium 预览）</h2>
+        <p class="simple-text">
+          解锁后可查看你的完整能力画像、关键短板、错因证据和训练计划。
+        </p>
+
+        <details>
+          <summary>12维能力画像（强弱分布 + Top3短板）</summary>
+          <div class="simple-text" style="margin-top:8px;">
+            解锁后查看你的 12 维能力分布，以及最影响提分的 Top3 短板。
+          </div>
+        </details>
+
+        <details>
+          <summary>高频错因标签</summary>
+          <div class="simple-text" style="margin-top:8px;">
+            解锁后查看你最常见的失分模式，例如同义替换、数字拼写、干扰项误判等。
+          </div>
+        </details>
+
+        <details>
+          <summary>Evidence Snapshot（证据快照）</summary>
+          <div class="simple-text" style="margin-top:8px;">
+            解锁后查看“你的答案 vs 标准答案 vs 判分规则”的具体证据。
+          </div>
+        </details>
+
+        <details>
+          <summary>7天 / 14天训练计划</summary>
+          <div class="simple-text" style="margin-top:8px;">
+            解锁后获取按你的薄弱点定制的训练动作。
+          </div>
+        </details>
+
+        <div class="ctaRow">
+          <button type="button" class="btn primary">解锁完整真诊断（内测版）</button>
+          <button type="button" class="btn">添加微信领取完整分析</button>
+        </div>
+      </section>
+    </div>
   </div>
 
   <script src="./score.js?v=20251223_1"></script>
