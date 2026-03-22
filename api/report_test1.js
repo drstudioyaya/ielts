@@ -91,6 +91,54 @@ function normalizedList(arr) {
 }
 
 /* ---------------------------
+ * 标签文本
+ * --------------------------- */
+
+function getDimensionLabel(dim) {
+  const map = {
+    D1: "词汇捕捉力",
+    D2: "同义替换识别力",
+    D3: "信息定位能力",
+    D4: "数字/日期/拼写精度",
+    D5: "场景适应能力",
+    D6: "长篇讲座理解力",
+    D7: "预测能力",
+    D8: "注意力持续度",
+    D9: "干扰项抗性",
+    D10: "语篇信号词敏感度",
+    D11: "语音适应力",
+    D12: "记笔记/工作记忆"
+  };
+  return map[dim] || dim;
+}
+
+function getErrorLabelText(label) {
+  const map = {
+    A1: "关键词未听出",
+    A2: "拼写接近但错误",
+    A4: "数字/日期/拼写失准",
+    B1: "同义替换未识别",
+    C1: "定位偏早/偏错",
+    C2: "定位偏晚",
+    C3: "题目顺序跟丢/串位",
+    E1: "被干扰项带偏",
+    E2: "比较/排除没跟上",
+    E3: "修正信息未跟上",
+    F1: "信号词不敏感",
+    F3: "长讲座结构理解失误",
+    G3: "地图/空间定位失误",
+    H3: "多人对话跟踪吃力",
+    H4: "工作记忆负荷过高",
+    I2: "格式规则执行不稳",
+    I3: "拼写/书写规则失误",
+    I4: "数字日期格式规则失误",
+    J2: "匹配题串位/配对失误",
+    K1: "未作答/证据不足"
+  };
+  return map[label] || label || "—";
+}
+
+/* ---------------------------
  * 自动判因核心
  * --------------------------- */
 
@@ -119,7 +167,6 @@ function detectPrimaryError(item, userAnswer) {
     };
   }
 
-  /* 1. 规则 / 格式类优先 */
   if (formatPolicy.numberSensitive || anyAcceptedLooksNumeric(acceptedAnswers)) {
     if (includesDigitLike(userRaw) || includesTimeLike(userRaw) || userNorm) {
       return {
@@ -146,7 +193,6 @@ function detectPrimaryError(item, userAnswer) {
     };
   }
 
-  /* 2. 题型优先规则 */
   if (questionType === "map_labeling") {
     return {
       primaryError: "G3",
@@ -163,7 +209,6 @@ function detectPrimaryError(item, userAnswer) {
     };
   }
 
-  /* 3. 选择题更细分 */
   if (questionType === "single_choice") {
     const userIsDistractor = distractorsNorm.includes(userNorm);
 
@@ -205,7 +250,6 @@ function detectPrimaryError(item, userAnswer) {
     };
   }
 
-  /* 4. 填空题更细分 */
   if (questionType === "form_completion") {
     if (section === 1) {
       return {
@@ -284,7 +328,6 @@ function detectPrimaryError(item, userAnswer) {
     };
   }
 
-  /* 5. metadata 候选回退 */
   const candidateErrors = Array.isArray(item.candidateErrors) ? item.candidateErrors : [];
   return {
     primaryError: candidateErrors[0] || "K1",
@@ -498,11 +541,13 @@ function getWeakDimensions(profile) {
   return Object.entries(profile || {})
     .filter(([, v]) => Number(v.total || 0) > 0)
     .sort((a, b) => Number(a[1].score || 0) - Number(b[1].score || 0))
-    .slice(0, 4)
+    .slice(0, 6)
     .map(([dim, v]) => ({
       dim,
+      label: getDimensionLabel(dim),
       score: Number(v.score || 0),
-      total: Number(v.total || 0)
+      total: Number(v.total || 0),
+      correct: Number(v.correct || 0)
     }));
 }
 
@@ -645,6 +690,365 @@ function buildFreeReport(overall, sections, topErrors, profile, itemDiagnostics)
   };
 }
 
+/* ---------------------------
+ * Premium 数据结构升级
+ * --------------------------- */
+
+function buildOneSentenceDiagnosis(overall, topErrors, weakDims) {
+  const band = Number(overall?.band || 0);
+  const labels = topErrors.map((x) => x.label);
+  const weak1 = weakDims[0]?.label || "核心能力";
+  const weak2 = weakDims[1]?.label || "稳定性";
+
+  if (band >= 7) {
+    if (labels.includes("E1") || labels.includes("H3")) {
+      return `你当前的瓶颈不是基础听不懂，而是高分段最常见的“干扰项处理稳定性”问题，尤其体现在${weak1}与${weak2}的协同不足上。`;
+    }
+    if (labels.includes("B1")) {
+      return `你当前最影响继续提分的，不是词汇量本身，而是题干与录音之间的替换识别精度；这会让你在已经听到信息的情况下仍然失分。`;
+    }
+    if (labels.includes("F3")) {
+      return `你已经具备较强的整体听力能力，当前真正限制继续上分的，是长讲座中的结构推进判断与答案窗口把握。`;
+    }
+    return `你已经具备较强的整体理解能力，当前需要解决的是高阶失误的稳定性，而不是继续用大量刷题去覆盖问题。`;
+  }
+
+  if (band >= 5.5) {
+    return `你当前处在“有理解基础，但稳定性不足”的阶段；真正拉分的关键不在于做更多题，而在于把${weak1}和${weak2}这两个核心短板先修稳。`;
+  }
+
+  if (band >= 4) {
+    return `你当前最优先修复的不是难题能力，而是基础拿分能力；如果先把${weak1}稳住，分数会比继续盲刷更快上来。`;
+  }
+
+  return `你当前最需要先建立基础题型生存能力，先把基础信息捕捉、定位和执行精度稳住，再谈更高难度题型。`;
+}
+
+function buildTopWeakDimensionsDetailed(profile) {
+  return getWeakDimensions(profile).slice(0, 3).map((x) => {
+    let interpretation = "";
+    if (x.dim === "D2") {
+      interpretation = "你更容易在“题干表达”和“录音表达”不一致时丢分，说明问题不只是听到没听到，而是替换识别不够快。";
+    } else if (x.dim === "D3") {
+      interpretation = "你常常不是完全听不懂，而是没有在正确的答案窗口里及时抓到信息。";
+    } else if (x.dim === "D4") {
+      interpretation = "你的理解基础可能并不差，但数字、日期、拼写和格式执行正在持续吞掉本来可以拿住的分数。";
+    } else if (x.dim === "D6") {
+      interpretation = "你在长讲座里的整体理解层次还不够稳，尤其是主线推进和信息层级把握。";
+    } else if (x.dim === "D9") {
+      interpretation = "你容易被被提及过、但不是最终答案的信息带偏，说明干扰项抗性仍是主要瓶颈。";
+    } else if (x.dim === "D10") {
+      interpretation = "你对转折、总结、举例、递进等信号的敏感度还不够，这会直接影响答案窗口判断。";
+    } else if (x.dim === "D12") {
+      interpretation = "你的工作记忆和边听边处理能力负担偏高，容易出现前后信息脱节。";
+    } else {
+      interpretation = "这项能力当前相对较弱，会持续拉低不同题型下的稳定表现。";
+    }
+
+    return {
+      dimension: x.dim,
+      label: x.label,
+      score: x.score,
+      interpretation
+    };
+  });
+}
+
+function buildTopRootCauses(topErrors, weakDims, sections) {
+  const labels = topErrors.map((x) => x.label);
+  const weakestSection = [...sections].sort((a, b) => a.rawCorrect - b.rawCorrect)[0];
+  const causes = [];
+
+  if (labels.includes("A4")) {
+    causes.push({
+      title: "基础执行分持续流失",
+      whyItHurts: "数字、日期、时间和拼写类错误会直接把本来应该稳定拿住的分数丢掉。",
+      whatItUsuallyLooksLike: "你能大致跟上信息，但在最终写答案时出错，导致“听到了也没得分”。"
+    });
+  }
+
+  if (labels.includes("B1")) {
+    causes.push({
+      title: "替换识别不够快",
+      whyItHurts: "你常常在录音换说法之后没能及时认出它其实就是题干对应信息。",
+      whatItUsuallyLooksLike: "题干关键词和录音表达不一致时，容易出现“听过但没选/没写对”。"
+    });
+  }
+
+  if (labels.includes("E1") || labels.includes("H3")) {
+    causes.push({
+      title: "干扰项与多人对话跟踪同时拉分",
+      whyItHurts: "你容易被先出现的信息、被否定的信息、或多人讨论中的非最终结论带偏。",
+      whatItUsuallyLooksLike: "选择题和讨论题里，最常错的不是完全不会，而是误选“听起来合理但不是最后答案”的内容。"
+    });
+  }
+
+  if (labels.includes("F3")) {
+    causes.push({
+      title: "长讲座结构把握不稳",
+      whyItHurts: "Section 4 的失分说明你在讲座推进、结构层级和答案窗口识别上仍不够稳。",
+      whatItUsuallyLooksLike: "能听到部分细节，但在结构转换或例证推进时成组失分。"
+    });
+  }
+
+  if (!causes.length) {
+    const weak1 = weakDims[0]?.label || "核心能力";
+    causes.push({
+      title: "稳定性不足",
+      whyItHurts: `${weak1}当前仍是拉分点，导致同一水平的题目表现波动较大。`,
+      whatItUsuallyLooksLike: "不是完全不会，而是同类错误反复出现。"
+    });
+  }
+
+  return causes.slice(0, 3);
+}
+
+function buildErrorMechanismChains(itemDiagnostics) {
+  const wrongItems = (Array.isArray(itemDiagnostics) ? itemDiagnostics : []).filter((x) => !x.isCorrect);
+  const chains = [];
+
+  const hasB1 = wrongItems.some((x) => x.primaryError === "B1");
+  const hasC1 = wrongItems.some((x) => x.primaryError === "C1");
+  const hasE1 = wrongItems.some((x) => x.primaryError === "E1");
+  const hasH3 = wrongItems.some((x) => x.primaryError === "H3");
+  const hasA4 = wrongItems.some((x) => x.primaryError === "A4");
+  const hasF3 = wrongItems.some((x) => x.primaryError === "F3");
+
+  if (hasB1 && hasC1) {
+    chains.push({
+      name: "替换没认出 → 定位慢半拍 → 答案窗口错过",
+      explanation: "你并不是完全没听到，而是因为没有及时认出录音换说法后的表达，导致答案窗口已经过去。"
+    });
+  }
+
+  if (hasE1 || hasH3) {
+    chains.push({
+      name: "先提及信息 → 后续修正/否定 → 误选非最终答案",
+      explanation: "你更容易在讨论题或选择题中被先出现的信息带偏，而没有牢牢跟到最后结论。"
+    });
+  }
+
+  if (hasA4) {
+    chains.push({
+      name: "听到信息 → 写出答案 → 细节执行失误",
+      explanation: "你的问题并不总是出在理解层，而是经常出在数字、日期、拼写或格式执行上。"
+    });
+  }
+
+  if (hasF3) {
+    chains.push({
+      name: "讲座结构推进没抓稳 → 局部信息理解断层 → 成组失分",
+      explanation: "Section 4 中的失分不是单个词不会，而是结构和答案窗口把握不够稳。"
+    });
+  }
+
+  if (!chains.length) {
+    chains.push({
+      name: "理解与执行之间存在断层",
+      explanation: "你当前的主要问题不是单点能力缺失，而是从“听到信息”到“确认答案并稳定写对”的链条还不够稳。"
+    });
+  }
+
+  return chains.slice(0, 3);
+}
+
+function buildEvidenceGroups(itemDiagnostics) {
+  const wrongItems = (Array.isArray(itemDiagnostics) ? itemDiagnostics : []).filter((x) => !x.isCorrect);
+  const grouped = {};
+
+  wrongItems.forEach((item) => {
+    const key = item.primaryError || "K1";
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(item);
+  });
+
+  return Object.entries(grouped)
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, 3)
+    .map(([label, items]) => ({
+      errorLabel: label,
+      errorText: getErrorLabelText(label),
+      count: items.length,
+      samples: items.slice(0, 3).map((item) => ({
+        qid: item.qid,
+        questionNumber: item.questionNumber,
+        section: item.section,
+        userAnswer: item.userAnswer || "",
+        correctAnswer: item.correctAnswer || "",
+        primaryError: item.primaryError,
+        secondaryErrors: item.secondaryErrors || [],
+        debugReason: item.debugReason || "",
+        cueWordsInQuestion: item.evidence?.cueWordsInQuestion || [],
+        paraphraseMap: item.evidence?.paraphraseMap || {},
+        distractors: item.evidence?.distractors || [],
+        speakerTracking: item.evidence?.speakerTracking || null
+      }))
+    }));
+}
+
+function buildSevenDayPlan(overall, topErrors, weakDims) {
+  const band = Number(overall?.band || 0);
+  const labels = topErrors.map((x) => x.label);
+  const weak1 = weakDims[0]?.label || "核心短板";
+  const weak2 = weakDims[1]?.label || "稳定性";
+
+  const plan = [
+    {
+      day: 1,
+      focus: "诊断复盘",
+      action: "把本次错题按“替换 / 定位 / 干扰项 / 执行细节”四类分开。"
+    }
+  ];
+
+  if (labels.includes("A4")) {
+    plan.push({
+      day: 2,
+      focus: "基础执行分",
+      action: "练 10 分钟数字、日期、时间、拼写快写，只练听到后立刻写对。"
+    });
+  } else {
+    plan.push({
+      day: 2,
+      focus: weak1,
+      action: `集中练 ${weak1}，先做最弱 section 的 1 组题。`
+    });
+  }
+
+  if (labels.includes("B1")) {
+    plan.push({
+      day: 3,
+      focus: "替换识别",
+      action: "做 8–10 题错题复盘，把题干表达和录音替换表达逐一配对。"
+    });
+  } else {
+    plan.push({
+      day: 3,
+      focus: weak2,
+      action: `围绕 ${weak2} 做 1 次错题精复盘。`
+    });
+  }
+
+  if (labels.includes("E1") || labels.includes("H3")) {
+    plan.push({
+      day: 4,
+      focus: "干扰项抗性",
+      action: "做 1 组 Section 3，逐题写下：谁说的、最后结论是什么、你为何误选。"
+    });
+  } else {
+    plan.push({
+      day: 4,
+      focus: "定位与窗口",
+      action: "在错题原文中标出答案真正出现的那一句。"
+    });
+  }
+
+  if (labels.includes("F3")) {
+    plan.push({
+      day: 5,
+      focus: "讲座结构",
+      action: "做 1 组 Section 4，只复盘结构：主题、转折、例子、结论。"
+    });
+  } else {
+    plan.push({
+      day: 5,
+      focus: "错因归类",
+      action: "把最近 10 道错题写成错因标签，统计最常见的 1–2 类。"
+    });
+  }
+
+  plan.push({
+    day: 6,
+    focus: "小组套题",
+    action: band >= 7
+      ? "做一组高质量精练，不求多，重点看稳定性。"
+      : "做 1 组最薄弱 section，练把“能做对”变成“稳定做对”。"
+  });
+
+  plan.push({
+    day: 7,
+    focus: "二次复盘",
+    action: "对照本报告，检查哪类错因减少了，哪类仍在反复出现。"
+  });
+
+  return plan;
+}
+
+function buildFourteenDayPlan(overall, topErrors, weakDims) {
+  const band = Number(overall?.band || 0);
+  const labels = topErrors.map((x) => x.label);
+  const weak1 = weakDims[0]?.label || "核心短板";
+
+  return [
+    {
+      phase: "第1周",
+      goal: band >= 7 ? "修高阶失误稳定性" : "先把基础分稳住",
+      action: labels.includes("A4")
+        ? "优先修基础执行分，再进入定位和替换识别。"
+        : "优先修最弱维度和失分最多的 section。"
+    },
+    {
+      phase: "第2周",
+      goal: `巩固 ${weak1} 并减少重复性错因`,
+      action: labels.includes("E1") || labels.includes("H3")
+        ? "重点练选择题 / 讨论题中的最终结论识别。"
+        : labels.includes("F3")
+        ? "重点练 Section 4 的讲座结构和信号词。"
+        : "继续按错因分组复盘，减少反复出现的高频错误。"
+    }
+  ];
+}
+
+function buildScoreImprovementPath(overall, weakDims, topErrors) {
+  const band = Number(overall?.band || 0);
+  const labels = topErrors.map((x) => x.label);
+  const weak1 = weakDims[0]?.label || "核心短板";
+  const weak2 = weakDims[1]?.label || "次级短板";
+
+  if (band >= 7) {
+    return [
+      `你当前已经具备较强整体能力，下一阶段最可能率先带来分数提升的，是修复 ${weak1}。`,
+      labels.includes("E1") || labels.includes("H3")
+        ? "如果先把选择题/讨论题里的误选率降下来，你的表现会比继续刷题更稳定。"
+        : "如果先把高频高阶错因压下来，分数会更容易从“偶尔达到”变成“稳定达到”。"
+    ];
+  }
+
+  if (band >= 5.5) {
+    return [
+      `你现在最应该先修的是 ${weak1}，其次是 ${weak2}。`,
+      labels.includes("A4")
+        ? "一旦基础执行分先稳住，整体 Band 往上走会比继续做更多题更快。"
+        : "先修最弱维度，再补强第二短板，比平均用力更有效。"
+    ];
+  }
+
+  if (band >= 4) {
+    return [
+      `你当前最有回报的路径，不是继续冲难题，而是先把 ${weak1} 稳住。`,
+      "当基础拿分区不再持续漏分后，再增加更高难度题型，提分效率会更高。"
+    ];
+  }
+
+  return [
+    "你当前最重要的是建立基础题型生存能力，而不是过早追求复杂题型。",
+    "先稳住基础信息捕捉、定位和细节执行，再逐步扩展到更高难度内容。"
+  ];
+}
+
+function buildPremiumReport(overall, sections, topErrors, profile, itemDiagnostics) {
+  const weakDims = getWeakDimensions(profile);
+  return {
+    oneSentenceDiagnosis: buildOneSentenceDiagnosis(overall, topErrors, weakDims),
+    topWeakDimensionsDetailed: buildTopWeakDimensionsDetailed(profile),
+    topRootCauses: buildTopRootCauses(topErrors, weakDims, sections),
+    errorMechanismChains: buildErrorMechanismChains(itemDiagnostics),
+    evidenceGroups: buildEvidenceGroups(itemDiagnostics),
+    sevenDayPlan: buildSevenDayPlan(overall, topErrors, weakDims),
+    fourteenDayPlan: buildFourteenDayPlan(overall, topErrors, weakDims),
+    scoreImprovementPath: buildScoreImprovementPath(overall, weakDims, topErrors)
+  };
+}
+
 function buildPremiumPreview(profile, topErrors) {
   const topWeakDimensions = Object.entries(profile)
     .filter(([, v]) => v.total > 0)
@@ -685,33 +1089,25 @@ function buildReportPayload(metadata, diagnosisResults, attemptId = "mock_attemp
   const band = getBandFromRaw(rawCorrect);
   const cefr = bandToCEFRForReport(band);
 
+  const overall = { rawCorrect, rawTotal, band, cefr };
   const sections = getSectionBuckets(results);
   const profile = aggregateProfile(results, metadata);
   const topErrors = aggregateTopErrors(results);
-  const freeReport = buildFreeReport(
-    { rawCorrect, rawTotal, band, cefr },
-    sections,
-    topErrors,
-    profile,
-    results
-  );
+  const freeReport = buildFreeReport(overall, sections, topErrors, profile, results);
   const premiumPreview = buildPremiumPreview(profile, topErrors);
+  const premiumReport = buildPremiumReport(overall, sections, topErrors, profile, results);
   const bandTable = buildBandTable();
 
   return {
     attemptId,
-    overall: {
-      rawCorrect,
-      rawTotal,
-      band,
-      cefr
-    },
+    overall,
     sections,
     profile,
     topErrors,
     itemDiagnostics: results,
     freeReport,
     premiumPreview,
+    premiumReport,
     bandTable
   };
 }
