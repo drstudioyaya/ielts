@@ -1,5 +1,9 @@
-import fs from "fs";
-import path from "path";
+const fs = require("fs");
+const path = require("path");
+
+/* ---------------------------
+ * 基础工具
+ * --------------------------- */
 
 function normalizeText(value) {
   return String(value ?? "")
@@ -56,6 +60,10 @@ function isNearSpelling(userAnswer, acceptedAnswers = []) {
     return dist > 0 && dist <= 2;
   });
 }
+
+/* ---------------------------
+ * 自动判因
+ * --------------------------- */
 
 function detectPrimaryError(item, userAnswer) {
   const acceptedAnswers = Array.isArray(item.acceptedAnswers) ? item.acceptedAnswers : [];
@@ -163,6 +171,10 @@ function diagnoseAttempt(metadata, userAnswersMap) {
     return diagnoseOneItem(item, userAnswer);
   });
 }
+
+/* ---------------------------
+ * 聚合报告
+ * --------------------------- */
 
 function getBandFromRaw(rawCorrect) {
   const raw = Number(rawCorrect || 0);
@@ -320,6 +332,26 @@ function buildPremiumPreview(profile, topErrors) {
   };
 }
 
+function buildBandTable() {
+  return [
+    { raw: "39-40", band: "9.0" },
+    { raw: "37-38", band: "8.5" },
+    { raw: "35-36", band: "8.0" },
+    { raw: "32-34", band: "7.5" },
+    { raw: "30-31", band: "7.0" },
+    { raw: "26-29", band: "6.5" },
+    { raw: "23-25", band: "6.0" },
+    { raw: "18-22", band: "5.5" },
+    { raw: "16-17", band: "5.0" },
+    { raw: "13-15", band: "4.5" },
+    { raw: "10-12", band: "4.0" },
+    { raw: "8-9", band: "3.5" },
+    { raw: "6-7", band: "3.0" },
+    { raw: "4-5", band: "2.5" },
+    { raw: "0-3", band: "2.0" }
+  ];
+}
+
 function buildReportPayload(metadata, diagnosisResults, attemptId = "mock_attempt") {
   const results = Array.isArray(diagnosisResults) ? diagnosisResults : [];
   const rawCorrect = results.filter((x) => x.isCorrect).length;
@@ -332,6 +364,7 @@ function buildReportPayload(metadata, diagnosisResults, attemptId = "mock_attemp
   const topErrors = aggregateTopErrors(results);
   const freeReport = buildFreeReport(sections);
   const premiumPreview = buildPremiumPreview(profile, topErrors);
+  const bandTable = buildBandTable();
 
   return {
     attemptId,
@@ -346,9 +379,14 @@ function buildReportPayload(metadata, diagnosisResults, attemptId = "mock_attemp
     topErrors,
     itemDiagnostics: results,
     freeReport,
-    premiumPreview
+    premiumPreview,
+    bandTable
   };
 }
+
+/* ---------------------------
+ * 读取数据
+ * --------------------------- */
 
 function readMetadata() {
   const filePath = path.join(process.cwd(), "public", "questions", "premium", "test1", "test1_metadata.json");
@@ -356,22 +394,70 @@ function readMetadata() {
   return JSON.parse(raw);
 }
 
-function readAnswersFromRequest(req) {
+function readAnswersFromQuery(req) {
   const answersParam = req.query.answers;
-  if (!answersParam) return {};
+  if (!answersParam) return null;
 
   try {
     return JSON.parse(answersParam);
   } catch {
-    return {};
+    return null;
   }
 }
 
-export default function handler(req, res) {
+async function readAnswersFromSupabaseByAttemptId(attemptId) {
+  const SUPABASE_URL = (process.env.SUPABASE_URL || "").trim().replace(/\/$/, "");
+  const SUPABASE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+
+  if (!SUPABASE_URL || !SUPABASE_KEY) {
+    throw new Error("missing_supabase_env");
+  }
+
+  const url =
+    `${SUPABASE_URL}/rest/v1/attempts` +
+    `?select=id,answers,test_id,section` +
+    `&id=eq.${encodeURIComponent(attemptId)}` +
+    `&limit=1`;
+
+  const r = await fetch(url, {
+    method: "GET",
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      Accept: "application/json"
+    }
+  });
+
+  if (!r.ok) {
+    const text = await r.text().catch(() => "");
+    throw new Error(`supabase_select_failed:${r.status}:${text}`);
+  }
+
+  const rows = await r.json();
+  const row = Array.isArray(rows) ? rows[0] : null;
+  if (!row) {
+    throw new Error("attempt_not_found");
+  }
+
+  return row.answers && typeof row.answers === "object" ? row.answers : {};
+}
+
+/* ---------------------------
+ * handler
+ * --------------------------- */
+
+module.exports = async (req, res) => {
   try {
-    const metadata = readMetadata();
-    const userAnswersMap = readAnswersFromRequest(req);
     const attemptId = String(req.query.attemptId || "test1_preview_attempt");
+    const metadata = readMetadata();
+
+    // 优先：URL 传 answers，方便调试
+    let userAnswersMap = readAnswersFromQuery(req);
+
+    // 如果没传 answers，就按 attemptId 去 Supabase 读真实答案
+    if (!userAnswersMap) {
+      userAnswersMap = await readAnswersFromSupabaseByAttemptId(attemptId);
+    }
 
     const diagnosisResults = diagnoseAttempt(metadata, userAnswersMap);
     const report = buildReportPayload(metadata, diagnosisResults, attemptId);
@@ -380,7 +466,7 @@ export default function handler(req, res) {
   } catch (err) {
     return res.status(500).json({
       error: "report_test1_failed",
-      message: String(err.message || err)
+      message: String(err && err.message ? err.message : err)
     });
   }
-}
+};
