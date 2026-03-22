@@ -86,10 +86,6 @@ function hasParaphraseHints(item) {
   return Object.keys(map).length > 0;
 }
 
-function hasDistractors(item) {
-  return Array.isArray(item?.distractors) && item.distractors.length > 0;
-}
-
 function normalizedList(arr) {
   return (Array.isArray(arr) ? arr : []).map((x) => normalizeText(x));
 }
@@ -106,7 +102,6 @@ function detectPrimaryError(item, userAnswer) {
   const userRaw = String(userAnswer ?? "").trim();
   const userNorm = normalizeText(userRaw);
   const distractorsNorm = normalizedList(item.distractors || []);
-  const acceptedNorm = normalizedList(acceptedAnswers);
 
   if (!userRaw) {
     return {
@@ -499,49 +494,154 @@ function aggregateTopErrors(results) {
     .slice(0, 5);
 }
 
-function buildFreeReport(sections, topErrors) {
-  const weakestSection = [...sections].sort((a, b) => a.rawCorrect - b.rawCorrect)[0];
-  const priorityOrder = [...sections]
+function getWeakDimensions(profile) {
+  return Object.entries(profile || {})
+    .filter(([, v]) => Number(v.total || 0) > 0)
+    .sort((a, b) => Number(a[1].score || 0) - Number(b[1].score || 0))
+    .slice(0, 4)
+    .map(([dim, v]) => ({
+      dim,
+      score: Number(v.score || 0),
+      total: Number(v.total || 0)
+    }));
+}
+
+function getSectionErrorProfile(results) {
+  const map = {
+    1: { totalWrong: 0, labels: {} },
+    2: { totalWrong: 0, labels: {} },
+    3: { totalWrong: 0, labels: {} },
+    4: { totalWrong: 0, labels: {} }
+  };
+
+  (Array.isArray(results) ? results : []).forEach((item) => {
+    const sec = Number(item.section || 0);
+    if (!map[sec]) return;
+    if (item.isCorrect) return;
+
+    map[sec].totalWrong += 1;
+    const label = item.primaryError || "K1";
+    map[sec].labels[label] = (map[sec].labels[label] || 0) + 1;
+  });
+
+  return map;
+}
+
+function buildFreeReport(overall, sections, topErrors, profile, itemDiagnostics) {
+  const band = Number(overall?.band || 0);
+  const weakDims = getWeakDimensions(profile);
+  const weakestDim = weakDims[0]?.dim || "";
+  const secondWeakDim = weakDims[1]?.dim || "";
+
+  const topErrorLabels = (Array.isArray(topErrors) ? topErrors : []).map((x) => x.label);
+  const weakestSection = [...(sections || [])].sort((a, b) => a.rawCorrect - b.rawCorrect)[0];
+  const priorityOrder = [...(sections || [])]
     .sort((a, b) => a.rawCorrect - b.rawCorrect)
     .map((s) => `Section ${s.section}`);
 
-  const topErrorLabels = topErrors.map((x) => x.label);
+  const sectionErrorProfile = getSectionErrorProfile(itemDiagnostics);
+  const weakSec = Number(weakestSection?.section || 1);
+  const weakSecLabels = Object.entries(sectionErrorProfile[weakSec]?.labels || {})
+    .sort((a, b) => b[1] - a[1])
+    .map(([label]) => label);
+
   let summary = "";
   let todayAction = "";
 
-  if (!weakestSection) {
-    summary = "暂无可用诊断数据。";
-    todayAction = "请先提交完整答案。";
-  } else if (topErrorLabels.includes("A4")) {
-    summary = "你当前的失分里，基础执行类问题占比很高，尤其集中在数字、日期、时间或拼写细节上。这说明你并不一定完全没听到，而是听到后没有稳定、准确地写出来。";
-    todayAction = "今天先练 10 分钟数字 / 日期 / 时间 / 拼写快写，只练“听到后立刻写对”。";
-  } else if (topErrorLabels.includes("B1")) {
-    summary = "你当前更明显的问题不是完全听不懂，而是对题干和录音之间的替换表达识别不够快，导致你听到了信息，却没有及时认出它就是答案。";
-    todayAction = "今天先做 1 组错题复盘，把每题题干关键词和录音里的替换表达各写一遍。";
-  } else if (topErrorLabels.includes("E1") || topErrorLabels.includes("H3")) {
-    summary = "你当前的失分更集中在讨论题和选择题中的干扰项处理，说明你容易被先提及的信息或多人对话中的非最终结论带偏。";
-    todayAction = "今天先做 1 组 Section 3，做完后逐题写下：谁说的、最后结论是什么、你被哪个信息带偏。";
-  } else if (topErrorLabels.includes("F3")) {
-    summary = "你当前更需要优先修复长段讲座里的结构理解问题。你不是完全听不到，而是对讲座层次、重点推进和答案窗口的把握还不够稳。";
-    todayAction = "今天先做 1 组 Section 4，只复盘 2 件事：转折词在哪里、答案是在主旨句还是细节句。";
-  } else if (weakestSection.section === 1) {
-    summary = "你当前的失分首先集中在基础拿分区，说明问题更可能出在拼写、数字细节、信息定位和落笔执行稳定性上。";
-    todayAction = "今天先练 10 分钟 Section 1：只做数字、日期、姓名拼写。";
-  } else if (weakestSection.section === 2) {
-    summary = "你当前更需要优先修复地图/场景说明类题型的定位与替换识别。";
-    todayAction = "今天先做 1 组 Section 2，做完后把题干关键词和录音里的替换表达各写一遍。";
-  } else if (weakestSection.section === 3) {
-    summary = "你当前的主要短板更接近多人对话中的信息跟踪和干扰项处理。";
-    todayAction = "今天先做 1 组 Section 3，做完后逐题写下：是谁说的、最后结论是什么。";
+  if (band >= 7) {
+    if (topErrorLabels.includes("E1") || weakestDim === "D9") {
+      summary =
+        "你的整体理解能力已经在线，当前最影响继续提分的不是基础听不懂，而是选择题和讨论题里的干扰项处理稳定性。你能抓到大意，但在“先提及、后修正、非最终结论”这类位置上还会被带偏。";
+      todayAction =
+        "今天先做 1 组选择题或 Section 3，做完后每题写 3 个点：谁先说了什么、后来怎么被修正、最终答案为什么不是你原来选的。";
+    } else if (topErrorLabels.includes("B1") || weakestDim === "D2") {
+      summary =
+        "你现在更像是卡在“替换识别精度”上：并不是完全没听到，而是题干和录音换了说法后，你没有足够快地认出它们本质上是同一个意思。这会让你在 7 分以上阶段反复丢不该丢的分。";
+      todayAction =
+        "今天先做 8–10 题错题复盘，只做一件事：把题干关键词和录音里的替换表达一一配对写出来。";
+    } else if (topErrorLabels.includes("F3") || weakestDim === "D6" || weakestDim === "D10") {
+      summary =
+        "你当前更像是高分段常见的“讲座结构稳定性”问题：细节并不是完全听不到，但在讲座推进、结构层级和答案窗口把握上还不够稳，所以会出现成组失分。";
+      todayAction =
+        "今天先做 1 组 Section 4，不急着重做整套，只复盘结构：开头主题、转折词、例子和最终结论分别在哪里。";
+    } else {
+      summary =
+        "你已经具备较强的整体听力能力，当前更关键的是把表现从“大多数时候做对”提升到“稳定做对”。这说明你现在的核心任务不是继续堆量，而是修正最容易反复出现的高阶失误。";
+      todayAction =
+        `今天先从 ${priorityOrder[0] || "失分最多的 Section"} 开始，做 1 组精复盘：每道错题都写下“我到底是没听到，没认出替换，还是被干扰项带偏”。`;
+    }
+  } else if (band >= 5.5) {
+    if (topErrorLabels.includes("B1") && topErrorLabels.includes("C1")) {
+      summary =
+        "你当前不是完全听不懂，而是“有理解，但不够稳”。更明显的问题出在定位和替换识别衔接不上：有时你听到了相关信息，但没有及时确认它就是答案，或者答案窗口已经过去。";
+      todayAction =
+        "今天先做 1 组 Section 2 或 Section 3，做完后每题写下：题干关键词、录音替换表达、答案真正出现在哪一句。";
+    } else if (topErrorLabels.includes("A4") || weakestDim === "D4") {
+      summary =
+        "你当前有一定理解基础，但基础执行分还没有稳住，尤其是数字、日期、时间或拼写类细节会持续拉低总分。这类分数如果先稳住，整体 Band 会比继续盲刷更容易上去。";
+      todayAction =
+        "今天先练 10 分钟基础执行：数字 / 日期 / 时间 / 拼写快写，只练“听到后立刻写对”。";
+    } else if (topErrorLabels.includes("E1") || topErrorLabels.includes("H3")) {
+      summary =
+        "你当前的一个明显短板在于讨论题中的干扰项判断。你能听懂部分内容，但在多人对话、意见变化和最终结论判断上容易被带偏，所以成绩波动会比较大。";
+      todayAction =
+        "今天先做 1 组 Section 3，做完后逐题写：谁说了决定性信息、你误选的内容为什么只是干扰。";
+    } else {
+      summary =
+        "你目前处在“可以继续提，但稳定性不足”的阶段。真正拉开你和更高分段差距的，不只是听力理解本身，而是不同题型下的执行精度和稳定度。";
+      todayAction =
+        `今天先从 ${priorityOrder[0] || "失分最多的 Section"} 开始，只做这一组，并把错题按“定位/替换/干扰项/执行细节”分成 4 类。`;
+    }
+  } else if (band >= 4) {
+    if (topErrorLabels.includes("A4") || weakestDim === "D4") {
+      summary =
+        "你当前最优先的不是做更多题，而是先把基础拿分区稳定下来。现在更明显的问题出在数字、拼写、日期和落笔执行上，这些本来应该拿住的分数正在持续流失。";
+      todayAction =
+        "今天先做 8 分钟数字 / 日期 / 拼写快写，再做 5 题 Section 1，目标不是做多，而是每题都写对。";
+    } else if (topErrorLabels.includes("C1") || weakSec === 2) {
+      summary =
+        "你当前更需要先修复信息定位能力。现在不是单纯词汇不够，而是你常常没能在正确的答案窗口里把信息抓住，所以会出现“听过但没拿到分”的情况。";
+      todayAction =
+        "今天先做 1 组 Section 2 或 Section 1，做完后在每道错题旁边标出答案真正出现的那一句。";
+    } else {
+      summary =
+        "你现在最需要建立的是稳定的基础拿分能力。与其继续刷很多题，不如先把最常见、最容易修复的失分点一个个拿住。";
+      todayAction =
+        `今天先从 ${priorityOrder[0] || "基础 section"} 开始，只做 10 分钟，重点找出你最常见的 1 种错误。`;
+    }
   } else {
-    summary = "你当前在长段讲座中的稳定性最需要加强。";
-    todayAction = "今天先做 1 组 Section 4，只复盘转折词和答案窗口。";
+    summary =
+      "你当前最优先的任务不是冲难题，而是先建立基础题型的生存能力。现在的失分说明你在基础信息捕捉、定位和细节执行上还不够稳，先把 Section 1 / 2 的基本分拿住，后面提升会更快。";
+    todayAction =
+      "今天先只做 Section 1 的基础填空，不做整套。每题只练 1 件事：听到关键词后，能不能立刻把答案准确写下来。";
   }
+
+  let extraHint = "";
+  if (weakestDim === "D2") {
+    extraHint = " 当前最弱点更偏向替换识别。";
+  } else if (weakestDim === "D3") {
+    extraHint = " 当前最弱点更偏向答案定位。";
+  } else if (weakestDim === "D4") {
+    extraHint = " 当前最弱点更偏向数字/拼写/格式执行。";
+  } else if (weakestDim === "D9") {
+    extraHint = " 当前最弱点更偏向干扰项抗性。";
+  } else if (weakestDim === "D10") {
+    extraHint = " 当前最弱点更偏向信号词与结构推进判断。";
+  } else if (weakestDim === "D12") {
+    extraHint = " 当前最弱点更偏向记笔记 / 工作记忆负荷。";
+  }
+
+  if (weakSecLabels.includes("K1") && band >= 5.5) {
+    extraHint += " 同时你还存在一部分本可避免的空题/漏题。";
+  }
+
+  summary += extraHint;
 
   return {
     summary,
     priorityOrder,
-    todayAction
+    todayAction,
+    weakDimensions: [weakestDim, secondWeakDim].filter(Boolean)
   };
 }
 
@@ -588,7 +688,13 @@ function buildReportPayload(metadata, diagnosisResults, attemptId = "mock_attemp
   const sections = getSectionBuckets(results);
   const profile = aggregateProfile(results, metadata);
   const topErrors = aggregateTopErrors(results);
-  const freeReport = buildFreeReport(sections, topErrors);
+  const freeReport = buildFreeReport(
+    { rawCorrect, rawTotal, band, cefr },
+    sections,
+    topErrors,
+    profile,
+    results
+  );
   const premiumPreview = buildPremiumPreview(profile, topErrors);
   const bandTable = buildBandTable();
 
