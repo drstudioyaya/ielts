@@ -133,6 +133,57 @@ function detectPrimaryError(item, userAnswer) {
   };
 }
 
+function resolveUserAnswer(userAnswersMap, item) {
+  if (!userAnswersMap || typeof userAnswersMap !== "object") return "";
+
+  const qid = String(item.qid || "");
+  const qNum = Number(item.questionNumber);
+  const qNumStr = String(qNum);
+  const qKeyLower = `q${qNum}`;
+  const qKeyUpper = `Q${qNum}`;
+  const sec = String(item.section || "");
+  const secKey1 = `section${sec}`;
+  const secKey2 = `Section${sec}`;
+
+  // 1) 直接按 metadata qid
+  if (userAnswersMap[qid] != null) return userAnswersMap[qid];
+
+  // 2) 常见平铺 key：1 / "1" / q1 / Q1
+  if (userAnswersMap[qNum] != null) return userAnswersMap[qNum];
+  if (userAnswersMap[qNumStr] != null) return userAnswersMap[qNumStr];
+  if (userAnswersMap[qKeyLower] != null) return userAnswersMap[qKeyLower];
+  if (userAnswersMap[qKeyUpper] != null) return userAnswersMap[qKeyUpper];
+
+  // 3) section 嵌套：section1[1] / section1["1"] / section1.q1 / section1.Q1
+  const nested1 = userAnswersMap[secKey1];
+  if (nested1 && typeof nested1 === "object") {
+    if (nested1[qNum] != null) return nested1[qNum];
+    if (nested1[qNumStr] != null) return nested1[qNumStr];
+    if (nested1[qKeyLower] != null) return nested1[qKeyLower];
+    if (nested1[qKeyUpper] != null) return nested1[qKeyUpper];
+  }
+
+  const nested2 = userAnswersMap[secKey2];
+  if (nested2 && typeof nested2 === "object") {
+    if (nested2[qNum] != null) return nested2[qNum];
+    if (nested2[qNumStr] != null) return nested2[qNumStr];
+    if (nested2[qKeyLower] != null) return nested2[qKeyLower];
+    if (nested2[qKeyUpper] != null) return nested2[qKeyUpper];
+  }
+
+  // 4) 某些前端会包一层 answers
+  const nestedAnswers = userAnswersMap.answers;
+  if (nestedAnswers && typeof nestedAnswers === "object") {
+    if (nestedAnswers[qid] != null) return nestedAnswers[qid];
+    if (nestedAnswers[qNum] != null) return nestedAnswers[qNum];
+    if (nestedAnswers[qNumStr] != null) return nestedAnswers[qNumStr];
+    if (nestedAnswers[qKeyLower] != null) return nestedAnswers[qKeyLower];
+    if (nestedAnswers[qKeyUpper] != null) return nestedAnswers[qKeyUpper];
+  }
+
+  return "";
+}
+
 function diagnoseOneItem(item, userAnswer) {
   const acceptedAnswers = Array.isArray(item.acceptedAnswers) ? item.acceptedAnswers : [];
   const isCorrect = matchesAcceptedAnswer(userAnswer, acceptedAnswers);
@@ -167,7 +218,7 @@ function diagnoseAttempt(metadata, userAnswersMap) {
   }
 
   return metadata.map((item) => {
-    const userAnswer = userAnswersMap?.[item.qid] ?? "";
+    const userAnswer = resolveUserAnswer(userAnswersMap, item);
     return diagnoseOneItem(item, userAnswer);
   });
 }
@@ -451,10 +502,7 @@ module.exports = async (req, res) => {
     const attemptId = String(req.query.attemptId || "test1_preview_attempt");
     const metadata = readMetadata();
 
-    // 优先：URL 传 answers，方便调试
     let userAnswersMap = readAnswersFromQuery(req);
-
-    // 如果没传 answers，就按 attemptId 去 Supabase 读真实答案
     if (!userAnswersMap) {
       userAnswersMap = await readAnswersFromSupabaseByAttemptId(attemptId);
     }
