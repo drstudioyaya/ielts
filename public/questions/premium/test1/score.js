@@ -197,6 +197,24 @@ function bandToCEFR(band) {
     return map[label] || label || "—";
   }
 
+  function getDimensionLabel(dim) {
+    const map = {
+      D1: "词汇捕捉力",
+      D2: "同义替换识别力",
+      D3: "信息定位能力",
+      D4: "数字/日期/拼写精度",
+      D5: "场景适应能力",
+      D6: "长篇讲座理解力",
+      D7: "预测能力",
+      D8: "注意力持续度",
+      D9: "干扰项抗性",
+      D10: "语篇信号词敏感度",
+      D11: "语音适应力",
+      D12: "记笔记/工作记忆"
+    };
+    return map[dim] || dim;
+  }
+
   function renderTopErrors(topErrors) {
     const items = safeArr(topErrors).slice(0, 5);
     if (!items.length) {
@@ -261,6 +279,143 @@ function bandToCEFR(band) {
     }).join("");
   }
 
+  function renderPremiumDiagnosisPreview(premiumReport) {
+    const text = premiumReport?.oneSentenceDiagnosis || "解锁后查看你的个性化 Premium 总诊断。";
+    return `
+      <div class="simple-text" style="margin-top:8px;">
+        ${esc(text)}
+      </div>
+    `;
+  }
+
+  function renderPremiumWeakDimensionsPreview(premiumReport) {
+    const items = safeArr(premiumReport?.topWeakDimensionsDetailed).slice(0, 2);
+    if (!items.length) {
+      return `<div class="simple-text" style="margin-top:8px;">解锁后查看你的 Top3 薄弱维度及逐项解释。</div>`;
+    }
+
+    return items.map((item) => `
+      <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
+        <div style="font-weight:700;">${esc(item.label || getDimensionLabel(item.dimension))}｜${esc(item.score)}%</div>
+        <div class="simple-text" style="font-size:14px; margin-top:6px;">
+          ${esc(item.interpretation || "")}
+        </div>
+      </div>
+    `).join("") + `
+      <div class="muted" style="margin-top:10px;">解锁后查看完整 Top3 短板与维度关联解释。</div>
+    `;
+  }
+
+  function renderPremiumRootCausesPreview(premiumReport) {
+    const items = safeArr(premiumReport?.topRootCauses).slice(0, 2);
+    if (!items.length) {
+      return `<div class="simple-text" style="margin-top:8px;">解锁后查看 Top3 根因拆解。</div>`;
+    }
+
+    return items.map((item) => `
+      <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
+        <div style="font-weight:700;">${esc(item.title || "")}</div>
+        <div class="simple-text" style="font-size:14px; margin-top:6px;">
+          ${esc(item.whyItHurts || "")}
+        </div>
+      </div>
+    `).join("") + `
+      <div class="muted" style="margin-top:10px;">解锁后查看完整根因链和对应训练方向。</div>
+    `;
+  }
+
+  function renderPremiumMechanismPreview(premiumReport) {
+    const items = safeArr(premiumReport?.errorMechanismChains).slice(0, 2);
+    if (!items.length) {
+      return `<div class="simple-text" style="margin-top:8px;">解锁后查看你的错误机制链。</div>`;
+    }
+
+    return items.map((item) => `
+      <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
+        <div style="font-weight:700;">${esc(item.name || "")}</div>
+        <div class="simple-text" style="font-size:14px; margin-top:6px;">
+          ${esc(item.explanation || "")}
+        </div>
+      </div>
+    `).join("") + `
+      <div class="muted" style="margin-top:10px;">解锁后查看完整错误链及对应证据题。</div>
+    `;
+  }
+
+  function renderPremiumEvidencePreview(premiumReport) {
+    const groups = safeArr(premiumReport?.evidenceGroups).slice(0, 2);
+    if (!groups.length) {
+      return `<div class="simple-text" style="margin-top:8px;">解锁后查看分组证据快照。</div>`;
+    }
+
+    return groups.map((group) => {
+      const samples = safeArr(group.samples).slice(0, 1);
+      const sampleHtml = samples.map((item) => `
+        <div class="simple-text" style="font-size:14px; margin-top:6px;">
+          例：Q${esc(item.questionNumber)}｜你的答案：${esc(item.userAnswer || "（空）")}｜正确答案：${esc(item.correctAnswer || "—")}
+        </div>
+      `).join("");
+
+      return `
+        <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
+          <div style="font-weight:700;">${esc(group.errorText || "")}（${esc(group.count || 0)}题）</div>
+          ${sampleHtml}
+        </div>
+      `;
+    }).join("") + `
+      <div class="muted" style="margin-top:10px;">解锁后查看每组代表性错题的完整证据链。</div>
+    `;
+  }
+
+  function renderPremiumPlanPreview(premiumReport) {
+    const seven = safeArr(premiumReport?.sevenDayPlan).slice(0, 2);
+    const fourteen = safeArr(premiumReport?.fourteenDayPlan).slice(0, 1);
+    const path = safeArr(premiumReport?.scoreImprovementPath).slice(0, 1);
+
+    let html = "";
+
+    if (seven.length) {
+      html += seven.map((item) => `
+        <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
+          <div style="font-weight:700;">Day ${esc(item.day)}｜${esc(item.focus || "")}</div>
+          <div class="simple-text" style="font-size:14px; margin-top:6px;">
+            ${esc(item.action || "")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    if (fourteen.length) {
+      html += fourteen.map((item) => `
+        <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
+          <div style="font-weight:700;">${esc(item.phase || "")}｜${esc(item.goal || "")}</div>
+          <div class="simple-text" style="font-size:14px; margin-top:6px;">
+            ${esc(item.action || "")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    if (path.length) {
+      html += `
+        <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
+          <div style="font-weight:700;">提分路径预估</div>
+          <div class="simple-text" style="font-size:14px; margin-top:6px;">
+            ${esc(path[0])}
+          </div>
+        </div>
+      `;
+    }
+
+    if (!html) {
+      html = `<div class="simple-text" style="margin-top:8px;">解锁后查看 7天 / 14天训练计划与提分路径。</div>`;
+    } else {
+      html += `<div class="muted" style="margin-top:10px;">解锁后查看完整训练处方与全部提分路径。</div>`;
+    }
+
+    return html;
+  }
+
   function renderReport(data, attemptId) {
     const app = $("#app");
     const overall = data?.overall || {};
@@ -280,6 +435,7 @@ function bandToCEFR(band) {
     const itemDiagnostics = safeArr(data?.itemDiagnostics);
     const freeText = getFreeTextFromApiOrFallback(data);
     const premiumPreview = getPremiumPreviewFromApi(data);
+    const premiumReport = data?.premiumReport || {};
 
     const cefrRaw = String(overall.cefr ?? "").trim();
     const cefrDerived =
@@ -427,31 +583,41 @@ function bandToCEFR(band) {
           解锁后可查看你的完整能力画像、关键短板、错因证据和训练计划。
         </p>
 
+        <details open>
+          <summary>一句总诊断（预览）</summary>
+          ${renderPremiumDiagnosisPreview(premiumReport)}
+        </details>
+
         <details>
           <summary>12维能力画像（强弱分布 + Top3短板）</summary>
-          <div class="simple-text" style="margin-top:8px;">
-            ${esc(premiumPreview.dimsText)}
-          </div>
+          ${renderPremiumWeakDimensionsPreview(premiumReport)}
         </details>
 
         <details>
-          <summary>高频错因标签</summary>
-          <div class="simple-text" style="margin-top:8px;">
-            ${esc(premiumPreview.labelsText)}
-          </div>
+          <summary>Top3 根因拆解</summary>
+          ${renderPremiumRootCausesPreview(premiumReport)}
         </details>
 
         <details>
-          <summary>Evidence Snapshot（证据快照）</summary>
-          <div class="simple-text" style="margin-top:8px;">
-            解锁后查看“你的答案 vs 标准答案 vs 判分规则”的具体证据。
-          </div>
+          <summary>错误机制链（为什么会这样错）</summary>
+          ${renderPremiumMechanismPreview(premiumReport)}
         </details>
 
         <details>
-          <summary>7天 / 14天训练计划</summary>
+          <summary>分组证据快照（Premium 预览）</summary>
+          ${renderPremiumEvidencePreview(premiumReport)}
+        </details>
+
+        <details>
+          <summary>7天 / 14天训练计划（Premium 预览）</summary>
+          ${renderPremiumPlanPreview(premiumReport)}
+        </details>
+
+        <details>
+          <summary>基础 Premium 指标预览</summary>
           <div class="simple-text" style="margin-top:8px;">
-            解锁后获取按你的薄弱点定制的训练动作。
+            <div><b>Top3 薄弱维度：</b>${esc(premiumPreview.dimsText)}</div>
+            <div style="margin-top:8px;"><b>Top3 高频错因：</b>${esc(premiumPreview.labelsText)}</div>
           </div>
         </details>
 
