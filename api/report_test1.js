@@ -61,14 +61,52 @@ function isNearSpelling(userAnswer, acceptedAnswers = []) {
   });
 }
 
+function includesDigitLike(value) {
+  return /\d/.test(String(value ?? ""));
+}
+
+function includesTimeLike(value) {
+  return /(\d{1,2}[:.]\d{2})|(half past)|(quarter past)|(quarter to)/i.test(String(value ?? ""));
+}
+
+function includesDateLike(value) {
+  return /(january|february|march|april|may|june|july|august|september|october|november|december|\d{1,2}[\/-]\d{1,2}|\d{1,2}(st|nd|rd|th))/i.test(String(value ?? ""));
+}
+
+function anyAcceptedLooksNumeric(acceptedAnswers = []) {
+  return acceptedAnswers.some((ans) => includesDigitLike(ans) || includesTimeLike(ans));
+}
+
+function anyAcceptedLooksDate(acceptedAnswers = []) {
+  return acceptedAnswers.some((ans) => includesDateLike(ans));
+}
+
+function hasParaphraseHints(item) {
+  const map = item?.paraphraseMap || {};
+  return Object.keys(map).length > 0;
+}
+
+function hasDistractors(item) {
+  return Array.isArray(item?.distractors) && item.distractors.length > 0;
+}
+
+function normalizedList(arr) {
+  return (Array.isArray(arr) ? arr : []).map((x) => normalizeText(x));
+}
+
 /* ---------------------------
- * 自动判因
+ * 自动判因核心
  * --------------------------- */
 
 function detectPrimaryError(item, userAnswer) {
   const acceptedAnswers = Array.isArray(item.acceptedAnswers) ? item.acceptedAnswers : [];
   const formatPolicy = item.formatPolicy || {};
+  const questionType = String(item.questionType || "");
+  const section = Number(item.section || 0);
   const userRaw = String(userAnswer ?? "").trim();
+  const userNorm = normalizeText(userRaw);
+  const distractorsNorm = normalizedList(item.distractors || []);
+  const acceptedNorm = normalizedList(acceptedAnswers);
 
   if (!userRaw) {
     return {
@@ -86,19 +124,22 @@ function detectPrimaryError(item, userAnswer) {
     };
   }
 
-  if (formatPolicy.numberSensitive) {
-    return {
-      primaryError: "A4",
-      secondaryErrors: ["I4"],
-      reason: "number_or_numeric_format_issue"
-    };
+  /* 1. 规则 / 格式类优先 */
+  if (formatPolicy.numberSensitive || anyAcceptedLooksNumeric(acceptedAnswers)) {
+    if (includesDigitLike(userRaw) || includesTimeLike(userRaw) || userNorm) {
+      return {
+        primaryError: "A4",
+        secondaryErrors: ["I4"],
+        reason: "number_time_format_or_value_issue"
+      };
+    }
   }
 
-  if (formatPolicy.dateSensitive) {
+  if (formatPolicy.dateSensitive || anyAcceptedLooksDate(acceptedAnswers)) {
     return {
       primaryError: "A4",
       secondaryErrors: ["I4"],
-      reason: "date_format_issue"
+      reason: "date_format_or_value_issue"
     };
   }
 
@@ -110,7 +151,58 @@ function detectPrimaryError(item, userAnswer) {
     };
   }
 
-  if (item.questionType === "single_choice") {
+  /* 2. 题型优先规则 */
+  if (questionType === "map_labeling") {
+    return {
+      primaryError: "G3",
+      secondaryErrors: ["C1", "E1"],
+      reason: "map_or_spatial_location_miss"
+    };
+  }
+
+  if (questionType === "matching") {
+    return {
+      primaryError: "J2",
+      secondaryErrors: ["C3", "H4"],
+      reason: "matching_pairing_or_sequence_miss"
+    };
+  }
+
+  /* 3. 选择题更细分 */
+  if (questionType === "single_choice") {
+    const userIsDistractor = distractorsNorm.includes(userNorm);
+
+    if (section === 3) {
+      if (userIsDistractor) {
+        return {
+          primaryError: "H3",
+          secondaryErrors: ["E1", "B1"],
+          reason: "multi_speaker_tracking_and_distractor_trap"
+        };
+      }
+      return {
+        primaryError: "E1",
+        secondaryErrors: ["H3", "B1"],
+        reason: "section3_choice_wrong_likely_discussion_trap"
+      };
+    }
+
+    if (userIsDistractor) {
+      return {
+        primaryError: "E1",
+        secondaryErrors: ["B1"],
+        reason: "selected_known_distractor"
+      };
+    }
+
+    if (hasParaphraseHints(item)) {
+      return {
+        primaryError: "B1",
+        secondaryErrors: ["E1", "C2"],
+        reason: "choice_wrong_likely_paraphrase_miss"
+      };
+    }
+
     return {
       primaryError: "E1",
       secondaryErrors: ["B1"],
@@ -118,7 +210,15 @@ function detectPrimaryError(item, userAnswer) {
     };
   }
 
-  if (item.questionType === "form_completion") {
+  /* 4. 填空题更细分 */
+  if (questionType === "form_completion") {
+    if (section === 1) {
+      return {
+        primaryError: "C1",
+        secondaryErrors: ["B1", "A4"],
+        reason: "section1_form_wrong_likely_location_or_detail_capture_issue"
+      };
+    }
     return {
       primaryError: "C1",
       secondaryErrors: ["B1"],
@@ -126,9 +226,74 @@ function detectPrimaryError(item, userAnswer) {
     };
   }
 
+  if (questionType === "sentence_completion") {
+    if (hasParaphraseHints(item)) {
+      return {
+        primaryError: "B1",
+        secondaryErrors: ["C1", "A4"],
+        reason: "sentence_completion_likely_paraphrase_miss"
+      };
+    }
+    return {
+      primaryError: "C1",
+      secondaryErrors: ["B1"],
+      reason: "sentence_completion_wrong_window"
+    };
+  }
+
+  if (questionType === "note_completion") {
+    if (section === 4) {
+      if (isNearSpelling(userRaw, acceptedAnswers)) {
+        return {
+          primaryError: "A2",
+          secondaryErrors: ["F3", "B1"],
+          reason: "section4_note_spelling_close"
+        };
+      }
+
+      if (hasParaphraseHints(item)) {
+        return {
+          primaryError: "F3",
+          secondaryErrors: ["B1", "A2"],
+          reason: "section4_lecture_structure_or_paraphrase_miss"
+        };
+      }
+
+      return {
+        primaryError: "F3",
+        secondaryErrors: ["B1"],
+        reason: "section4_note_completion_likely_lecture_structure_miss"
+      };
+    }
+
+    if (section === 3) {
+      if (hasParaphraseHints(item)) {
+        return {
+          primaryError: "B1",
+          secondaryErrors: ["H3", "C1"],
+          reason: "section3_note_likely_paraphrase_or_tracking_miss"
+        };
+      }
+
+      return {
+        primaryError: "H3",
+        secondaryErrors: ["C1", "B1"],
+        reason: "section3_note_completion_likely_multi_speaker_tracking_issue"
+      };
+    }
+
+    return {
+      primaryError: "C1",
+      secondaryErrors: ["B1", "A2"],
+      reason: "note_completion_wrong_answer_window"
+    };
+  }
+
+  /* 5. metadata 候选回退 */
+  const candidateErrors = Array.isArray(item.candidateErrors) ? item.candidateErrors : [];
   return {
-    primaryError: item.candidateErrors?.[0] || "K1",
-    secondaryErrors: item.candidateErrors?.slice(1, 3) || [],
+    primaryError: candidateErrors[0] || "K1",
+    secondaryErrors: candidateErrors.slice(1, 3),
     reason: "fallback_candidate_error"
   };
 }
@@ -145,16 +310,13 @@ function resolveUserAnswer(userAnswersMap, item) {
   const secKey1 = `section${sec}`;
   const secKey2 = `Section${sec}`;
 
-  // 1) 直接按 metadata qid
   if (userAnswersMap[qid] != null) return userAnswersMap[qid];
 
-  // 2) 常见平铺 key：1 / "1" / q1 / Q1
   if (userAnswersMap[qNum] != null) return userAnswersMap[qNum];
   if (userAnswersMap[qNumStr] != null) return userAnswersMap[qNumStr];
   if (userAnswersMap[qKeyLower] != null) return userAnswersMap[qKeyLower];
   if (userAnswersMap[qKeyUpper] != null) return userAnswersMap[qKeyUpper];
 
-  // 3) section 嵌套：section1[1] / section1["1"] / section1.q1 / section1.Q1
   const nested1 = userAnswersMap[secKey1];
   if (nested1 && typeof nested1 === "object") {
     if (nested1[qNum] != null) return nested1[qNum];
@@ -171,7 +333,6 @@ function resolveUserAnswer(userAnswersMap, item) {
     if (nested2[qKeyUpper] != null) return nested2[qKeyUpper];
   }
 
-  // 4) 某些前端会包一层 answers
   const nestedAnswers = userAnswersMap.answers;
   if (nestedAnswers && typeof nestedAnswers === "object") {
     if (nestedAnswers[qid] != null) return nestedAnswers[qid];
@@ -206,7 +367,8 @@ function diagnoseOneItem(item, userAnswer) {
       cueWordsInQuestion: item.cueWordsInQuestion || [],
       paraphraseMap: item.paraphraseMap || {},
       distractors: item.distractors || [],
-      signalWordType: item.signalWordType || null
+      signalWordType: item.signalWordType || null,
+      speakerTracking: item.speakerTracking || null
     },
     debugReason: diagnosis.reason
   };
@@ -337,18 +499,31 @@ function aggregateTopErrors(results) {
     .slice(0, 5);
 }
 
-function buildFreeReport(sections) {
+function buildFreeReport(sections, topErrors) {
   const weakestSection = [...sections].sort((a, b) => a.rawCorrect - b.rawCorrect)[0];
   const priorityOrder = [...sections]
     .sort((a, b) => a.rawCorrect - b.rawCorrect)
     .map((s) => `Section ${s.section}`);
 
+  const topErrorLabels = topErrors.map((x) => x.label);
   let summary = "";
   let todayAction = "";
 
   if (!weakestSection) {
     summary = "暂无可用诊断数据。";
     todayAction = "请先提交完整答案。";
+  } else if (topErrorLabels.includes("A4")) {
+    summary = "你当前的失分里，基础执行类问题占比很高，尤其集中在数字、日期、时间或拼写细节上。这说明你并不一定完全没听到，而是听到后没有稳定、准确地写出来。";
+    todayAction = "今天先练 10 分钟数字 / 日期 / 时间 / 拼写快写，只练“听到后立刻写对”。";
+  } else if (topErrorLabels.includes("B1")) {
+    summary = "你当前更明显的问题不是完全听不懂，而是对题干和录音之间的替换表达识别不够快，导致你听到了信息，却没有及时认出它就是答案。";
+    todayAction = "今天先做 1 组错题复盘，把每题题干关键词和录音里的替换表达各写一遍。";
+  } else if (topErrorLabels.includes("E1") || topErrorLabels.includes("H3")) {
+    summary = "你当前的失分更集中在讨论题和选择题中的干扰项处理，说明你容易被先提及的信息或多人对话中的非最终结论带偏。";
+    todayAction = "今天先做 1 组 Section 3，做完后逐题写下：谁说的、最后结论是什么、你被哪个信息带偏。";
+  } else if (topErrorLabels.includes("F3")) {
+    summary = "你当前更需要优先修复长段讲座里的结构理解问题。你不是完全听不到，而是对讲座层次、重点推进和答案窗口的把握还不够稳。";
+    todayAction = "今天先做 1 组 Section 4，只复盘 2 件事：转折词在哪里、答案是在主旨句还是细节句。";
   } else if (weakestSection.section === 1) {
     summary = "你当前的失分首先集中在基础拿分区，说明问题更可能出在拼写、数字细节、信息定位和落笔执行稳定性上。";
     todayAction = "今天先练 10 分钟 Section 1：只做数字、日期、姓名拼写。";
@@ -413,7 +588,7 @@ function buildReportPayload(metadata, diagnosisResults, attemptId = "mock_attemp
   const sections = getSectionBuckets(results);
   const profile = aggregateProfile(results, metadata);
   const topErrors = aggregateTopErrors(results);
-  const freeReport = buildFreeReport(sections);
+  const freeReport = buildFreeReport(sections, topErrors);
   const premiumPreview = buildPremiumPreview(profile, topErrors);
   const bandTable = buildBandTable();
 
