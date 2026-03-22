@@ -144,11 +144,7 @@ function bandToCEFR(band) {
     const sections = safeArr(data?.sections);
     const overall = data?.overall || {};
 
-    if (
-      apiFree &&
-      typeof apiFree.summary === "string" &&
-      apiFree.summary.trim()
-    ) {
+    if (apiFree && typeof apiFree.summary === "string" && apiFree.summary.trim()) {
       const priority = Array.isArray(apiFree.priorityOrder)
         ? apiFree.priorityOrder.join(" → ")
         : (apiFree.priorityOrder || "");
@@ -175,6 +171,96 @@ function bandToCEFR(band) {
     };
   }
 
+  function getErrorLabelText(label) {
+    const map = {
+      A1: "关键词未听出",
+      A2: "拼写接近但错误",
+      A4: "数字/日期/拼写失准",
+      B1: "同义替换未识别",
+      C1: "定位偏早/偏错",
+      C2: "定位偏晚",
+      C3: "题目顺序跟丢/串位",
+      E1: "被干扰项带偏",
+      E2: "比较/排除没跟上",
+      E3: "修正信息未跟上",
+      F1: "信号词不敏感",
+      F3: "长讲座结构理解失误",
+      G3: "地图/空间定位失误",
+      H3: "多人对话跟踪吃力",
+      H4: "工作记忆负荷过高",
+      I2: "格式规则执行不稳",
+      I3: "拼写/书写规则失误",
+      I4: "数字日期格式规则失误",
+      J2: "匹配题串位/配对失误",
+      K1: "未作答/证据不足"
+    };
+    return map[label] || label || "—";
+  }
+
+  function renderTopErrors(topErrors) {
+    const items = safeArr(topErrors).slice(0, 5);
+    if (!items.length) {
+      return `<div class="muted">暂无高频错因数据。</div>`;
+    }
+
+    return items.map((item) => {
+      const label = item?.label || "";
+      const count = Number(item?.count || 0);
+      return `
+        <div class="sectionItem">
+          <div class="sectionLeft">
+            <div class="sectionTitle">${esc(label)}｜${esc(getErrorLabelText(label))}</div>
+            <div class="sectionMeta">出现次数：${esc(count)}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderEvidenceSnapshot(itemDiagnostics) {
+    const wrongItems = safeArr(itemDiagnostics)
+      .filter((item) => !item.isCorrect)
+      .slice(0, 5);
+
+    if (!wrongItems.length) {
+      return `<div class="muted">本次没有可展示的错题证据快照。</div>`;
+    }
+
+    return wrongItems.map((item) => {
+      const qNo = item?.questionNumber ?? "—";
+      const userAnswer = item?.userAnswer || "（空）";
+      const correctAnswer = item?.correctAnswer || "—";
+      const primaryError = item?.primaryError || "—";
+      const secondaryErrors = safeArr(item?.secondaryErrors);
+      const debugReason = item?.debugReason || "—";
+      const evidence = item?.evidence || {};
+      const cueWords = safeArr(evidence?.cueWordsInQuestion);
+      const distractors = safeArr(evidence?.distractors);
+      const paraphraseMap = evidence?.paraphraseMap || {};
+
+      const paraphraseText = Object.keys(paraphraseMap).length
+        ? Object.entries(paraphraseMap)
+            .map(([k, v]) => `${k} → ${v}`)
+            .join("；")
+        : "—";
+
+      return `
+        <div class="card" style="background:#fff; padding:14px; margin-top:12px;">
+          <h3>Q${esc(qNo)}｜主错因：${esc(primaryError)}（${esc(getErrorLabelText(primaryError))}）</h3>
+          <div class="simple-text" style="font-size:14px;">
+            <div><b>你的答案：</b>${esc(userAnswer)}</div>
+            <div style="margin-top:6px;"><b>正确答案：</b>${esc(correctAnswer)}</div>
+            <div style="margin-top:6px;"><b>次错因：</b>${esc(secondaryErrors.length ? secondaryErrors.join(" / ") : "—")}</div>
+            <div style="margin-top:6px;"><b>判定原因：</b>${esc(debugReason)}</div>
+            <div style="margin-top:6px;"><b>题干线索：</b>${esc(cueWords.length ? cueWords.join(" / ") : "—")}</div>
+            <div style="margin-top:6px;"><b>替换线索：</b>${esc(paraphraseText)}</div>
+            <div style="margin-top:6px;"><b>干扰项：</b>${esc(distractors.length ? distractors.join(" / ") : "—")}</div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
   function renderReport(data, attemptId) {
     const app = $("#app");
     const overall = data?.overall || {};
@@ -190,6 +276,8 @@ function bandToCEFR(band) {
     const overallPct = pct(rawCorrect, rawTotal);
     const sections = safeArr(data?.sections);
     const bandTable = safeArr(data?.bandTable);
+    const topErrors = safeArr(data?.topErrors);
+    const itemDiagnostics = safeArr(data?.itemDiagnostics);
     const freeText = getFreeTextFromApiOrFallback(data);
     const premiumPreview = getPremiumPreviewFromApi(data);
 
@@ -311,6 +399,24 @@ function bandToCEFR(band) {
           <h3>今天就能开始的 1 个动作</h3>
           <p class="simple-text">${esc(freeText.action)}</p>
         </div>
+      </div>
+    `;
+
+    const moduleTopErrors = `
+      <div class="card" style="grid-column:1/-1;">
+        <h2>高频错因标签（免费可见）</h2>
+        <div class="muted">这里展示你本次最常见的失分模式。</div>
+        <div class="hr"></div>
+        ${renderTopErrors(topErrors)}
+      </div>
+    `;
+
+    const moduleEvidence = `
+      <div class="card" style="grid-column:1/-1;">
+        <h2>Evidence Snapshot（错题证据快照）</h2>
+        <div class="muted">先展示前 5 道错题的证据快照，方便你确认系统判因是否合理。</div>
+        <div class="hr"></div>
+        ${renderEvidenceSnapshot(itemDiagnostics)}
       </div>
     `;
 
@@ -494,6 +600,8 @@ function bandToCEFR(band) {
       ${module1Sections}
       ${module3}
       ${moduleFree}
+      ${moduleTopErrors}
+      ${moduleEvidence}
       ${modulePremium}
       ${moduleShare}
       ${appendixWrap}
