@@ -239,7 +239,7 @@ function bandToCEFR(band) {
 
   function buildWechatUnlockText(attemptId, overall) {
     const band = overall?.band ?? "—";
-    return `老师，我刚做完雅思听力测试，想领取完整分析报告。
+    return `老师，您好！我刚完成雅思听力测试，想领取完整分析报告。
 我的听力诊断编号：${attemptId || "—"}
 我的听力分数是：${band}`;
   }
