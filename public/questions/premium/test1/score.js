@@ -41,20 +41,93 @@ function bandToCEFR(band) {
     return Array.isArray(v) ? v : [];
   }
 
-  function guessSectionNote(secNum) {
-    const map = {
-      "1": "通常考：信息定位 + 拼写/数字。",
-      "2": "通常考：地图/流程 + 同义替换。",
-      "3": "通常考：多人对话 + 干扰项。",
-      "4": "通常考：学术讲座 + 结构信号词。",
-    };
-    return map[String(secNum)] || "";
-  }
-
   function bandFromOverall(overall) {
     const b = overall?.band;
     if (b === null || b === undefined || b === "") return "—";
     return String(b);
+  }
+
+  function getQuestionTypeLabel(type) {
+    const map = {
+      form_completion: "表格填空",
+      sentence_completion: "句子填空",
+      note_completion: "笔记填空",
+      single_choice: "单选题",
+      matching: "匹配题",
+      map_labeling: "地图题"
+    };
+    return map[type] || type || "题目";
+  }
+
+  function buildQuestionSummary(item) {
+    const evidence = item?.evidence || {};
+    const cues = safeArr(evidence?.cueWordsInQuestion);
+    const typeText = getQuestionTypeLabel(item?.questionType);
+    if (cues.length) {
+      return `${typeText}｜${cues.join(" / ")}`;
+    }
+    return typeText;
+  }
+
+  function buildWechatUnlockText(attemptId, overall) {
+    const band = overall?.band ?? "—";
+    return `老师，我刚做完雅思听力测试，想领取完整分析报告。
+我的听力诊断编号：${attemptId || "—"}
+我的听力分数是：${band}`;
+  }
+
+  async function copyWechatUnlockText(attemptId, overall) {
+    const text = buildWechatUnlockText(attemptId, overall);
+    try {
+      await navigator.clipboard.writeText(text);
+      alert("已复制发送文案，添加微信后直接粘贴发送即可");
+    } catch {
+      prompt("复制后发送给老师：", text);
+    }
+  }
+
+  function getErrorLabelText(label) {
+    const map = {
+      A1: "关键词未听出",
+      A2: "拼写接近但错误",
+      A4: "数字/日期/拼写失准",
+      B1: "同义替换未识别",
+      C1: "定位偏早/偏错",
+      C2: "定位偏晚",
+      C3: "题目顺序跟丢/串位",
+      E1: "被干扰项带偏",
+      E2: "比较/排除没跟上",
+      E3: "修正信息未跟上",
+      F1: "信号词不敏感",
+      F3: "长讲座结构理解失误",
+      G3: "地图/空间定位失误",
+      H3: "多人对话跟踪吃力",
+      H4: "工作记忆负荷过高",
+      I2: "格式规则执行不稳",
+      I3: "拼写/书写规则失误",
+      I4: "数字日期格式规则失误",
+      J2: "匹配题串位/配对失误",
+      K1: "未作答/证据不足"
+    };
+    return map[label] || label || "—";
+  }
+
+  function getDimensionLabel(dim) {
+    const map = {
+      D1: "词汇捕捉力",
+      D2: "同义替换识别力",
+      D3: "信息定位能力",
+      D4: "数字/日期/拼写精度",
+      D5: "场景适应能力",
+      D6: "长篇讲座理解力",
+      D7: "预测能力",
+      D8: "注意力持续度",
+      D9: "干扰项抗性",
+      D10: "语篇信号词敏感度",
+      D11: "语音适应力",
+      D12: "记笔记/工作记忆"
+    };
+    return map[dim] || dim;
   }
 
   function renderError(message, raw) {
@@ -171,120 +244,55 @@ function bandToCEFR(band) {
     };
   }
 
-  function getErrorLabelText(label) {
-    const map = {
-      A1: "关键词未听出",
-      A2: "拼写接近但错误",
-      A4: "数字/日期/拼写失准",
-      B1: "同义替换未识别",
-      C1: "定位偏早/偏错",
-      C2: "定位偏晚",
-      C3: "题目顺序跟丢/串位",
-      E1: "被干扰项带偏",
-      E2: "比较/排除没跟上",
-      E3: "修正信息未跟上",
-      F1: "信号词不敏感",
-      F3: "长讲座结构理解失误",
-      G3: "地图/空间定位失误",
-      H3: "多人对话跟踪吃力",
-      H4: "工作记忆负荷过高",
-      I2: "格式规则执行不稳",
-      I3: "拼写/书写规则失误",
-      I4: "数字日期格式规则失误",
-      J2: "匹配题串位/配对失误",
-      K1: "未作答/证据不足"
-    };
-    return map[label] || label || "—";
-  }
+  function renderErrorTags(topErrors) {
+    const items = safeArr(topErrors)
+      .filter((item) => String(item?.label || "") !== "K1")
+      .slice(0, 5);
 
-  function getDimensionLabel(dim) {
-    const map = {
-      D1: "词汇捕捉力",
-      D2: "同义替换识别力",
-      D3: "信息定位能力",
-      D4: "数字/日期/拼写精度",
-      D5: "场景适应能力",
-      D6: "长篇讲座理解力",
-      D7: "预测能力",
-      D8: "注意力持续度",
-      D9: "干扰项抗性",
-      D10: "语篇信号词敏感度",
-      D11: "语音适应力",
-      D12: "记笔记/工作记忆"
-    };
-    return map[dim] || dim;
-  }
-
-  function getQuestionTypeLabel(type) {
-    const map = {
-      form_completion: "表格填空",
-      sentence_completion: "句子填空",
-      note_completion: "笔记填空",
-      single_choice: "单选题",
-      matching: "匹配题",
-      map_labeling: "地图题"
-    };
-    return map[type] || type || "题目";
-  }
-
-  function buildQuestionSummary(item) {
-    const evidence = item?.evidence || {};
-    const cues = safeArr(evidence?.cueWordsInQuestion);
-    const typeText = getQuestionTypeLabel(item?.questionType);
-    if (cues.length) {
-      return `${typeText}｜${cues.join(" / ")}`;
-    }
-    return typeText;
-  }
-
-  function buildWechatUnlockText(attemptId, overall) {
-    const band = overall?.band ?? "—";
-    return `老师，您好！我刚完成雅思听力测试，想领取完整分析报告。
-我的听力诊断编号：${attemptId || "—"}
-我的听力分数是：${band}`;
-  }
-
-  async function copyWechatUnlockText(attemptId, overall) {
-    const text = buildWechatUnlockText(attemptId, overall);
-    try {
-      await navigator.clipboard.writeText(text);
-      alert("已复制微信发送文案，添加好友后直接粘贴发送即可");
-    } catch {
-      prompt("复制后发送给老师：", text);
-    }
-  }
-
-  function renderTopErrors(topErrors) {
-    const items = safeArr(topErrors).slice(0, 5);
     if (!items.length) {
-      return `<div class="muted">暂无高频错因数据。</div>`;
+      return `<div class="muted">暂无可展示的高频错因。</div>`;
     }
 
-    return items.map((item) => {
-      const label = item?.label || "";
-      const count = Number(item?.count || 0);
+    return `
+      <div class="tagWrap">
+        ${items.map((item) => {
+          const label = item?.label || "";
+          const count = Number(item?.count || 0);
+          return `
+            <div class="tagCard">
+              <div class="tagTitle">${esc(getErrorLabelText(label))}</div>
+              <div class="tagMeta">${esc(label)} × ${esc(count)}</div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  }
+
+  function renderEvidenceSnapshot(itemDiagnostics) {
+    const wrongItems = safeArr(itemDiagnostics)
+      .filter((item) => !item.isCorrect && String(item?.primaryError || "") !== "K1")
+      .slice(0, 2);
+
+    if (!wrongItems.length) {
       return `
-        <div class="sectionItem">
-          <div class="sectionLeft">
-            <div class="sectionTitle">${esc(label)}｜${esc(getErrorLabelText(label))}</div>
-            <div class="sectionMeta">出现次数：${esc(count)}</div>
+        <div class="muted">本次没有可展示的代表性错题证据。</div>
+        <div class="blurLockCard" style="margin-top:12px;">
+          <div class="blurMask"></div>
+          <div class="blurContent">
+            <div class="blurTitle">解锁完整诊断分析</div>
+            <div class="blurText">添加微信可领取完整版诊断分析、更多错题证据快照、Top3 根因拆解和基础训练建议。</div>
+            <div class="ctaRow" style="margin-top:12px;">
+              <button type="button" class="btn primary" id="copyWechatUnlockBtn">添加微信领取完整版诊断分析</button>
+            </div>
           </div>
         </div>
       `;
-    }).join("");
-  }
-
-  function renderEvidenceSnapshot(itemDiagnostics, attemptId, overall) {
-    const wrongItems = safeArr(itemDiagnostics)
-      .filter((item) => !item.isCorrect)
-      .slice(0, 3);
-
-    if (!wrongItems.length) {
-      return `<div class="muted">本次没有可展示的错题证据快照。</div>`;
     }
 
     const cards = wrongItems.map((item) => {
       const qNo = item?.questionNumber ?? "—";
+      const questionSummary = buildQuestionSummary(item);
       const userAnswer = item?.userAnswer || "（空）";
       const correctAnswer = item?.correctAnswer || "—";
       const primaryError = item?.primaryError || "—";
@@ -294,22 +302,20 @@ function bandToCEFR(band) {
       const cueWords = safeArr(evidence?.cueWordsInQuestion);
       const distractors = safeArr(evidence?.distractors);
       const paraphraseMap = evidence?.paraphraseMap || {};
-      const questionSummary = buildQuestionSummary(item);
 
       const paraphraseText = Object.keys(paraphraseMap).length
-        ? Object.entries(paraphraseMap)
-            .map(([k, v]) => `${k} → ${v}`)
-            .join("；")
+        ? Object.entries(paraphraseMap).map(([k, v]) => `${k} → ${v}`).join("；")
         : "—";
 
       return `
         <div class="card" style="background:#fff; padding:14px; margin-top:12px;">
-          <h3>Q${esc(qNo)}｜主错因：${esc(primaryError)}（${esc(getErrorLabelText(primaryError))}）</h3>
+          <h3>Q${esc(qNo)}</h3>
           <div class="simple-text" style="font-size:14px;">
-            <div><b>题目摘要：</b>${esc(questionSummary)}</div>
+            <div><b>题目：</b>${esc(questionSummary)}</div>
             <div style="margin-top:6px;"><b>你的答案：</b>${esc(userAnswer)}</div>
             <div style="margin-top:6px;"><b>正确答案：</b>${esc(correctAnswer)}</div>
-            <div style="margin-top:6px;"><b>次错因：</b>${esc(secondaryErrors.length ? secondaryErrors.join(" / ") : "—")}</div>
+            <div style="margin-top:6px;"><b>主错因：</b>${esc(getErrorLabelText(primaryError))}</div>
+            <div style="margin-top:6px;"><b>次错因：</b>${esc(secondaryErrors.length ? secondaryErrors.map(getErrorLabelText).join(" / ") : "—")}</div>
             <div style="margin-top:6px;"><b>判定原因：</b>${esc(debugReason)}</div>
             <div style="margin-top:6px;"><b>题干线索：</b>${esc(cueWords.length ? cueWords.join(" / ") : "—")}</div>
             <div style="margin-top:6px;"><b>替换线索：</b>${esc(paraphraseText)}</div>
@@ -319,30 +325,25 @@ function bandToCEFR(band) {
       `;
     }).join("");
 
-    return `
-      ${cards}
-      <div class="card" style="background:#fff; padding:14px; margin-top:12px;">
-        <div style="font-weight:700;">已展示 3 个代表性错题证据</div>
-        <div class="simple-text" style="font-size:14px; margin-top:8px;">
-          添加微信并发送你的诊断编号，可领取更多证据快照、Top3 根因拆解和完整训练建议。
-        </div>
-        <div class="ctaRow" style="margin-top:12px;">
-          <button type="button" class="btn primary" id="copyWechatUnlockBtn">添加微信解锁完整分析报告</button>
-        </div>
-        <div class="muted" style="margin-top:10px; font-size:13px;">
-          复制后可直接粘贴发送：诊断编号 + 当前分数会自动带上。
+    const lockCard = `
+      <div class="blurLockCard" style="margin-top:12px;">
+        <div class="blurMask"></div>
+        <div class="blurContent">
+          <div class="blurTitle">其余证据快照已折叠</div>
+          <div class="blurText">添加微信可领取完整版诊断分析、更多错题证据快照、Top3 根因拆解和基础训练建议。</div>
+          <div class="ctaRow" style="margin-top:12px;">
+            <button type="button" class="btn primary" id="copyWechatUnlockBtn">添加微信领取完整版诊断分析</button>
+          </div>
         </div>
       </div>
     `;
+
+    return cards + lockCard;
   }
 
   function renderPremiumDiagnosisPreview(premiumReport) {
-    const text = premiumReport?.oneSentenceDiagnosis || "解锁后查看你的个性化 Premium 总诊断。";
-    return `
-      <div class="simple-text" style="margin-top:8px;">
-        ${esc(text)}
-      </div>
-    `;
+    const text = premiumReport?.oneSentenceDiagnosis || "解锁后查看你的个性化总诊断。";
+    return `<div class="simple-text" style="margin-top:8px;">${esc(text)}</div>`;
   }
 
   function renderPremiumWeakDimensionsPreview(premiumReport) {
@@ -350,17 +351,12 @@ function bandToCEFR(band) {
     if (!items.length) {
       return `<div class="simple-text" style="margin-top:8px;">解锁后查看你的 Top3 薄弱维度及逐项解释。</div>`;
     }
-
     return items.map((item) => `
       <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
         <div style="font-weight:700;">${esc(item.label || getDimensionLabel(item.dimension))}｜${esc(item.score)}%</div>
-        <div class="simple-text" style="font-size:14px; margin-top:6px;">
-          ${esc(item.interpretation || "")}
-        </div>
+        <div class="simple-text" style="font-size:14px; margin-top:6px;">${esc(item.interpretation || "")}</div>
       </div>
-    `).join("") + `
-      <div class="muted" style="margin-top:10px;">解锁后查看完整 Top3 短板与维度关联解释。</div>
-    `;
+    `).join("") + `<div class="muted" style="margin-top:10px;">解锁后查看完整 Top3 短板与维度关联解释。</div>`;
   }
 
   function renderPremiumRootCausesPreview(premiumReport) {
@@ -368,17 +364,12 @@ function bandToCEFR(band) {
     if (!items.length) {
       return `<div class="simple-text" style="margin-top:8px;">解锁后查看 Top3 根因拆解。</div>`;
     }
-
     return items.map((item) => `
       <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
         <div style="font-weight:700;">${esc(item.title || "")}</div>
-        <div class="simple-text" style="font-size:14px; margin-top:6px;">
-          ${esc(item.whyItHurts || "")}
-        </div>
+        <div class="simple-text" style="font-size:14px; margin-top:6px;">${esc(item.whyItHurts || "")}</div>
       </div>
-    `).join("") + `
-      <div class="muted" style="margin-top:10px;">解锁后查看完整根因链和对应训练方向。</div>
-    `;
+    `).join("") + `<div class="muted" style="margin-top:10px;">解锁后查看完整根因链和对应训练方向。</div>`;
   }
 
   function renderPremiumMechanismPreview(premiumReport) {
@@ -386,17 +377,12 @@ function bandToCEFR(band) {
     if (!items.length) {
       return `<div class="simple-text" style="margin-top:8px;">解锁后查看你的错误机制链。</div>`;
     }
-
     return items.map((item) => `
       <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
         <div style="font-weight:700;">${esc(item.name || "")}</div>
-        <div class="simple-text" style="font-size:14px; margin-top:6px;">
-          ${esc(item.explanation || "")}
-        </div>
+        <div class="simple-text" style="font-size:14px; margin-top:6px;">${esc(item.explanation || "")}</div>
       </div>
-    `).join("") + `
-      <div class="muted" style="margin-top:10px;">解锁后查看完整错误链及对应证据题。</div>
-    `;
+    `).join("") + `<div class="muted" style="margin-top:10px;">解锁后查看完整错误链及对应证据题。</div>`;
   }
 
   function renderPremiumEvidencePreview(premiumReport) {
@@ -419,9 +405,7 @@ function bandToCEFR(band) {
           ${sampleHtml}
         </div>
       `;
-    }).join("") + `
-      <div class="muted" style="margin-top:10px;">解锁后查看每组代表性错题的完整证据链。</div>
-    `;
+    }).join("") + `<div class="muted" style="margin-top:10px;">解锁后查看每组代表性错题的完整证据链。</div>`;
   }
 
   function renderPremiumPlanPreview(premiumReport) {
@@ -435,9 +419,7 @@ function bandToCEFR(band) {
       html += seven.map((item) => `
         <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
           <div style="font-weight:700;">Day ${esc(item.day)}｜${esc(item.focus || "")}</div>
-          <div class="simple-text" style="font-size:14px; margin-top:6px;">
-            ${esc(item.action || "")}
-          </div>
+          <div class="simple-text" style="font-size:14px; margin-top:6px;">${esc(item.action || "")}</div>
         </div>
       `).join("");
     }
@@ -446,9 +428,7 @@ function bandToCEFR(band) {
       html += fourteen.map((item) => `
         <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
           <div style="font-weight:700;">${esc(item.phase || "")}｜${esc(item.goal || "")}</div>
-          <div class="simple-text" style="font-size:14px; margin-top:6px;">
-            ${esc(item.action || "")}
-          </div>
+          <div class="simple-text" style="font-size:14px; margin-top:6px;">${esc(item.action || "")}</div>
         </div>
       `).join("");
     }
@@ -457,9 +437,7 @@ function bandToCEFR(band) {
       html += `
         <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
           <div style="font-weight:700;">提分路径预估</div>
-          <div class="simple-text" style="font-size:14px; margin-top:6px;">
-            ${esc(path[0])}
-          </div>
+          <div class="simple-text" style="font-size:14px; margin-top:6px;">${esc(path[0])}</div>
         </div>
       `;
     }
@@ -523,12 +501,6 @@ function bandToCEFR(band) {
           <span class="pill">CEFR: <b>${esc(cefrDerived)}</b></span>
           <span class="pill">Time: <b>${esc(Math.max(1, Math.round(Number(timeSpentSec || 0) / 60)))} mins</b></span>
         </div>
-
-        <div class="hr"></div>
-
-        <div class="muted" style="margin-top:8px;">
-          提示：本报告基于你提交的答案生成，评分规则在「附录A」可查看。
-        </div>
       </div>
     `;
 
@@ -560,47 +532,9 @@ function bandToCEFR(band) {
       </div>
     `;
 
-    const module3 = `
-      <div class="card" style="grid-column:1/-1;">
-        <h2>Section 1–4 表现分析</h2>
-        <div class="muted">（先用“可读解释 + 分数”上线，后续再接入更细的错因分析）</div>
-        <div class="hr"></div>
-
-        ${
-          sections.length
-            ? sections
-                .filter((s) => ["1", "2", "3", "4"].includes(String(s.section)))
-                .map((s) => {
-                  const sec = String(s.section);
-                  const sc = Number(s.rawCorrect ?? 0);
-                  const st = Number(s.rawTotal ?? 0);
-                  const sp = pct(sc, st);
-                  const note = guessSectionNote(sec);
-                  return `
-                    <div class="sectionItem" style="padding:16px; border:1px solid #eee; border-radius:14px; margin-top:12px;">
-                      <div class="sectionLeft">
-                        <div class="sectionTitle">Section ${esc(sec)}</div>
-                        <div class="sectionMeta">${esc(sc)} / ${esc(st)}（${esc(sp)}%）</div>
-                        <div class="muted" style="margin-top:8px;">${esc(note)}</div>
-                      </div>
-                      <div style="min-width:160px; flex:0 0 160px;">
-                        <div class="bar"><div style="width:${sp}%"></div></div>
-                      </div>
-                    </div>
-                  `;
-                })
-                .join("")
-            : `<div class="muted">暂无 Section 分析数据。</div>`
-        }
-
-        <div class="hr"></div>
-        <div><b>Report note：</b><span class="muted">下一步优先顺序：先修复失分最多的 Section，再补其他部分（解锁后会给到具体错因与训练动作）。</span></div>
-      </div>
-    `;
-
     const moduleFree = `
       <div class="card" style="grid-column:1/-1;">
-        <h2>当前失分画像（免费版）</h2>
+        <h2>当前失分画像</h2>
         <p class="simple-text">${esc(freeText.summary)}</p>
 
         <div class="miniBox">
@@ -617,27 +551,27 @@ function bandToCEFR(band) {
 
     const moduleTopErrors = `
       <div class="card" style="grid-column:1/-1;">
-        <h2>高频错因标签（免费可见）</h2>
-        <div class="muted">这里展示你本次最常见的失分模式。</div>
+        <h2>高频错因标签</h2>
+        <div class="muted">这里展示你本次最常见的真实失分模式。</div>
         <div class="hr"></div>
-        ${renderTopErrors(topErrors)}
+        ${renderErrorTags(topErrors)}
       </div>
     `;
 
     const moduleEvidence = `
       <div class="card" style="grid-column:1/-1;">
-        <h2>Evidence Snapshot（错题证据快照）</h2>
-        <div class="muted">先展示 3 个代表性错题，方便你确认系统判因是否合理。</div>
+        <h2>Evidence Snapshot</h2>
+        <div class="muted">先展示 2 个代表性错题证据。</div>
         <div class="hr"></div>
-        ${renderEvidenceSnapshot(itemDiagnostics, attemptId, overall)}
+        ${renderEvidenceSnapshot(itemDiagnostics)}
       </div>
     `;
 
     const modulePremium = `
       <div class="card" style="grid-column:1/-1;">
-        <h2>完整诊断（Premium 预览）</h2>
+        <h2>完整诊断报告</h2>
         <p class="simple-text">
-          解锁后可查看你的完整能力画像、关键短板、错因证据和训练计划。
+          添加微信后可领取完整版诊断分析；后续也可升级为更深入的提分报告。
         </p>
 
         <details open>
@@ -646,32 +580,32 @@ function bandToCEFR(band) {
         </details>
 
         <details>
-          <summary>12维能力画像（强弱分布 + Top3短板）</summary>
+          <summary>能力画像（预览）</summary>
           ${renderPremiumWeakDimensionsPreview(premiumReport)}
         </details>
 
         <details>
-          <summary>Top3 根因拆解</summary>
+          <summary>Top3 根因拆解（预览）</summary>
           ${renderPremiumRootCausesPreview(premiumReport)}
         </details>
 
         <details>
-          <summary>错误机制链（为什么会这样错）</summary>
+          <summary>错误机制链（预览）</summary>
           ${renderPremiumMechanismPreview(premiumReport)}
         </details>
 
         <details>
-          <summary>分组证据快照（Premium 预览）</summary>
+          <summary>证据分组（预览）</summary>
           ${renderPremiumEvidencePreview(premiumReport)}
         </details>
 
         <details>
-          <summary>7天 / 14天训练计划（Premium 预览）</summary>
+          <summary>训练计划（预览）</summary>
           ${renderPremiumPlanPreview(premiumReport)}
         </details>
 
         <details>
-          <summary>基础 Premium 指标预览</summary>
+          <summary>基础诊断指标（预览）</summary>
           <div class="simple-text" style="margin-top:8px;">
             <div><b>Top3 薄弱维度：</b>${esc(premiumPreview.dimsText)}</div>
             <div style="margin-top:8px;"><b>Top3 高频错因：</b>${esc(premiumPreview.labelsText)}</div>
@@ -679,7 +613,7 @@ function bandToCEFR(band) {
         </details>
 
         <div class="ctaRow">
-          <button type="button" class="btn primary" id="copyWechatPremiumBtn">添加微信解锁完整分析报告</button>
+          <button type="button" class="btn primary" id="copyWechatPremiumBtn">添加微信领取完整版诊断分析</button>
         </div>
         <div class="muted" style="margin-top:10px; font-size:13px;">
           点击后会自动复制发送文案：诊断编号 + 当前分数。
@@ -720,17 +654,12 @@ function bandToCEFR(band) {
                 ${
                   bandTable.length
                     ? bandTable
-                        .map((row) => {
-                          const raw = row?.raw ?? "";
-                          const band = row?.band ?? "";
-                          return `
-                            <tr>
-                              <td style="border:1px solid #111; padding:10px 12px; text-align:center;">${esc(raw)}</td>
-                              <td style="border:1px solid #111; padding:10px 12px; text-align:center;">${esc(band)}</td>
-                            </tr>
-                          `;
-                        })
-                        .join("")
+                        .map((row) => `
+                          <tr>
+                            <td style="border:1px solid #111; padding:10px 12px; text-align:center;">${esc(row?.raw ?? "")}</td>
+                            <td style="border:1px solid #111; padding:10px 12px; text-align:center;">${esc(row?.band ?? "")}</td>
+                          </tr>
+                        `).join("")
                     : `
                       <tr>
                         <td style="border:1px solid #111; padding:10px 12px; text-align:center;" colspan="2">
@@ -823,7 +752,6 @@ function bandToCEFR(band) {
       ${module0}
       ${module1Overall}
       ${module1Sections}
-      ${module3}
       ${moduleFree}
       ${moduleTopErrors}
       ${moduleEvidence}
