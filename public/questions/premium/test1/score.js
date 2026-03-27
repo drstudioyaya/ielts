@@ -12,6 +12,235 @@ function bandToCEFR(band) {
 (function () {
   const $ = (sel) => document.querySelector(sel);
 
+  // 你后面把二维码图片地址放这里
+  const WECHAT_QR_IMAGE = "";
+
+  function injectExtraStyles() {
+    if (document.getElementById("score-extra-styles")) return;
+    const style = document.createElement("style");
+    style.id = "score-extra-styles";
+    style.textContent = `
+      .tagWrap{
+        display:flex;
+        flex-wrap:wrap;
+        gap:10px;
+        margin-top:8px;
+      }
+      .tagCard{
+        display:flex;
+        flex-direction:column;
+        gap:4px;
+        padding:12px 14px;
+        border:1px solid #e5e7eb;
+        border-radius:14px;
+        background:#fff;
+        min-width:140px;
+      }
+      .tagTitle{
+        font-weight:700;
+        font-size:14px;
+        color:#111827;
+      }
+      .tagMeta{
+        font-size:12px;
+        color:#6b7280;
+      }
+      .miniBox{
+        margin-top:16px;
+        padding:14px;
+        border:1px solid #e5e7eb;
+        border-radius:12px;
+        background:#fff;
+      }
+      .simple-text{
+        color:#111827;
+        line-height:1.8;
+        font-size:15px;
+      }
+      .ctaRow{
+        display:flex;
+        gap:12px;
+        flex-wrap:wrap;
+        margin-top:18px;
+      }
+      .blurLockCard{
+        position:relative;
+        overflow:hidden;
+        border:1px solid #e5e7eb;
+        border-radius:14px;
+        background:linear-gradient(180deg,#fafafa 0%,#f3f4f6 100%);
+        min-height:200px;
+      }
+      .blurMask{
+        position:absolute;
+        inset:0;
+        background:
+          linear-gradient(to bottom, rgba(255,255,255,.35), rgba(255,255,255,.92)),
+          repeating-linear-gradient(
+            -20deg,
+            rgba(17,24,39,.06) 0px,
+            rgba(17,24,39,.06) 8px,
+            rgba(255,255,255,.12) 8px,
+            rgba(255,255,255,.12) 16px
+          );
+        backdrop-filter: blur(4px);
+      }
+      .blurContent{
+        position:relative;
+        z-index:2;
+        padding:22px 18px;
+      }
+      .blurTitle{
+        font-size:18px;
+        font-weight:800;
+        color:#111827;
+      }
+      .blurText{
+        margin-top:8px;
+        color:#374151;
+        line-height:1.8;
+        font-size:14px;
+      }
+      .inlineHint{
+        margin-top:10px;
+        font-size:13px;
+        color:#6b7280;
+      }
+      .qBlock{
+        margin-top:12px;
+        padding:14px;
+        border:1px solid #e5e7eb;
+        border-radius:14px;
+        background:#fff;
+      }
+      .qTitle{
+        font-weight:800;
+        font-size:16px;
+        margin-bottom:8px;
+        color:#111827;
+      }
+      .qQuestion{
+        font-size:14px;
+        line-height:1.8;
+        color:#111827;
+        margin-bottom:8px;
+      }
+      .qMeta{
+        font-size:14px;
+        line-height:1.8;
+        color:#111827;
+      }
+      .subtleLine{
+        margin-top:10px;
+        font-size:13px;
+        color:#6b7280;
+      }
+      .premiumPreviewCard{
+        margin-top:12px;
+        padding:14px;
+        border:1px solid #e5e7eb;
+        border-radius:14px;
+        background:#fff;
+      }
+      .premiumPreviewTitle{
+        font-weight:700;
+        font-size:15px;
+        color:#111827;
+      }
+      .premiumPreviewText{
+        margin-top:6px;
+        font-size:14px;
+        line-height:1.8;
+        color:#374151;
+      }
+      .wxModal{
+        position:fixed;
+        inset:0;
+        background:rgba(17,24,39,.55);
+        display:none;
+        align-items:center;
+        justify-content:center;
+        padding:20px;
+        z-index:9999;
+      }
+      .wxModal.show{
+        display:flex;
+      }
+      .wxModalCard{
+        width:min(92vw, 460px);
+        background:#fff;
+        border-radius:18px;
+        padding:18px;
+        box-shadow:0 20px 60px rgba(0,0,0,.18);
+      }
+      .wxModalTitle{
+        font-size:20px;
+        font-weight:800;
+        color:#111827;
+      }
+      .wxModalDesc{
+        margin-top:8px;
+        font-size:14px;
+        line-height:1.8;
+        color:#4b5563;
+      }
+      .wxQrBox{
+        margin-top:14px;
+        border:1px solid #e5e7eb;
+        border-radius:14px;
+        padding:14px;
+        background:#f9fafb;
+        text-align:center;
+      }
+      .wxQrBox img{
+        max-width:220px;
+        width:100%;
+        height:auto;
+        border-radius:10px;
+        display:block;
+        margin:0 auto;
+      }
+      .wxQrPlaceholder{
+        padding:28px 12px;
+        color:#6b7280;
+        font-size:14px;
+        line-height:1.8;
+      }
+      .wxCopyBox{
+        margin-top:14px;
+        border:1px solid #e5e7eb;
+        border-radius:14px;
+        padding:14px;
+        background:#fff;
+      }
+      .wxCopyText{
+        white-space:pre-wrap;
+        word-break:break-word;
+        font-size:14px;
+        line-height:1.8;
+        color:#111827;
+      }
+      .wxBtnRow{
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-top:14px;
+      }
+      @media (max-width: 860px){
+        .tagCard{
+          min-width:unset;
+          width:calc(50% - 5px);
+        }
+      }
+      @media (max-width: 560px){
+        .tagCard{
+          width:100%;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
   function getAttemptId() {
     const params = new URLSearchParams(location.search);
     return (params.get("attemptId") || "").trim();
@@ -45,28 +274,6 @@ function bandToCEFR(band) {
     const b = overall?.band;
     if (b === null || b === undefined || b === "") return "—";
     return String(b);
-  }
-
-  function getQuestionTypeLabel(type) {
-    const map = {
-      form_completion: "表格填空",
-      sentence_completion: "句子填空",
-      note_completion: "笔记填空",
-      single_choice: "单选题",
-      matching: "匹配题",
-      map_labeling: "地图题"
-    };
-    return map[type] || type || "题目";
-  }
-
-  function buildQuestionSummary(item) {
-    const evidence = item?.evidence || {};
-    const cues = safeArr(evidence?.cueWordsInQuestion);
-    const typeText = getQuestionTypeLabel(item?.questionType);
-    if (cues.length) {
-      return `${typeText}｜${cues.join(" / ")}`;
-    }
-    return typeText;
   }
 
   function buildWechatUnlockText(attemptId, overall) {
@@ -128,6 +335,18 @@ function bandToCEFR(band) {
       D12: "记笔记/工作记忆"
     };
     return map[dim] || dim;
+  }
+
+  function getQuestionTypeLabel(type) {
+    const map = {
+      form_completion: "表格填空",
+      sentence_completion: "句子填空",
+      note_completion: "笔记填空",
+      single_choice: "单选题",
+      matching: "匹配题",
+      map_labeling: "地图题"
+    };
+    return map[type] || "题目";
   }
 
   function renderError(message, raw) {
@@ -237,223 +456,251 @@ function bandToCEFR(band) {
     const premium = data?.premiumPreview || {};
     const dims = Array.isArray(premium.topWeakDimensions) ? premium.topWeakDimensions : [];
     const labels = Array.isArray(premium.topErrorLabels) ? premium.topErrorLabels : [];
-
     return {
-      dimsText: dims.length ? dims.join(" / ") : "解锁后查看你的 Top3 薄弱维度",
-      labelsText: labels.length ? labels.join(" / ") : "解锁后查看你最常见的失分模式"
+      dimsText: dims.length ? dims.map(getDimensionLabel).join(" / ") : "解锁后查看你的 Top3 薄弱维度",
+      labelsText: labels.length ? labels.map(getErrorLabelText).join(" / ") : "解锁后查看你最常见的失分模式"
     };
   }
 
-  function renderErrorTags(topErrors) {
-    const items = safeArr(topErrors)
+  function createWxModal(attemptId, overall) {
+    if (document.getElementById("wxModal")) return;
+
+    const modal = document.createElement("div");
+    modal.id = "wxModal";
+    modal.className = "wxModal";
+    modal.innerHTML = `
+      <div class="wxModalCard">
+        <div class="wxModalTitle">添加微信领取完整版诊断分析</div>
+        <div class="wxModalDesc">
+          添加微信后，把下方文案直接粘贴发送给老师即可。
+        </div>
+
+        <div class="wxQrBox">
+          ${
+            WECHAT_QR_IMAGE
+              ? `<img src="${esc(WECHAT_QR_IMAGE)}" alt="微信二维码" />`
+              : `<div class="wxQrPlaceholder">二维码图片稍后替换到 <b>WECHAT_QR_IMAGE</b> 变量里即可。</div>`
+          }
+        </div>
+
+        <div class="wxCopyBox">
+          <div class="wxCopyText" id="wxCopyText">${esc(buildWechatUnlockText(attemptId, overall))}</div>
+        </div>
+
+        <div class="wxBtnRow">
+          <button type="button" class="btn primary" id="wxCopyBtn">一键复制发送文案</button>
+          <button type="button" class="btn" id="wxCloseBtn">关闭</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.classList.remove("show");
+    });
+
+    const closeBtn = document.getElementById("wxCloseBtn");
+    if (closeBtn) closeBtn.onclick = () => modal.classList.remove("show");
+
+    const copyBtn = document.getElementById("wxCopyBtn");
+    if (copyBtn) {
+      copyBtn.onclick = () => copyWechatUnlockText(attemptId, overall);
+    }
+  }
+
+  function openWxModal(attemptId, overall) {
+    createWxModal(attemptId, overall);
+    const modal = document.getElementById("wxModal");
+    if (modal) {
+      const textNode = document.getElementById("wxCopyText");
+      if (textNode) textNode.textContent = buildWechatUnlockText(attemptId, overall);
+      modal.classList.add("show");
+    }
+  }
+
+  function loadQuestionBank() {
+    return new Promise((resolve) => {
+      if (window.PREMIUM_TEST1) return resolve(window.PREMIUM_TEST1);
+
+      const existing = document.getElementById("dynamic-questions-js");
+      if (existing) {
+        existing.addEventListener("load", () => resolve(window.PREMIUM_TEST1 || null), { once: true });
+        existing.addEventListener("error", () => resolve(null), { once: true });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.id = "dynamic-questions-js";
+      script.src = "./questions.js?v=" + Date.now();
+      script.onload = () => resolve(window.PREMIUM_TEST1 || null);
+      script.onerror = () => resolve(null);
+      document.body.appendChild(script);
+    });
+  }
+
+  function getQuestionObjectFromBank(bank, questionNumber) {
+    if (!bank) return null;
+    const sections = ["section1", "section2", "section3", "section4"];
+    for (const sec of sections) {
+      const arr = bank?.[sec]?.questions;
+      if (!Array.isArray(arr)) continue;
+      const found = arr.find((q) => Number(q.number) === Number(questionNumber));
+      if (found) return found;
+    }
+    return null;
+  }
+
+  function buildFullQuestionText(bankQuestion, item) {
+    const qType = getQuestionTypeLabel(item?.questionType);
+
+    if (!bankQuestion) {
+      const evidence = item?.evidence || {};
+      const cues = safeArr(evidence?.cueWordsInQuestion);
+      return cues.length ? `${qType}｜${cues.join(" / ")}` : qType;
+    }
+
+    const qText = bankQuestion.question ? String(bankQuestion.question) : "";
+    const options = safeArr(bankQuestion.options);
+
+    if (options.length) {
+      const optionText = options
+        .map((opt, idx) => `${String.fromCharCode(65 + idx)}. ${opt}`)
+        .join(" / ");
+      return `${qText} 选项：${optionText}`;
+    }
+
+    return qText || qType;
+  }
+
+  function renderErrorTags(topErrors, itemDiagnostics) {
+    const filtered = safeArr(topErrors)
       .filter((item) => String(item?.label || "") !== "K1")
       .slice(0, 5);
 
-    if (!items.length) {
-      return `<div class="muted">暂无可展示的高频错因。</div>`;
-    }
+    const k1Count = safeArr(itemDiagnostics).filter(
+      (item) => !item.isCorrect && String(item?.primaryError || "") === "K1"
+    ).length;
 
-    return `
-      <div class="tagWrap">
-        ${items.map((item) => {
-          const label = item?.label || "";
-          const count = Number(item?.count || 0);
-          return `
-            <div class="tagCard">
-              <div class="tagTitle">${esc(getErrorLabelText(label))}</div>
-              <div class="tagMeta">${esc(label)} × ${esc(count)}</div>
-            </div>
-          `;
-        }).join("")}
-      </div>
-    `;
+    const tagsHtml = filtered.length
+      ? `
+        <div class="tagWrap">
+          ${filtered.map((item, idx) => {
+            const label = item?.label || "";
+            const count = Number(item?.count || 0);
+            const bg = idx === 0 ? "#111827" : idx === 1 ? "#1f2937" : "#374151";
+            return `
+              <div class="tagCard" style="background:${bg}; border-color:${bg}; color:#fff;">
+                <div class="tagTitle" style="color:#fff;">${esc(getErrorLabelText(label))}</div>
+                <div class="tagMeta" style="color:rgba(255,255,255,.78);">${esc(label)} × ${esc(count)}</div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `
+      : `<div class="muted">暂无可展示的高频错因。</div>`;
+
+    const hintHtml = k1Count > 0
+      ? `<div class="inlineHint">另有 ${esc(k1Count)} 题未作答，可能影响诊断完整度。</div>`
+      : "";
+
+    return tagsHtml + hintHtml;
   }
 
-  function renderEvidenceSnapshot(itemDiagnostics) {
+  function renderEvidenceSnapshot(itemDiagnostics, questionBank) {
     const wrongItems = safeArr(itemDiagnostics)
       .filter((item) => !item.isCorrect && String(item?.primaryError || "") !== "K1")
       .slice(0, 2);
 
-    if (!wrongItems.length) {
-      return `
-        <div class="muted">本次没有可展示的代表性错题证据。</div>
-        <div class="blurLockCard" style="margin-top:12px;">
-          <div class="blurMask"></div>
-          <div class="blurContent">
-            <div class="blurTitle">解锁完整诊断分析</div>
-            <div class="blurText">添加微信可领取完整版诊断分析、更多错题证据快照、Top3 根因拆解和基础训练建议。</div>
-            <div class="ctaRow" style="margin-top:12px;">
-              <button type="button" class="btn primary" id="copyWechatUnlockBtn">添加微信领取完整版诊断分析</button>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
     const cards = wrongItems.map((item) => {
       const qNo = item?.questionNumber ?? "—";
-      const questionSummary = buildQuestionSummary(item);
+      const bankQuestion = getQuestionObjectFromBank(questionBank, qNo);
+      const questionText = buildFullQuestionText(bankQuestion, item);
       const userAnswer = item?.userAnswer || "（空）";
       const correctAnswer = item?.correctAnswer || "—";
       const primaryError = item?.primaryError || "—";
-      const secondaryErrors = safeArr(item?.secondaryErrors);
       const debugReason = item?.debugReason || "—";
-      const evidence = item?.evidence || {};
-      const cueWords = safeArr(evidence?.cueWordsInQuestion);
-      const distractors = safeArr(evidence?.distractors);
-      const paraphraseMap = evidence?.paraphraseMap || {};
-
-      const paraphraseText = Object.keys(paraphraseMap).length
-        ? Object.entries(paraphraseMap).map(([k, v]) => `${k} → ${v}`).join("；")
-        : "—";
 
       return `
-        <div class="card" style="background:#fff; padding:14px; margin-top:12px;">
-          <h3>Q${esc(qNo)}</h3>
-          <div class="simple-text" style="font-size:14px;">
-            <div><b>题目：</b>${esc(questionSummary)}</div>
-            <div style="margin-top:6px;"><b>你的答案：</b>${esc(userAnswer)}</div>
-            <div style="margin-top:6px;"><b>正确答案：</b>${esc(correctAnswer)}</div>
-            <div style="margin-top:6px;"><b>主错因：</b>${esc(getErrorLabelText(primaryError))}</div>
-            <div style="margin-top:6px;"><b>次错因：</b>${esc(secondaryErrors.length ? secondaryErrors.map(getErrorLabelText).join(" / ") : "—")}</div>
-            <div style="margin-top:6px;"><b>判定原因：</b>${esc(debugReason)}</div>
-            <div style="margin-top:6px;"><b>题干线索：</b>${esc(cueWords.length ? cueWords.join(" / ") : "—")}</div>
-            <div style="margin-top:6px;"><b>替换线索：</b>${esc(paraphraseText)}</div>
-            <div style="margin-top:6px;"><b>干扰项：</b>${esc(distractors.length ? distractors.join(" / ") : "—")}</div>
-          </div>
+        <div class="qBlock">
+          <div class="qTitle">Q${esc(qNo)}</div>
+          <div class="qQuestion"><b>题目：</b>${esc(questionText)}</div>
+          <div class="qMeta"><b>你的答案：</b>${esc(userAnswer)}</div>
+          <div class="qMeta"><b>正确答案：</b>${esc(correctAnswer)}</div>
+          <div class="qMeta"><b>主错因：</b>${esc(getErrorLabelText(primaryError))}</div>
+          <div class="qMeta"><b>判定原因：</b>${esc(debugReason)}</div>
         </div>
       `;
     }).join("");
 
-    const lockCard = `
+    return `
+      ${cards || `<div class="muted">本次没有可展示的代表性错题证据。</div>`}
       <div class="blurLockCard" style="margin-top:12px;">
         <div class="blurMask"></div>
         <div class="blurContent">
-          <div class="blurTitle">其余证据快照已折叠</div>
-          <div class="blurText">添加微信可领取完整版诊断分析、更多错题证据快照、Top3 根因拆解和基础训练建议。</div>
+          <div class="blurTitle">其余错题证据快照、Top3根因拆解、7天训练计划已折叠</div>
+          <div class="blurText">
+            添加微信后可领取完整版诊断分析，获取更多错题证据、完整根因分析和训练建议。
+          </div>
           <div class="ctaRow" style="margin-top:12px;">
-            <button type="button" class="btn primary" id="copyWechatUnlockBtn">添加微信领取完整版诊断分析</button>
+            <button type="button" class="btn primary" id="copyWechatUnlockBtn">解锁完整雅思听力诊断分析报告</button>
           </div>
         </div>
       </div>
     `;
-
-    return cards + lockCard;
   }
 
-  function renderPremiumDiagnosisPreview(premiumReport) {
-    const text = premiumReport?.oneSentenceDiagnosis || "解锁后查看你的个性化总诊断。";
-    return `<div class="simple-text" style="margin-top:8px;">${esc(text)}</div>`;
-  }
+  function renderPremiumSummary(premiumReport, premiumPreview) {
+    const oneLine = premiumReport?.oneSentenceDiagnosis || "添加微信后可领取更完整的诊断分析。";
+    const weak = safeArr(premiumReport?.topWeakDimensionsDetailed).slice(0, 1)[0];
+    const weakText = weak
+      ? `${weak.label}｜${weak.score}%`
+      : premiumPreview?.dimsText || "Top3 薄弱维度";
+    const root = safeArr(premiumReport?.topRootCauses).slice(0, 1)[0];
+    const rootText = root?.title || "Top3 根因拆解";
+    const mech = safeArr(premiumReport?.errorMechanismChains).slice(0, 1)[0];
+    const mechText = mech?.name || "错误机制链";
 
-  function renderPremiumWeakDimensionsPreview(premiumReport) {
-    const items = safeArr(premiumReport?.topWeakDimensionsDetailed).slice(0, 1);
-    if (!items.length) {
-      return `<div class="simple-text" style="margin-top:8px;">解锁后查看你的 Top3 薄弱维度及逐项解释。</div>`;
-    }
-    return items.map((item) => `
-      <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
-        <div style="font-weight:700;">${esc(item.label || getDimensionLabel(item.dimension))}｜${esc(item.score)}%</div>
-        <div class="simple-text" style="font-size:14px; margin-top:6px;">${esc(item.interpretation || "")}</div>
+    return `
+      <div class="premiumPreviewCard">
+        <div class="premiumPreviewTitle">一句总诊断（预览）</div>
+        <div class="premiumPreviewText">${esc(oneLine)}</div>
       </div>
-    `).join("") + `<div class="muted" style="margin-top:10px;">解锁后查看完整 Top3 短板与维度关联解释。</div>`;
-  }
 
-  function renderPremiumRootCausesPreview(premiumReport) {
-    const items = safeArr(premiumReport?.topRootCauses).slice(0, 1);
-    if (!items.length) {
-      return `<div class="simple-text" style="margin-top:8px;">解锁后查看 Top3 根因拆解。</div>`;
-    }
-    return items.map((item) => `
-      <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
-        <div style="font-weight:700;">${esc(item.title || "")}</div>
-        <div class="simple-text" style="font-size:14px; margin-top:6px;">${esc(item.whyItHurts || "")}</div>
+      <div class="premiumPreviewCard">
+        <div class="premiumPreviewTitle">薄弱能力（预览）</div>
+        <div class="premiumPreviewText">${esc(weakText)}</div>
       </div>
-    `).join("") + `<div class="muted" style="margin-top:10px;">解锁后查看完整根因链和对应训练方向。</div>`;
-  }
 
-  function renderPremiumMechanismPreview(premiumReport) {
-    const items = safeArr(premiumReport?.errorMechanismChains).slice(0, 1);
-    if (!items.length) {
-      return `<div class="simple-text" style="margin-top:8px;">解锁后查看你的错误机制链。</div>`;
-    }
-    return items.map((item) => `
-      <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
-        <div style="font-weight:700;">${esc(item.name || "")}</div>
-        <div class="simple-text" style="font-size:14px; margin-top:6px;">${esc(item.explanation || "")}</div>
+      <div class="premiumPreviewCard">
+        <div class="premiumPreviewTitle">Top3 根因拆解（预览）</div>
+        <div class="premiumPreviewText">${esc(rootText)}</div>
       </div>
-    `).join("") + `<div class="muted" style="margin-top:10px;">解锁后查看完整错误链及对应证据题。</div>`;
+
+      <div class="premiumPreviewCard">
+        <div class="premiumPreviewTitle">错误机制链（预览）</div>
+        <div class="premiumPreviewText">${esc(mechText)}</div>
+      </div>
+
+      <div class="subtleLine">
+        添加微信后可领取完整版诊断分析；后续也可升级为更深入的提分报告。
+      </div>
+    `;
   }
 
-  function renderPremiumEvidencePreview(premiumReport) {
-    const groups = safeArr(premiumReport?.evidenceGroups).slice(0, 1);
-    if (!groups.length) {
-      return `<div class="simple-text" style="margin-top:8px;">解锁后查看分组证据快照。</div>`;
-    }
+  async function renderReport(data, attemptId) {
+    injectExtraStyles();
 
-    return groups.map((group) => {
-      const samples = safeArr(group.samples).slice(0, 1);
-      const sampleHtml = samples.map((item) => `
-        <div class="simple-text" style="font-size:14px; margin-top:6px;">
-          例：Q${esc(item.questionNumber)}｜你的答案：${esc(item.userAnswer || "（空）")}｜正确答案：${esc(item.correctAnswer || "—")}
-        </div>
-      `).join("");
-
-      return `
-        <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
-          <div style="font-weight:700;">${esc(group.errorText || "")}（${esc(group.count || 0)}题）</div>
-          ${sampleHtml}
-        </div>
-      `;
-    }).join("") + `<div class="muted" style="margin-top:10px;">解锁后查看每组代表性错题的完整证据链。</div>`;
-  }
-
-  function renderPremiumPlanPreview(premiumReport) {
-    const seven = safeArr(premiumReport?.sevenDayPlan).slice(0, 1);
-    const fourteen = safeArr(premiumReport?.fourteenDayPlan).slice(0, 1);
-    const path = safeArr(premiumReport?.scoreImprovementPath).slice(0, 1);
-
-    let html = "";
-
-    if (seven.length) {
-      html += seven.map((item) => `
-        <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
-          <div style="font-weight:700;">Day ${esc(item.day)}｜${esc(item.focus || "")}</div>
-          <div class="simple-text" style="font-size:14px; margin-top:6px;">${esc(item.action || "")}</div>
-        </div>
-      `).join("");
-    }
-
-    if (fourteen.length) {
-      html += fourteen.map((item) => `
-        <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
-          <div style="font-weight:700;">${esc(item.phase || "")}｜${esc(item.goal || "")}</div>
-          <div class="simple-text" style="font-size:14px; margin-top:6px;">${esc(item.action || "")}</div>
-        </div>
-      `).join("");
-    }
-
-    if (path.length) {
-      html += `
-        <div class="card" style="background:#fff; padding:12px; margin-top:10px;">
-          <div style="font-weight:700;">提分路径预估</div>
-          <div class="simple-text" style="font-size:14px; margin-top:6px;">${esc(path[0])}</div>
-        </div>
-      `;
-    }
-
-    if (!html) {
-      html = `<div class="simple-text" style="margin-top:8px;">解锁后查看 7天 / 14天训练计划与提分路径。</div>`;
-    } else {
-      html += `<div class="muted" style="margin-top:10px;">解锁后查看完整训练处方与全部提分路径。</div>`;
-    }
-
-    return html;
-  }
-
-  function renderReport(data, attemptId) {
     const app = $("#app");
     const overall = data?.overall || {};
+    const sections = safeArr(data?.sections);
+    const topErrors = safeArr(data?.topErrors);
+    const itemDiagnostics = safeArr(data?.itemDiagnostics);
+    const bandTable = safeArr(data?.bandTable);
+    const freeText = getFreeTextFromApiOrFallback(data);
+    const premiumPreview = getPremiumPreviewFromApi(data);
+    const premiumReport = data?.premiumReport || {};
+    const questionBank = await loadQuestionBank();
 
     let timeSpentSec = Number(overall.timeSpentSec ?? 0);
     if (!timeSpentSec || timeSpentSec <= 0) {
@@ -464,13 +711,6 @@ function bandToCEFR(band) {
     const rawCorrect = Number(overall.rawCorrect ?? 0);
     const rawTotal = Number(overall.rawTotal ?? 0);
     const overallPct = pct(rawCorrect, rawTotal);
-    const sections = safeArr(data?.sections);
-    const bandTable = safeArr(data?.bandTable);
-    const topErrors = safeArr(data?.topErrors);
-    const itemDiagnostics = safeArr(data?.itemDiagnostics);
-    const freeText = getFreeTextFromApiOrFallback(data);
-    const premiumPreview = getPremiumPreviewFromApi(data);
-    const premiumReport = data?.premiumReport || {};
 
     const cefrRaw = String(overall.cefr ?? "").trim();
     const cefrDerived =
@@ -493,10 +733,8 @@ function bandToCEFR(band) {
         <h2>考试结果总览</h2>
         <div class="bigScore">${esc(rawCorrect)} / ${esc(rawTotal)}</div>
         <div class="bigScore" style="margin-top:6px;">Band：${esc(bandFromOverall(overall))}</div>
-
         <div class="muted" style="margin-top:10px;">正确率：${esc(overallPct)}%</div>
         <div class="bar"><div style="width:${overallPct}%"></div></div>
-
         <div class="kv" style="margin-top:10px;">
           <span class="pill">CEFR: <b>${esc(cefrDerived)}</b></span>
           <span class="pill">Time: <b>${esc(Math.max(1, Math.round(Number(timeSpentSec || 0) / 60)))} mins</b></span>
@@ -509,25 +747,23 @@ function bandToCEFR(band) {
         <h2>Section得分</h2>
         ${
           sections.length
-            ? sections
-                .map((s) => {
-                  const sc = Number(s.rawCorrect ?? 0);
-                  const st = Number(s.rawTotal ?? 0);
-                  const sp = pct(sc, st);
-                  return `
-                    <div class="sectionItem">
-                      <div class="sectionLeft">
-                        <div class="sectionTitle">${esc(sectionLabel(String(s.section || "")))}</div>
-                        <div class="sectionMeta">${esc(sc)} / ${esc(st)}（${esc(sp)}%）</div>
-                      </div>
-                      <div style="min-width:140px; flex:0 0 140px;">
-                        <div class="bar"><div style="width:${sp}%"></div></div>
-                      </div>
+            ? sections.map((s) => {
+                const sc = Number(s.rawCorrect ?? 0);
+                const st = Number(s.rawTotal ?? 0);
+                const sp = pct(sc, st);
+                return `
+                  <div class="sectionItem">
+                    <div class="sectionLeft">
+                      <div class="sectionTitle">${esc(sectionLabel(String(s.section || "")))}</div>
+                      <div class="sectionMeta">${esc(sc)} / ${esc(st)}（${esc(sp)}%）</div>
                     </div>
-                  `;
-                })
-                .join("")
-            : `<div class="muted">暂无分 Section 数据。</div>`
+                    <div style="min-width:140px; flex:0 0 140px;">
+                      <div class="bar"><div style="width:${sp}%"></div></div>
+                    </div>
+                  </div>
+                `;
+              }).join("")
+            : `<div class="muted">暂无 Section 数据。</div>`
         }
       </div>
     `;
@@ -554,69 +790,25 @@ function bandToCEFR(band) {
         <h2>高频错因标签</h2>
         <div class="muted">这里展示你本次最常见的真实失分模式。</div>
         <div class="hr"></div>
-        ${renderErrorTags(topErrors)}
+        ${renderErrorTags(topErrors, itemDiagnostics)}
       </div>
     `;
 
     const moduleEvidence = `
       <div class="card" style="grid-column:1/-1;">
         <h2>Evidence Snapshot</h2>
-        <div class="muted">先展示 2 个代表性错题证据。</div>
+        <div class="muted">先展示 2 个完整错题证据。</div>
         <div class="hr"></div>
-        ${renderEvidenceSnapshot(itemDiagnostics)}
+        ${renderEvidenceSnapshot(itemDiagnostics, questionBank)}
       </div>
     `;
 
     const modulePremium = `
       <div class="card" style="grid-column:1/-1;">
         <h2>完整诊断报告</h2>
-        <p class="simple-text">
-          添加微信后可领取完整版诊断分析；后续也可升级为更深入的提分报告。
-        </p>
-
-        <details open>
-          <summary>一句总诊断（预览）</summary>
-          ${renderPremiumDiagnosisPreview(premiumReport)}
-        </details>
-
-        <details>
-          <summary>能力画像（预览）</summary>
-          ${renderPremiumWeakDimensionsPreview(premiumReport)}
-        </details>
-
-        <details>
-          <summary>Top3 根因拆解（预览）</summary>
-          ${renderPremiumRootCausesPreview(premiumReport)}
-        </details>
-
-        <details>
-          <summary>错误机制链（预览）</summary>
-          ${renderPremiumMechanismPreview(premiumReport)}
-        </details>
-
-        <details>
-          <summary>证据分组（预览）</summary>
-          ${renderPremiumEvidencePreview(premiumReport)}
-        </details>
-
-        <details>
-          <summary>训练计划（预览）</summary>
-          ${renderPremiumPlanPreview(premiumReport)}
-        </details>
-
-        <details>
-          <summary>基础诊断指标（预览）</summary>
-          <div class="simple-text" style="margin-top:8px;">
-            <div><b>Top3 薄弱维度：</b>${esc(premiumPreview.dimsText)}</div>
-            <div style="margin-top:8px;"><b>Top3 高频错因：</b>${esc(premiumPreview.labelsText)}</div>
-          </div>
-        </details>
-
+        ${renderPremiumSummary(premiumReport, premiumPreview)}
         <div class="ctaRow">
           <button type="button" class="btn primary" id="copyWechatPremiumBtn">添加微信领取完整版诊断分析</button>
-        </div>
-        <div class="muted" style="margin-top:10px; font-size:13px;">
-          点击后会自动复制发送文案：诊断编号 + 当前分数。
         </div>
       </div>
     `;
@@ -635,45 +827,31 @@ function bandToCEFR(band) {
     const appendixA = `
       <details>
         <summary><b>附录A（可展开）：对照表（仅参考）</b></summary>
-
         <div style="margin-top:12px;">
           <div style="font-weight:700; margin: 6px 0;">A1. 答对题数 vs IELTS 对照表（仅参考）</div>
           <div style="margin-top:10px; overflow-x:auto;">
             <table style="width:100%; border-collapse:collapse; font-size:14px;">
               <thead>
                 <tr>
-                  <th style="border:1px solid #111; padding:10px 12px; text-align:center; background:#f3f3f3;">
-                    Raw score (correct answers)
-                  </th>
-                  <th style="border:1px solid #111; padding:10px 12px; text-align:center; background:#f3f3f3;">
-                    Approx. IELTS Listening Band
-                  </th>
+                  <th style="border:1px solid #111; padding:10px 12px; text-align:center; background:#f3f3f3;">Raw score (correct answers)</th>
+                  <th style="border:1px solid #111; padding:10px 12px; text-align:center; background:#f3f3f3;">Approx. IELTS Listening Band</th>
                 </tr>
               </thead>
               <tbody>
                 ${
                   bandTable.length
-                    ? bandTable
-                        .map((row) => `
-                          <tr>
-                            <td style="border:1px solid #111; padding:10px 12px; text-align:center;">${esc(row?.raw ?? "")}</td>
-                            <td style="border:1px solid #111; padding:10px 12px; text-align:center;">${esc(row?.band ?? "")}</td>
-                          </tr>
-                        `).join("")
-                    : `
-                      <tr>
-                        <td style="border:1px solid #111; padding:10px 12px; text-align:center;" colspan="2">
-                          ${esc("暂无对照表数据")}
-                        </td>
-                      </tr>
-                    `
+                    ? bandTable.map((row) => `
+                        <tr>
+                          <td style="border:1px solid #111; padding:10px 12px; text-align:center;">${esc(row?.raw ?? "")}</td>
+                          <td style="border:1px solid #111; padding:10px 12px; text-align:center;">${esc(row?.band ?? "")}</td>
+                        </tr>
+                      `).join("")
+                    : `<tr><td style="border:1px solid #111; padding:10px 12px; text-align:center;" colspan="2">暂无对照表数据</td></tr>`
                 }
               </tbody>
             </table>
           </div>
-          <div class="muted" style="margin-top:8px;">
-            Footnote: This mapping is approximate and provided for reference only.
-          </div>
+          <div class="muted" style="margin-top:8px;">Footnote: This mapping is approximate and provided for reference only.</div>
         </div>
 
         <div style="height:14px;"></div>
@@ -699,9 +877,7 @@ function bandToCEFR(band) {
               </tbody>
             </table>
           </div>
-          <div class="muted" style="margin-top:8px;">
-            Footnote: This mapping is approximate and provided for reference only. (IELTS/CEFR 非严格一一对应)
-          </div>
+          <div class="muted" style="margin-top:8px;">Footnote: This mapping is approximate and provided for reference only. (IELTS/CEFR 非严格一一对应)</div>
         </div>
       </details>
     `;
@@ -714,8 +890,8 @@ function bandToCEFR(band) {
             <li>Spelling must be correct. Misspellings are marked wrong.</li>
             <li>Grammar must be correct where required by the sentence.</li>
             <li>Word limit must be respected (e.g., ONE WORD AND/OR A NUMBER).</li>
-            <li>Numbers may be written in digits or words only if the word limit allows (e.g., 8:30 / 8.30; ‘eight thirty’ only when permitted).</li>
-            <li>Hyphenation/spacing variants may be accepted when meaning is unchanged (e.g., part-time / part time).</li>
+            <li>Numbers may be written in digits or words only if the word limit allows.</li>
+            <li>Hyphenation/spacing variants may be accepted when meaning is unchanged.</li>
             <li>No free synonym acceptance unless explicitly allowed in the answer key.</li>
           </ul>
         </div>
@@ -760,8 +936,7 @@ function bandToCEFR(band) {
       ${appendixWrap}
     `;
 
-    const pill = $("#attemptIdPill");
-    if (pill) pill.textContent = attemptId;
+    createWxModal(attemptId, overall);
 
     const copyExamLinkInPageBtn = $("#copyExamLinkInPageBtn");
     if (copyExamLinkInPageBtn) {
@@ -783,11 +958,7 @@ function bandToCEFR(band) {
         const text = `我在做这个雅思听力免费测试，你也来试试：\n${examUrl}`;
         if (navigator.share) {
           try {
-            await navigator.share({
-              title: "雅思听力免费测试",
-              text,
-              url: examUrl,
-            });
+            await navigator.share({ title: "雅思听力免费测试", text, url: examUrl });
             return;
           } catch {}
         }
@@ -801,17 +972,18 @@ function bandToCEFR(band) {
     }
 
     const copyWechatUnlockBtn = $("#copyWechatUnlockBtn");
-    if (copyWechatUnlockBtn) {
-      copyWechatUnlockBtn.onclick = () => copyWechatUnlockText(attemptId, overall);
-    }
+    if (copyWechatUnlockBtn) copyWechatUnlockBtn.onclick = () => openWxModal(attemptId, overall);
 
     const copyWechatPremiumBtn = $("#copyWechatPremiumBtn");
-    if (copyWechatPremiumBtn) {
-      copyWechatPremiumBtn.onclick = () => copyWechatUnlockText(attemptId, overall);
-    }
+    if (copyWechatPremiumBtn) copyWechatPremiumBtn.onclick = () => openWxModal(attemptId, overall);
+
+    const pill = $("#attemptIdPill");
+    if (pill) pill.textContent = attemptId;
   }
 
   async function load() {
+    injectExtraStyles();
+
     const attemptId = getAttemptId();
 
     const h1 = document.querySelector("h1");
@@ -852,7 +1024,7 @@ function bandToCEFR(band) {
         return renderError("返回数据格式不正确（缺少 overall）", text);
       }
 
-      renderReport(data, attemptId);
+      await renderReport(data, attemptId);
     } catch (e) {
       renderError("网络或脚本错误：" + String(e?.message || e), String(e));
     }
@@ -883,11 +1055,7 @@ function bandToCEFR(band) {
       const text = `我在做这个雅思听力免费测试，你也来试试：\n${examUrl}`;
       if (navigator.share) {
         try {
-          await navigator.share({
-            title: "雅思听力免费测试",
-            text,
-            url: examUrl,
-          });
+          await navigator.share({ title: "雅思听力免费测试", text, url: examUrl });
           return;
         } catch {}
       }
